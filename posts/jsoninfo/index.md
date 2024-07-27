@@ -62,6 +62,6 @@ json 模块里的 dumps 函数是对数据进行编码，形成 json 格式的�
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/jsoninfo/  
 > 转载 URL: https://baijiahao.baidu.com/s?id=1608659655547720220&amp;wfr=spider&amp;for=pc

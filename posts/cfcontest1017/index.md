@@ -82,6 +82,6 @@ int main(){
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/cfcontest1017/  
 

@@ -83,6 +83,6 @@ Simon Pieters，撰写了 auto-sizes 规范的人，曾经巧妙并勇敢地尝�
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/auto-sizes/  
 

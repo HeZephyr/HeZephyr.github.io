@@ -59,6 +59,6 @@ img[loading=&#39;lazy&#39;]:not([data-lazyloaded]) {
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/native-img-loading-lazy/  
 

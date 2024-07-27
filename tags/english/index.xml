@@ -1,4 +1,4 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>English - 标签 | 菠菜眾長</title><link>https://lruihao.cn/tags/english/</link><description>English - 标签 | 菠菜眾長</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>1024@lruihao.cn (Lruihao)</managingEditor><webMaster>1024@lruihao.cn (Lruihao)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 26 Mar 2024 12:23:44 +0800</lastBuildDate><atom:link href="https://lruihao.cn/tags/english/" rel="self" type="application/rss+xml"/><item><title>写文档时英文标题什么时候要大写？</title><link>https://lruihao.cn/posts/c6bc2d5/</link><pubDate>Tue, 26 Mar 2024 12:23:44 +0800</pubDate><author>Lruihao</author><guid>https://lruihao.cn/posts/c6bc2d5/</guid><description><![CDATA[<p>对于本文的标题的思考来自于 <a href="https://gohugo.io/getting-started/configuration/#titlecasestyle"target="_blank" rel="external nofollow noopener noreferrer">Hugo 配置文档<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>中的一个配置 <code>titleCaseStyle</code>，默认情况下，Hugo 在创建自动章节标题以及使用 <code>strings.Title</code> 函数转换字符串时遵循美联社样本中发布的大小写规则。</p>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>English - 标签 | 菠菜眾長</title><link>https://lruihao.cn/tags/english/</link><description>English - 标签 | 菠菜眾長</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 26 Mar 2024 12:23:44 +0800</lastBuildDate><atom:link href="https://lruihao.cn/tags/english/" rel="self" type="application/rss+xml"/><item><title>写文档时英文标题什么时候要大写？</title><link>https://lruihao.cn/posts/c6bc2d5/</link><pubDate>Tue, 26 Mar 2024 12:23:44 +0800</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/c6bc2d5/</guid><description><![CDATA[<p>对于本文的标题的思考来自于 <a href="https://gohugo.io/getting-started/configuration/#titlecasestyle"target="_blank" rel="external nofollow noopener noreferrer">Hugo 配置文档<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>中的一个配置 <code>titleCaseStyle</code>，默认情况下，Hugo 在创建自动章节标题以及使用 <code>strings.Title</code> 函数转换字符串时遵循美联社样本中发布的大小写规则。</p>
 <p>但是这似乎和我高中所学的英文标题大小写规则有所出入，我记得我的高中英语老师教的是虚词不需要大写的，而不是美联社风格的每个单词都首字母大写。</p>
 <p>经过一番查阅，以下部分内容引用北京师范大学 - 出版科学研究院的一篇文章，<a href="https://pub.bnu.edu.cn/jzyg1/72203.html"target="_blank" rel="external nofollow noopener noreferrer">“出版物中，英文什么时候要大写？ ”<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>。</p>
 <h2 id="标题中的大写规则" class="heading-element"><span>1 标题中的大写规则</span>
@@ -118,7 +118,7 @@
 <li>美术设计根据需要，书名会全部字母大写。</li>
 </ol>
 <p>例如：</p>
-<p>LOOKING AHEAD</p>]]></description></item><item><title>英语语法--主谓一致</title><link>https://lruihao.cn/posts/subject-verb/</link><pubDate>Sat, 12 Jan 2019 13:02:49 +0000</pubDate><author>Lruihao</author><guid>https://lruihao.cn/posts/subject-verb/</guid><description><![CDATA[<!-- markdownlint-disable MD033 -->
+<p>LOOKING AHEAD</p>]]></description></item><item><title>英语语法--主谓一致</title><link>https://lruihao.cn/posts/subject-verb/</link><pubDate>Sat, 12 Jan 2019 13:02:49 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/subject-verb/</guid><description><![CDATA[<!-- markdownlint-disable MD033 -->
 <h2 id="常见情况" class="heading-element"><span>1 常见情况</span>
   <a href="#%e5%b8%b8%e8%a7%81%e6%83%85%e5%86%b5" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
@@ -323,7 +323,7 @@ maths,physicsa（物理）,politics（政治）,classics,economics,Aids,SARs,dia
   <a href="#of-of-%e8%a1%a8%e6%89%80%e5%b1%9e%e6%97%b6%e4%b8%ad%e5%bf%83%e8%af%8d%e5%9c%a8-of-%e4%b9%8b%e5%89%8d%e8%b0%93%e8%af%ad%e5%8a%a8%e8%af%8d%e7%94%b1%e4%b8%ad%e5%bf%83%e8%af%8d%e5%86%b3%e5%ae%9a%e7%89%b9%e4%be%8b%e9%99%a4%e5%a4%96" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2>]]></description></item><item><title>英语语法--形式倒装</title><link>https://lruihao.cn/posts/inversion-3/</link><pubDate>Mon, 10 Dec 2018 21:52:30 +0000</pubDate><author>Lruihao</author><guid>https://lruihao.cn/posts/inversion-3/</guid><description><![CDATA[<blockquote>
+</h2>]]></description></item><item><title>英语语法--形式倒装</title><link>https://lruihao.cn/posts/inversion-3/</link><pubDate>Mon, 10 Dec 2018 21:52:30 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/inversion-3/</guid><description><![CDATA[<blockquote>
 <p>形式倒装，句子本不是本来的语序。</p>
 </blockquote>
 <h3 id="may-位于句首标祝愿" class="heading-element"><span>0.1 may 位于句首，标祝愿</span>
@@ -368,7 +368,7 @@ However <u>difficult(adj.)</u> the problem is,we must work it out today.</li>
 <li>What an interesting talk they had!</li>
 <li>How interesting the talk was!</li>
 </ol>
-]]></description></item><item><title>英语语法--完全倒装</title><link>https://lruihao.cn/posts/inversion-2/</link><pubDate>Mon, 10 Dec 2018 21:14:51 +0000</pubDate><author>Lruihao</author><guid>https://lruihao.cn/posts/inversion-2/</guid><description><![CDATA[<blockquote>
+]]></description></item><item><title>英语语法--完全倒装</title><link>https://lruihao.cn/posts/inversion-2/</link><pubDate>Mon, 10 Dec 2018 21:14:51 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/inversion-2/</guid><description><![CDATA[<blockquote>
 <p>完全倒装：把整个谓语动词放到主语前。</p>
 </blockquote>
 <h3 id="表方位或时间的副词-adv表地点的介词短语位于句首时" class="heading-element"><span>0.1 表方位或时间的副词 (adv)、表地点的介词短语位于句首时</span>
@@ -413,7 +413,7 @@ However <u>difficult(adj.)</u> the problem is,we must work it out today.</li>
 <li>There remains nothing to be done.</li>
 <li>There happened an event last week.</li>
 </ol>
-]]></description></item><item><title>英语语法--部分倒装</title><link>https://lruihao.cn/posts/inversion-1/</link><pubDate>Sat, 08 Dec 2018 17:52:39 +0000</pubDate><author>Lruihao</author><guid>https://lruihao.cn/posts/inversion-1/</guid><description><![CDATA[<blockquote>
+]]></description></item><item><title>英语语法--部分倒装</title><link>https://lruihao.cn/posts/inversion-1/</link><pubDate>Sat, 08 Dec 2018 17:52:39 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/inversion-1/</guid><description><![CDATA[<blockquote>
 <p>虽然我英语四级没过，词汇量也不很多，甚至下降了很多，但是对于英语的语法我还是很喜欢的，马上快四级了又，复习整理一下以前的语法笔记。<strong>以下内容纯手打！！</strong>
 先从倒装句开始吧！分为三大类，部分倒装，完全倒装和形式倒装。先复习第一种。</p>
 </blockquote>

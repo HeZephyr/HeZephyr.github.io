@@ -48,6 +48,6 @@ hexo d -g  //部署
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/blog-backup/  
 

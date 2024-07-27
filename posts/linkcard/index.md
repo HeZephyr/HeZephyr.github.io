@@ -52,6 +52,6 @@ html 链接写法，a 标签加上`class=&#34;card-link&#34;`
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/linkcard/  
 

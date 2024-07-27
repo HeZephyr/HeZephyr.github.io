@@ -86,6 +86,6 @@ void panduan(int a1,int b1,int c1)
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/judgetriangle/  
 

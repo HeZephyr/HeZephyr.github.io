@@ -134,6 +134,6 @@ CASE WHEN &lt;求值表达式&gt; THEN &lt;表达式&gt;
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/sql/  
 

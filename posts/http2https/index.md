@@ -31,6 +31,6 @@ if (window.location.host == host &amp;&amp; window.location.protocol != targetPr
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/http2https/  
 

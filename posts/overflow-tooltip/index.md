@@ -171,6 +171,6 @@ const rangeWidth = range.getBoundingClientRect().width
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/overflow-tooltip/  
 

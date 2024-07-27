@@ -147,6 +147,6 @@ Namespaces are one honking great idea -- let&#39;s do more of those!
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/pysx1/  
 

@@ -72,6 +72,6 @@ $header-height: 3.5rem !default;
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/css-scss-var/  
 

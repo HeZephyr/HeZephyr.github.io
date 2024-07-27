@@ -78,6 +78,6 @@ B: 自动生成 get/set 方法
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/eclipseuse/  
 

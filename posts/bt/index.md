@@ -43,6 +43,6 @@ wget -O install.sh http://download.bt.cn/install/install_6.0.sh &amp;&amp; bash 
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/posts/bt/  
 

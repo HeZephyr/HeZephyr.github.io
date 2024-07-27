@@ -67,6 +67,6 @@ new Vue({ el: &#39;#app-mmt&#39;, data: { message: &#39;&#39; }});
 
 ---
 
-> 作者: [Lruihao](https://github.com/Lruihao)  
+> 作者: [HeZephyr](https://github.com/HeZephyr)  
 > URL: https://lruihao.cn/projects/font-mmt/  
 
