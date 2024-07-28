@@ -1,0 +1,112 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>策略模式 - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/</link><description>策略模式 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 01 May 2022 09:44:58 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F/" rel="self" type="application/rss+xml"/><item><title>设计模式之策略模式详解（Java实现）</title><link>https://lruihao.cn/posts/13.%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%E8%AF%A6%E8%A7%A3java%E5%AE%9E%E7%8E%B0/</link><pubDate>Sun, 01 May 2022 09:44:58 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/13.%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F%E8%AF%A6%E8%A7%A3java%E5%AE%9E%E7%8E%B0/</guid><description><![CDATA[<h2 id="策略模式介绍" class="heading-element"><span>1 策略模式介绍</span>
+  <a href="#%e7%ad%96%e7%95%a5%e6%a8%a1%e5%bc%8f%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在很多情况下，实现某个目标的途径不止一条，例如在外出旅游时游客可以选择多种不同的出行方式，可根据实际情况来确定最适合的出行方式。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/293afe7e145a9bf9ef941bd9281efee7-20231125212746115.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/293afe7e145a9bf9ef941bd9281efee7-20231125212746115.png?size=small" data-sub-html="<h2>image-20220430182337891</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/293afe7e145a9bf9ef941bd9281efee7-20231125212746115.png" alt="image-20220430182337891" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/293afe7e145a9bf9ef941bd9281efee7-20231125212746115.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/293afe7e145a9bf9ef941bd9281efee7-20231125212746115.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/293afe7e145a9bf9ef941bd9281efee7-20231125212746115.png?size=large 2x" data-title="image-20220430182337891" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>在软件开发中，也常常会遇到类似的情况，实现某个功能有多种算法，一种常用的方法是通过硬编码将所有的算法集中在一个类中，在该类中提供多个方法，每个方法对应一个算法；当然也可以将这些算法封装在一个统一的方法中，通过if&hellip;else&hellip;等条件判断选择。这两种实现方法都可以称为硬编码。但这样的方式封装了大量的算法，代码非常复杂，维护也很困难。</p>
+<p>策略模式（Strategy Pattern）定义一些独立的类来封装不同的算法，<font color="red">每一个类封装一种具体的算法，在这里每一个封装算法的类都可以称为一种策略（Strategy），为了保证这些策略在使用时具有一致性，一般会提供一个抽象的策略类来做算法的声明，而每种算法对应于一个具体策略类。</font></p>
+<p>策略模式定义一系列算法，将每一个算法封装起来，并让它们可以相互替换。策略模式让算法可以独立于使用它们的客户而变化。它又称为政策（Policy）模式，是一种对象行为型模式。</p>
+<h2 id="策略模式详解" class="heading-element"><span>2 策略模式详解</span>
+  <a href="#%e7%ad%96%e7%95%a5%e6%a8%a1%e5%bc%8f%e8%af%a6%e8%a7%a3" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="策略模式结构" class="heading-element"><span>2.1 策略模式结构</span>
+  <a href="#%e7%ad%96%e7%95%a5%e6%a8%a1%e5%bc%8f%e7%bb%93%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>其结构图如下：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/a0bafc2ebad2e45b4d50aa5c618086d1.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/a0bafc2ebad2e45b4d50aa5c618086d1.png?size=small" data-sub-html="<h2>image-20220430184548630</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/a0bafc2ebad2e45b4d50aa5c618086d1.png" alt="image-20220430184548630" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/a0bafc2ebad2e45b4d50aa5c618086d1.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/a0bafc2ebad2e45b4d50aa5c618086d1.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/a0bafc2ebad2e45b4d50aa5c618086d1.png?size=large 2x" data-title="image-20220430184548630" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>由图可知，策略模式包含以下3个角色。</p>
+<ol>
+<li>Context（环境类）：环境类是使用算法的角色，它在解决某个问题时可以采用多种策略。<font color="red">在环境类中维持一个对抽象策略类的引用实例，用于定义所采用的策略。</font></li>
+<li>Strategy（抽象策略类）：抽象策略类为所支持的算法声明了抽象方法，是所有策略类的父类，它可以是抽象类或具体类，也可以是接口。<font color="red">环境类通过抽象策略类中声明的方法在运行时调用具体策略类中实现的算法。</font></li>
+<li>ConcreteStrategy（具体策略类）：具体策略类实现了在抽象策略类中声明的算法，在运行时具体策略类将覆盖在环境类中定义的抽象策略类对象，使用一种具体的算法实现某个业务功能。</li>
+</ol>
+<h3 id="策略模式实现" class="heading-element"><span>2.2 策略模式实现</span>
+  <a href="#%e7%ad%96%e7%95%a5%e6%a8%a1%e5%bc%8f%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>抽象策略类典型代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">abstract</span><span class="w"> </span><span class="kd">class</span> <span class="nc">AbstractStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 声明抽象算法</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kd">abstract</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">algorithm</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>具体策略类典型代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">ConcreteStrategyA</span><span class="w"> </span><span class="kd">extends</span><span class="w"> </span><span class="n">AbstractStrategy</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 算法的具体实现</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">algorithm</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="c1">// 算法A</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>环境类典型代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-java" data-lang="java"><span class="line"><span class="cl"><span class="kd">public</span><span class="w"> </span><span class="kd">class</span> <span class="nc">Context</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">private</span><span class="w"> </span><span class="n">AbstractStrategy</span><span class="w"> </span><span class="n">strategy</span><span class="p">;</span><span class="w"> </span><span class="c1">// 维持一个对抽象策略类的引用</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">setStrategy</span><span class="p">(</span><span class="n">AbstractStrategy</span><span class="w"> </span><span class="n">strategy</span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="k">this</span><span class="p">.</span><span class="na">strategy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">strategy</span><span class="p">;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="c1">// 调用策略类中的算法</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="kd">public</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="nf">algorithm</span><span class="p">()</span><span class="w"> </span><span class="p">{</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="n">strategy</span><span class="p">.</span><span class="na">algorithm</span><span class="p">();</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="p">}</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="策略模式应用举例" class="heading-element"><span>2.3 策略模式应用举例</span>
+  <a href="#%e7%ad%96%e7%95%a5%e6%a8%a1%e5%bc%8f%e5%ba%94%e7%94%a8%e4%b8%be%e4%be%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>题目描述</strong></p>
+<blockquote>
+<p>某软件公司为某电影院开发了一套影院售票系统，在该系统中需要为不同类型的用户提供不同的电影票打折方式，具体打折方案如下：*  (1)  学生凭学生证可享受票价8折优惠。
+(2)  年龄在10周岁及以下的儿童可享受每张票减免10元的优惠（原始票价需大于等于20元）。
+(3)  影院VIP用户除享受票价半价优惠外还可进行积分，积分累计到一定额度可换取电影院赠送的奖品。
+该系统在将来可能还要根据需要引入新的打折方式。现使用策略模式设计该影院售票系统的打折方案。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>UML类图</strong>
+<a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/ced8cdbe32c449a8b2780bd9e9113a20.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/ced8cdbe32c449a8b2780bd9e9113a20.png?size=small" data-sub-html="<h2>在这里插入图片描述</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/ced8cdbe32c449a8b2780bd9e9113a20.png" alt="在这里插入图片描述" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/ced8cdbe32c449a8b2780bd9e9113a20.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/ced8cdbe32c449a8b2780bd9e9113a20.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/ced8cdbe32c449a8b2780bd9e9113a20.png?size=large 2x" data-title="在这里插入图片描述" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>其中，MovieTicket充当环境类角色，Discount充当抽象策略角色，StudentDiscount、ChildrenDiscount和VIPDiscount充当具体策略角色。</p>
+</li>
+<li>
+<p><strong>代码</strong></p>
+<p><a href="https://github.com/unique-pure/designpattern_code/tree/main/src/strategy_pattern"target="_blank" rel="external nofollow noopener noreferrer">代码地址<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+</li>
+</ul>
+]]></description></item></channel></rss>

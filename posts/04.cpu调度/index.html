@@ -1,0 +1,291 @@
+<!doctype html><html itemscope itemtype=http://schema.org/WebPage lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=2"><meta name=robots content="noodp"><title>CPU调度 | ZephyrHe</title><meta name=author content="HeZephyr">
+<meta name=author-link content="https://github.com/HeZephyr"><meta name=description content="github代码 1 Program Explanation 程序scheduler.py允许您查看不同调度程序在响应时间、周转时间和总等待时间等调度指标下的执行情况。 “实现”了三个调度程序：FIFO、SJF 和 RR。 要运行该程序获取其选项，可执行以下操作： ./scheduler.py -h 或者 python scheduler.py -h 得到： 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ❯ python scheduler.py -h Usage: scheduler.py [options] Options: -h, --help show this help message and"><meta name=keywords content='OS'><meta itemprop=name content="CPU调度"><meta itemprop=description content="github代码 1 Program Explanation 程序scheduler.py允许您查看不同调度程序在响应时间、周转时间和总等待时间等调度指标下的执行情况。 “实现”了三个调度程序：FIFO、SJF 和 RR。 要运行该程序获取其选项，可执行以下操作： ./scheduler.py -h 或者 python scheduler.py -h 得到： 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ❯ python scheduler.py -h Usage: scheduler.py [options] Options: -h, --help show this help message and"><meta itemprop=datePublished content="2024-04-25T22:32:51+00:00"><meta itemprop=dateModified content="2024-07-28T09:02:18+00:00"><meta itemprop=wordCount content="2537"><meta itemprop=image content="https://lruihao.cn/images/apple-devices-preview.webp"><meta itemprop=keywords content="OS"><meta property="og:url" content="https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/"><meta property="og:site_name" content="ZephyrHe"><meta property="og:title" content="CPU调度"><meta property="og:description" content="github代码 1 Program Explanation 程序scheduler.py允许您查看不同调度程序在响应时间、周转时间和总等待时间等调度指标下的执行情况。 “实现”了三个调度程序：FIFO、SJF 和 RR。 要运行该程序获取其选项，可执行以下操作： ./scheduler.py -h 或者 python scheduler.py -h 得到： 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ❯ python scheduler.py -h Usage: scheduler.py [options] Options: -h, --help show this help message and"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-04-25T22:32:51+00:00"><meta property="article:modified_time" content="2024-07-28T09:02:18+00:00"><meta property="article:tag" content="OS"><meta property="og:image" content="https://lruihao.cn/images/apple-devices-preview.webp"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://lruihao.cn/images/apple-devices-preview.webp"><meta name=twitter:title content="CPU调度"><meta name=twitter:description content="github代码 1 Program Explanation 程序scheduler.py允许您查看不同调度程序在响应时间、周转时间和总等待时间等调度指标下的执行情况。 “实现”了三个调度程序：FIFO、SJF 和 RR。 要运行该程序获取其选项，可执行以下操作： ./scheduler.py -h 或者 python scheduler.py -h 得到： 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 ❯ python scheduler.py -h Usage: scheduler.py [options] Options: -h, --help show this help message and"><meta name=application-name content="Zephyr's Blog"><meta name=apple-mobile-web-app-title content="Zephyr's Blog"><meta name=theme-color data-light=#ffffff data-dark=#252627 content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/><link rel=prev href=https://lruihao.cn/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/><link rel=next href=https://lruihao.cn/posts/05.%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://unpkg.com/@fortawesome/fontawesome-free@6.4.2/css/all.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=https://unpkg.com/@fortawesome/fontawesome-free@6.4.2/css/all.min.css></noscript><link rel=preload href=https://unpkg.com/animate.css@4.1.1/animate.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=https://unpkg.com/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"CPU调度","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/lruihao.cn\/posts\/04.cpu%E8%B0%83%E5%BA%A6\/"},"image":[{"@type":"ImageObject","url":"https:\/\/lruihao.cn\/images\/apple-devices-preview.webp","width":2880,"height":1508}],"genre":"posts","keywords":"OS","wordcount":2537,"url":"https:\/\/lruihao.cn\/posts\/04.cpu%E8%B0%83%E5%BA%A6\/","datePublished":"2024-04-25T22:32:51+00:00","dateModified":"2024-07-28T09:02:18+00:00","license":"本站内容采用 CC BY-NC-SA 4.0 国际许可协议。","publisher":{"@type":"Organization","name":"Lruihao","logo":"https:\/\/lruihao.cn\/images\/avatar.jpg"},"author":{"@type":"Person","name":"HeZephyr"},"description":""}</script></head><body data-header-desktop=sticky data-header-mobile=auto><script>(window.localStorage?.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("data-theme","dark")</script><div class=wrapper data-page-style=normal><header class="desktop animate__faster" id=header-desktop><div class=header-wrapper data-github-corner=right><div class=header-title><a href=/ title=ZephyrHe><img loading=lazy src=/images/logo.png alt=ZephyrHe data-title=ZephyrHe width=26 height=26 class=logo style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span class=header-title-text>HeZephyr</span></a><span class=header-subtitle>贺志飞的博客</span></div><nav><ul class=menu><li class="menu-item has-children"><a class=menu-link href=/archives/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 归档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/collections/><i class="fa-solid fa-layer-group fa-fw fa-sm" aria-hidden=true></i> 合集</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends/ title=友情链接><i class="fa-solid fa-users-viewfinder fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/guestbook/><i class="fa-solid fa-comments fa-fw fa-sm" aria-hidden=true></i> 留言</a></li><li class=menu-item><a class=menu-link href=/about/><i class="fa-solid fa-signature fa-fw fa-sm" aria-hidden=true></i> 关于</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id=search-desktop><input type=text placeholder=搜索文章标题或内容…… id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></li><li class="menu-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></li></ul></nav></div></header><header class="mobile animate__faster" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=ZephyrHe><img loading=lazy src=/images/logo.png alt=ZephyrHe data-title=ZephyrHe width=26 height=26 class=logo style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span class=header-title-text>HeZephyr</span></a><span class=header-subtitle>贺志飞的博客</span></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><nav><ul class=menu id=menu-mobile><li class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章标题或内容…… id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=/archives/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 归档</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/collections/><i class="fa-solid fa-layer-group fa-fw fa-sm" aria-hidden=true></i> 合集</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends/ title=友情链接><i class="fa-solid fa-users-viewfinder fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/guestbook/><i class="fa-solid fa-comments fa-fw fa-sm" aria-hidden=true></i> 留言</a></li><li class=menu-item><a class=menu-link href=/about/><i class="fa-solid fa-signature fa-fw fa-sm" aria-hidden=true></i> 关于</a></li><li class="menu-item text-center"><a class=menu-link href=https://github.com/Lruihao/hugo-blog title=GitHub rel="noopener noreferrer" target=_blank><i class='fa-brands fa-github fa-fw' aria-hidden=true></i></a></li><li class="menu-item menu-system"><span class="menu-system-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></span></li></ul></nav></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><nav aria-label=breadcrumb class="breadcrumb-container sticky"><ol class=breadcrumb><li class=breadcrumb-item><a href=/posts/ title=Posts>文章</a></li><li class="breadcrumb-item active" aria-current=page>CPU调度</li></ol></nav><main class=container><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label=合集><div class="details collection-details open"><div class="details-summary collection-summary"><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i>
+<span class=collection-name data-collections=合集>OSTEP</span>
+<span class=collection-count>39</span><i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden=true></i></div><div class="details-content collection-content"><nav><ul class=collection-list><li class=collection-item><a href=/posts/01.%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D/ title=进程介绍>进程介绍</a></li><li class=collection-item><a href=/posts/02.%E8%BF%9B%E7%A8%8Bapi/ title=进程API>进程API</a></li><li class=collection-item><a href=/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/ title=有限直接执行>有限直接执行</a></li><li class=collection-item><span class=active title=CPU调度>CPU调度</span></li><li class=collection-item><a href=/posts/05.%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97/ title=多级反馈队列>多级反馈队列</a></li><li class=collection-item><a href=/posts/06.%E6%AF%94%E4%BE%8B%E4%BB%BD%E9%A2%9D%E8%B0%83%E5%BA%A6/ title=比例份额调度>比例份额调度</a></li><li class=collection-item><a href=/posts/07.%E5%A4%9Acpu%E8%B0%83%E5%BA%A6/ title=多CPU调度>多CPU调度</a></li><li class=collection-item><a href=/posts/08.%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/ title=地址空间>地址空间</a></li><li class=collection-item><a href=/posts/09.%E5%86%85%E5%AD%98api/ title=内存API>内存API</a></li><li class=collection-item><a href=/posts/10.%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2/ title=地址转换>地址转换</a></li><li class=collection-item><a href=/posts/11.%E6%AE%B5/ title=段>段</a></li><li class=collection-item><a href=/posts/12.%E7%A9%BA%E9%97%B2%E7%A9%BA%E9%97%B4%E7%AE%A1%E7%90%86/ title=空闲空间管理>空闲空间管理</a></li><li class=collection-item><a href=/posts/13.%E9%A1%B5/ title=页>页</a></li><li class=collection-item><a href=/posts/14.%E5%BF%AB%E8%A1%A8/ title=快表>快表</a></li><li class=collection-item><a href=/posts/15.%E9%AB%98%E7%BA%A7%E9%A1%B5%E8%A1%A8/ title=高级页表>高级页表</a></li><li class=collection-item><a href=/posts/16.%E9%A1%B5%E9%9D%A2%E4%BA%A4%E6%8D%A2/ title=页面交换>页面交换</a></li><li class=collection-item><a href=/posts/17.%E4%BA%A4%E6%8D%A2%E7%AD%96%E7%95%A5/ title=交换策略>交换策略</a></li><li class=collection-item><a href=/posts/18.%E5%AE%8C%E6%95%B4vm%E7%B3%BB%E7%BB%9F/ title=完整VM系统>完整VM系统</a></li><li class=collection-item><a href=/posts/19.%E5%B9%B6%E5%8F%91%E5%92%8C%E7%BA%BF%E7%A8%8B/ title=并发和线程>并发和线程</a></li><li class=collection-item><a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ title=线程API>线程API</a></li><li class=collection-item><a href=/posts/21.%E9%94%81/ title=锁>锁</a></li><li class=collection-item><a href=/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=锁定数据结构>锁定数据结构</a></li><li class=collection-item><a href=/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/ title=条件变量>条件变量</a></li><li class=collection-item><a href=/posts/24.%E4%BF%A1%E5%8F%B7%E9%87%8F/ title=信号量>信号量</a></li><li class=collection-item><a href=/posts/25.%E5%B9%B6%E5%8F%91bug/ title=并发bug>并发bug</a></li><li class=collection-item><a href=/posts/26.%E5%9F%BA%E4%BA%8E%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%B9%B6%E5%8F%91/ title=基于事件的并发>基于事件的并发</a></li><li class=collection-item><a href=/posts/27.io%E8%AE%BE%E5%A4%87/ title=IO设备>IO设备</a></li><li class=collection-item><a href=/posts/28.%E7%A1%AC%E7%9B%98%E9%A9%B1%E5%8A%A8%E5%99%A8/ title=硬盘驱动器>硬盘驱动器</a></li><li class=collection-item><a href=/posts/29.%E5%BB%89%E4%BB%B7%E7%A3%81%E7%9B%98%E5%86%97%E4%BD%99%E9%98%B5%E5%88%97/ title=廉价磁盘冗余阵列>廉价磁盘冗余阵列</a></li><li class=collection-item><a href=/posts/30.%E6%96%87%E4%BB%B6%E5%92%8C%E7%9B%AE%E5%BD%95/ title=文件和目录>文件和目录</a></li><li class=collection-item><a href=/posts/31.%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%AE%9E%E7%8E%B0/ title=文件系统实现>文件系统实现</a></li><li class=collection-item><a href=/posts/32.%E5%BF%AB%E9%80%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=快速文件系统>快速文件系统</a></li><li class=collection-item><a href=/posts/33.fsck%E5%92%8C%E6%97%A5%E5%BF%97/ title=FSCK和日志>FSCK和日志</a></li><li class=collection-item><a href=/posts/34.%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=日志结构文件系统>日志结构文件系统</a></li><li class=collection-item><a href=/posts/35.%E5%9F%BA%E4%BA%8E%E9%97%AA%E5%AD%98%E7%9A%84ssd/ title=基于闪存的SSD>基于闪存的SSD</a></li><li class=collection-item><a href=/posts/36.%E6%95%B0%E6%8D%AE%E5%AE%8C%E6%95%B4%E6%80%A7%E5%92%8C%E4%BF%9D%E6%8A%A4/ title=数据完整性和保护>数据完整性和保护</a></li><li class=collection-item><a href=/posts/37.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/ title=分布式系统>分布式系统</a></li><li class=collection-item><a href=/posts/38.%E7%BD%91%E7%BB%9C%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=网络文件系统>网络文件系统</a></li><li class=collection-item><a href=/posts/39.andrew%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=Andrew文件系统>Andrew文件系统</a></li></ul><div class=collection-nav-simple><a href=/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/ class=collection-nav-item rel=prev title=有限直接执行><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i></a><span class=text-secondary>4/39</span><a href=/posts/05.%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97/ class=collection-nav-item rel=next title=多级反馈队列><i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></nav></div></div></aside><article class="page single"><div class=header><h1 class="single-title animate__animated animate__flipInX"><span>CPU调度</span></h1></div><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://github.com/HeZephyr title=作者 target=_blank rel="external nofollow noopener noreferrer author" class=author><img loading=lazy src="https://cn.gravatar.com/avatar/65f6ab71abcb9d540eb32a2704884927?s=32&amp;d=mp" alt=HeZephyr data-title=HeZephyr width=20 height=20 class=avatar style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'>&nbsp;HeZephyr</a></span><span class=post-included-in>&nbsp;收录于 <a href=/categories/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/ class=post-category title="分类 - 系统架构"><i class="fa-regular fa-folder fa-fw" aria-hidden=true></i> 系统架构</a> 和 <a href=/collections/ostep/ class=post-collection title="合集 - OSTEP"><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i> OSTEP</a></span></div><div class=post-meta-line><span title="发布于 2024-04-25 22:32:51"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden=true></i><time datetime=2024-04-25>2024-04-25</time></span>&nbsp;<span title="更新于 2024-07-28 09:02:18"><i class="fa-regular fa-calendar-check fa-fw me-1" aria-hidden=true></i><time datetime=2024-07-28>2024-07-28</time></span>&nbsp;<span title="2537 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden=true></i>约 2600 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden=true></i>预计阅读 6 分钟</span>&nbsp;<span id=busuanzi_container_page_pv class="busuanzi_visitors comment-visitors" data-flag-title=CPU调度>
+<i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_page_pv>-</span>&nbsp;次阅读
+</span>&nbsp;</div></div><div class="details toc" id=toc-static data-kept=false><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fa-solid fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ol><li><a href=#program-explanation>Program Explanation</a></li><li><a href=#qa>QA</a></li></ol></nav></div></div><div class=content id=content data-end-flag="「本文完，更多内容汇总在我的 GitHub与CSDN，持续更新，求关注、求 star、求订阅！」"><p><a href=https://github.com/unique-pure/ostep/blob/main/Virtualization/04.CPU%20Scheduling/README.md target=_blank rel="external nofollow noopener noreferrer">github代码<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden=true></i></a></p><h2 id=program-explanation class=heading-element><span>1 Program Explanation</span>
+<a href=#program-explanation class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>程序<code>scheduler.py</code>允许您查看不同调度程序在响应时间、周转时间和总等待时间等调度指标下的执行情况。 “实现”了三个调度程序：FIFO、SJF 和 RR。
+要运行该程序获取其选项，可执行以下操作：
+<code>./scheduler.py -h</code>
+或者
+<code>python scheduler.py -h</code>
+得到：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>❯ python scheduler.py -h
+</span></span><span class=line><span class=cl>Usage: scheduler.py [options]
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Options:
+</span></span><span class=line><span class=cl>  -h, --help            show this help message and exit
+</span></span><span class=line><span class=cl>  -s SEED, --seed=SEED  the random seed
+</span></span><span class=line><span class=cl>  -j JOBS, --jobs=JOBS  number of jobs in the system
+</span></span><span class=line><span class=cl>  -l JLIST, --jlist=JLIST
+</span></span><span class=line><span class=cl>                        instead of random jobs, provide a comma-separated list
+</span></span><span class=line><span class=cl>                        of run times
+</span></span><span class=line><span class=cl>  -m MAXLEN, --maxlen=MAXLEN
+</span></span><span class=line><span class=cl>                        max length of job
+</span></span><span class=line><span class=cl>  -p POLICY, --policy=POLICY
+</span></span><span class=line><span class=cl>                        sched policy to use: SJF, FIFO, RR
+</span></span><span class=line><span class=cl>  -q QUANTUM, --quantum=QUANTUM
+</span></span><span class=line><span class=cl>                        length of time slice for RR policy
+</span></span><span class=line><span class=cl>  -c                    compute answers for me</span></span></code></pre></td></tr></table></div></div><p>首先，在不带 -c 选项的情况下运行：这会向您显示要解决的问题而不透露答案。例如，如果您想要使用 FIFO 策略计算响应、周转和等待三个作业，请运行以下命令：
+<code>python scheduler.py -p FIFO -j 3 -s 100</code>
+这指定了具有三个作业的 FIFO 策略，而且重要的是，指定了 100 的特定随机种子。如果您想查看该问题的解决方案，则必须再次指定该完全相同的随机种子。让我们运行一下，看看会发生什么。这是您应该看到的：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-gdscript3 data-lang=gdscript3><span class=line><span class=cl><span class=err>❯</span> <span class=n>python</span> <span class=n>scheduler</span><span class=o>.</span><span class=n>py</span> <span class=o>-</span><span class=n>p</span> <span class=n>FIFO</span> <span class=o>-</span><span class=n>j</span> <span class=mi>3</span> <span class=o>-</span><span class=n>s</span> <span class=mi>100</span>
+</span></span><span class=line><span class=cl><span class=n>ARG</span> <span class=n>policy</span> <span class=n>FIFO</span>
+</span></span><span class=line><span class=cl><span class=n>ARG</span> <span class=n>jobs</span> <span class=mi>3</span>
+</span></span><span class=line><span class=cl><span class=n>ARG</span> <span class=n>maxlen</span> <span class=mi>10</span>
+</span></span><span class=line><span class=cl><span class=n>ARG</span> <span class=nb>seed</span> <span class=mi>100</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>Here</span> <span class=n>is</span> <span class=n>the</span> <span class=n>job</span> <span class=n>list</span><span class=p>,</span> <span class=n>with</span> <span class=n>the</span> <span class=n>run</span> <span class=n>time</span> <span class=n>of</span> <span class=n>each</span> <span class=n>job</span><span class=p>:</span> 
+</span></span><span class=line><span class=cl>  <span class=n>Job</span> <span class=mi>0</span> <span class=p>(</span> <span class=n>length</span> <span class=o>=</span> <span class=mi>2</span> <span class=p>)</span>
+</span></span><span class=line><span class=cl>  <span class=n>Job</span> <span class=mi>1</span> <span class=p>(</span> <span class=n>length</span> <span class=o>=</span> <span class=mi>5</span> <span class=p>)</span>
+</span></span><span class=line><span class=cl>  <span class=n>Job</span> <span class=mi>2</span> <span class=p>(</span> <span class=n>length</span> <span class=o>=</span> <span class=mi>8</span> <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>Compute</span> <span class=n>the</span> <span class=n>turnaround</span> <span class=n>time</span><span class=p>,</span> <span class=n>response</span> <span class=n>time</span><span class=p>,</span> <span class=ow>and</span> <span class=n>wait</span> <span class=n>time</span> <span class=k>for</span> <span class=n>each</span> <span class=n>job</span><span class=o>.</span>
+</span></span><span class=line><span class=cl><span class=n>When</span> <span class=n>you</span> <span class=n>are</span> <span class=n>done</span><span class=p>,</span> <span class=n>run</span> <span class=n>this</span> <span class=n>program</span> <span class=n>again</span><span class=p>,</span> <span class=n>with</span> <span class=n>the</span> <span class=n>same</span> <span class=n>arguments</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=n>but</span> <span class=n>with</span> <span class=o>-</span><span class=n>c</span><span class=p>,</span> <span class=n>which</span> <span class=n>will</span> <span class=n>thus</span> <span class=n>provide</span> <span class=n>you</span> <span class=n>with</span> <span class=n>the</span> <span class=n>answers</span><span class=o>.</span> <span class=n>You</span> <span class=n>can</span> <span class=n>use</span>
+</span></span><span class=line><span class=cl><span class=o>-</span><span class=n>s</span> <span class=o>&lt;</span><span class=n>somenumber</span><span class=o>&gt;</span> <span class=ow>or</span> <span class=n>your</span> <span class=n>own</span> <span class=n>job</span> <span class=n>list</span> <span class=p>(</span><span class=o>-</span><span class=n>l</span> <span class=mi>10</span><span class=p>,</span><span class=mi>15</span><span class=p>,</span><span class=mi>20</span> <span class=k>for</span> <span class=n>example</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>to</span> <span class=n>generate</span> <span class=n>different</span> <span class=n>problems</span> <span class=k>for</span> <span class=n>yourself</span><span class=o>.</span></span></span></code></pre></td></tr></table></div></div><p>计算每个作业的周转时间、响应时间和等待时间。完成后，使用相同的参数再次运行该程序，但使用 -c选项，这将为您提供答案。您可以使用 -s 或您自己的作业列表（例如 -l 10,15,20）为自己生成不同的问题。
+从这个例子中可以看出，生成了三个作业：长度为 2 的作业 0、长度为 5 的作业 1 和长度为 8 的作业 2。正如程序所述，您现在可以使用它来计算一些统计数据，看看是否可以掌握基本概念。
+完成后，您可以使用相同的程序来“解决”问题并查看您的工作是否正确。为此，请使用“-c”选项。输出：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>❯ python scheduler.py -p FIFO -j 3 -s 100 -c
+</span></span><span class=line><span class=cl>ARG policy FIFO
+</span></span><span class=line><span class=cl>ARG jobs 3
+</span></span><span class=line><span class=cl>ARG maxlen 10
+</span></span><span class=line><span class=cl>ARG seed 100
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Here is the job list, with the run time of each job: 
+</span></span><span class=line><span class=cl>  Job 0 ( length = 2 )
+</span></span><span class=line><span class=cl>  Job 1 ( length = 5 )
+</span></span><span class=line><span class=cl>  Job 2 ( length = 8 )
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>** Solutions **
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Execution trace:
+</span></span><span class=line><span class=cl>  [ time   0 ] Run job 0 for 2.00 secs ( DONE at 2.00 )
+</span></span><span class=line><span class=cl>  [ time   2 ] Run job 1 for 5.00 secs ( DONE at 7.00 )
+</span></span><span class=line><span class=cl>  [ time   7 ] Run job 2 for 8.00 secs ( DONE at 15.00 )
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Final statistics:
+</span></span><span class=line><span class=cl>  Job   0 -- Response: 0.00  Turnaround 2.00  Wait 0.00
+</span></span><span class=line><span class=cl>  Job   1 -- Response: 2.00  Turnaround 7.00  Wait 2.00
+</span></span><span class=line><span class=cl>  Job   2 -- Response: 7.00  Turnaround 15.00  Wait 7.00
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  Average -- Response: 3.00  Turnaround 8.00  Wait 3.00</span></span></code></pre></td></tr></table></div></div><p>从上述输出我们可以看到，作业0首先运行了2秒，作业2接着运行了5秒，最后作业2运行了8秒。
+最终的统计数据也很有用：它们计算“响应时间”（作业到达后第一次运行之前等待所花费的时间）、“周转时间”（自第一次到达以来完成作业所花费的时间）以及总时间。 “等待时间”（准备好但未运行的任何时间）。统计数据按作业显示，然后显示所有作业的平均值。当然，您应该在使用“-c”选项运行之前计算出所有这些内容！
+如果您想尝试相同类型的问题但使用不同的输入，请尝试更改作业数量或随机种子或同时更改两者。不同的随机种子基本上为您提供了一种为自己生成无数不同问题的方法，并且“-c”选项可以让您检查自己的工作。继续这样做，直到您觉得自己真正理解了这些概念。
+另一个有用的选项是“-l”（这是一个小写的 L），它可以让您指定您希望看到的计划的确切作业。例如，如果您想了解 SJF 如何执行长度为 5、10 和 15 的三个作业，您可以运行：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-gdscript3 data-lang=gdscript3><span class=line><span class=cl><span class=err>❯</span> <span class=n>python</span> <span class=n>scheduler</span><span class=o>.</span><span class=n>py</span> <span class=o>-</span><span class=n>p</span> <span class=n>SJF</span> <span class=o>-</span><span class=n>l</span> <span class=mi>5</span><span class=p>,</span><span class=mi>10</span><span class=p>,</span><span class=mi>15</span>
+</span></span><span class=line><span class=cl><span class=n>ARG</span> <span class=n>policy</span> <span class=n>SJF</span>
+</span></span><span class=line><span class=cl><span class=n>ARG</span> <span class=n>jlist</span> <span class=mi>5</span><span class=p>,</span><span class=mi>10</span><span class=p>,</span><span class=mi>15</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>Here</span> <span class=n>is</span> <span class=n>the</span> <span class=n>job</span> <span class=n>list</span><span class=p>,</span> <span class=n>with</span> <span class=n>the</span> <span class=n>run</span> <span class=n>time</span> <span class=n>of</span> <span class=n>each</span> <span class=n>job</span><span class=p>:</span> 
+</span></span><span class=line><span class=cl>  <span class=n>Job</span> <span class=mi>0</span> <span class=p>(</span> <span class=n>length</span> <span class=o>=</span> <span class=mf>5.0</span> <span class=p>)</span>
+</span></span><span class=line><span class=cl>  <span class=n>Job</span> <span class=mi>1</span> <span class=p>(</span> <span class=n>length</span> <span class=o>=</span> <span class=mf>10.0</span> <span class=p>)</span>
+</span></span><span class=line><span class=cl>  <span class=n>Job</span> <span class=mi>2</span> <span class=p>(</span> <span class=n>length</span> <span class=o>=</span> <span class=mf>15.0</span> <span class=p>)</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=n>Compute</span> <span class=n>the</span> <span class=n>turnaround</span> <span class=n>time</span><span class=p>,</span> <span class=n>response</span> <span class=n>time</span><span class=p>,</span> <span class=ow>and</span> <span class=n>wait</span> <span class=n>time</span> <span class=k>for</span> <span class=n>each</span> <span class=n>job</span><span class=o>.</span>
+</span></span><span class=line><span class=cl><span class=n>When</span> <span class=n>you</span> <span class=n>are</span> <span class=n>done</span><span class=p>,</span> <span class=n>run</span> <span class=n>this</span> <span class=n>program</span> <span class=n>again</span><span class=p>,</span> <span class=n>with</span> <span class=n>the</span> <span class=n>same</span> <span class=n>arguments</span><span class=p>,</span>
+</span></span><span class=line><span class=cl><span class=n>but</span> <span class=n>with</span> <span class=o>-</span><span class=n>c</span><span class=p>,</span> <span class=n>which</span> <span class=n>will</span> <span class=n>thus</span> <span class=n>provide</span> <span class=n>you</span> <span class=n>with</span> <span class=n>the</span> <span class=n>answers</span><span class=o>.</span> <span class=n>You</span> <span class=n>can</span> <span class=n>use</span>
+</span></span><span class=line><span class=cl><span class=o>-</span><span class=n>s</span> <span class=o>&lt;</span><span class=n>somenumber</span><span class=o>&gt;</span> <span class=ow>or</span> <span class=n>your</span> <span class=n>own</span> <span class=n>job</span> <span class=n>list</span> <span class=p>(</span><span class=o>-</span><span class=n>l</span> <span class=mi>10</span><span class=p>,</span><span class=mi>15</span><span class=p>,</span><span class=mi>20</span> <span class=k>for</span> <span class=n>example</span><span class=p>)</span>
+</span></span><span class=line><span class=cl><span class=n>to</span> <span class=n>generate</span> <span class=n>different</span> <span class=n>problems</span> <span class=k>for</span> <span class=n>yourself</span><span class=o>.</span></span></span></code></pre></td></tr></table></div></div><p>计算完后还是通过-c选项获得答案。指定确切的作业时，无须指定随机种子或者作业数量。
+我们最后测试一下RR，可以运行：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>❯ python scheduler.py -p RR -l 5,10,15 -c
+</span></span><span class=line><span class=cl>ARG policy RR
+</span></span><span class=line><span class=cl>ARG jlist 5,10,15
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Here is the job list, with the run time of each job: 
+</span></span><span class=line><span class=cl>  Job 0 ( length = 5.0 )
+</span></span><span class=line><span class=cl>  Job 1 ( length = 10.0 )
+</span></span><span class=line><span class=cl>  Job 2 ( length = 15.0 )
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>** Solutions **
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Execution trace:
+</span></span><span class=line><span class=cl>  [ time   0 ] Run job   0 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   1 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   2 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   3 ] Run job   0 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   4 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   5 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   6 ] Run job   0 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   7 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   8 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time   9 ] Run job   0 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  10 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  11 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  12 ] Run job   0 for 1.00 secs ( DONE at 13.00 )
+</span></span><span class=line><span class=cl>  [ time  13 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  14 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  15 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  16 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  17 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  18 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  19 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  20 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  21 ] Run job   1 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  22 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  23 ] Run job   1 for 1.00 secs ( DONE at 24.00 )
+</span></span><span class=line><span class=cl>  [ time  24 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  25 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  26 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  27 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  28 ] Run job   2 for 1.00 secs
+</span></span><span class=line><span class=cl>  [ time  29 ] Run job   2 for 1.00 secs ( DONE at 30.00 )
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>Final statistics:
+</span></span><span class=line><span class=cl>  Job   0 -- Response: 0.00  Turnaround 13.00  Wait 8.00
+</span></span><span class=line><span class=cl>  Job   1 -- Response: 1.00  Turnaround 24.00  Wait 14.00
+</span></span><span class=line><span class=cl>  Job   2 -- Response: 2.00  Turnaround 30.00  Wait 15.00
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>  Average -- Response: 1.00  Turnaround 22.33  Wait 12.33</span></span></code></pre></td></tr></table></div></div><h2 id=qa class=heading-element><span>2 QA</span>
+<a href=#qa class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><blockquote><p>以下问题都可以通过<code>scheduler.py</code>进行验证</p></blockquote><ol><li>使用 SJF 和 FIFO 调度器运行长度为 200 的三个作业时，计算响应时间和周转时间<ul><li>SJF
+$turnaround = \frac{200-0+400-0+600-0}{3}=400$
+$response=\frac{0+200+400}{3}=200$</li><li>FIFO
+跟SJF一样</li></ul></li><li>现在执行相同的操作，但使用不同长度的作业：100、200 和 300。<ul><li>SJF
+$turnaround = \frac{100-0+300-0+600-0}{3}=333$
+$response=\frac{0+100+300}{3}=133$</li><li>FIFO
+由于到达时间是一样，所以调度具有不确定性，最佳方案就是和SJF一样。</li></ul></li><li>现在执行相同的操作，但也使用 RR 调度程序和时间片 1
+对于RR，$response=\frac{0+1+2}{3}=1$
+$turnaround=\frac{298+499+600}{3}=265.67$</li><li>在哪些类型的工作负载中，SJF 的周转时间与 FIFO 相同？<blockquote><p>SJF 始终提供与 FIFO 相同的周转时间，除非较短的作业在较长的作业之后到达。只要所有作业长度相等或按升序到达，周转时间就会相同。</p></blockquote></li><li>在哪些类型的工作负载和时间片长度下，SJF 可以提供与 RR 相同的响应时间？<blockquote><p>如果所有作业长度(x)相同，且时间片长度(q)=x，在这种情况下，SJF提供与RR相同的响应时间。通过运行以下代码验证：
+<code>./scheduler.py -p SJF -l 100,100,100 -c</code>
+<code>./scheduler.py -p RR -l 100,100,100 -c -q 100</code></p></blockquote></li><li>随着作业长度的增加，SJF 的响应时间会发生什么变化？您能否使用模拟器来演示这一趋势？<blockquote><p>如果我们将每个工作的长度加倍，平均响应时间也会加倍。这意味着工作长度和响应时间之间存在线性关系。</p></blockquote></li><li>随着时间片长度的增加，RR 的响应时间会发生什么变化？你能写出一个方程，在给定 N 个作业的情况下给出最坏情况的响应时间吗？<blockquote><p>响应时间随着时间片长度的增加而线性增加。令 N 为作业数量，q 为时间片长度，则最坏情况的响应时间为 $\frac{(N-1)q}{N}$。</p></blockquote></li></ol></div><hr class=awesome-hr><h2 id=see-also>相关内容</h2><ul><li><a href=/posts/01.%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D/ title=进程介绍>进程介绍</a></li><li><a href=/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/ title=有限直接执行>有限直接执行</a></li><li><a href=/posts/02.%E8%BF%9B%E7%A8%8Bapi/ title=进程API>进程API</a></li><li><a href=/posts/02.c%E8%AF%AD%E8%A8%80%E5%A6%82%E4%BD%95%E4%BB%8E%E4%B8%80%E5%AE%9A%E8%8C%83%E5%9B%B4%E5%86%85%E7%94%9F%E6%88%90%E9%9A%8F%E6%9C%BA%E6%95%B4%E6%95%B0/ title=如何使用C语言从一定范围内生成随机整数？>如何使用C语言从一定范围内生成随机整数？</a></li><li><a href=/posts/02.%E9%95%9C%E5%83%8F/ title=镜像网站>镜像网站</a></li></ul><div class=post-reward><div class=comment>Buy me a coffee~</div><input type=checkbox class=reward-input name=reward id=fi-reward hidden>
+<label class=reward-button for=fi-reward><i class="fa-solid fa-qrcode fa-fw" aria-hidden=true></i>赞赏</label><div class=reward-ways data-mode=fixed><div><img loading=lazy src=/images/alipay.png alt="HeZephyr 支付宝" data-title="HeZephyr 支付宝" style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span data-animation>支付宝</span></div><div><img loading=lazy src=/images/wechatpay.jpg alt="HeZephyr 微信" data-title="HeZephyr 微信" style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span data-animation>微信</span></div></div></div><div class=collection-card><div class="collection-title text-secondary">收录于 <a href=/collections/ostep/><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i> <span>合集・OSTEP</span></span></a> 39</div><div class=collection-nav><a href=/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/ class=collection-nav-item rel=prev title=有限直接执行><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i><span>有限直接执行</span>
+</a><a href=/posts/05.%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97/ class=collection-nav-item rel=next title=多级反馈队列><span>多级反馈队列</span><i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span title="更新于 2024-07-28 09:02:18">更新于 2024-07-28&nbsp;</span></div><div class=post-info-license><span><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-sa/4.0/ target=_blank>CC BY-NC-SA 4.0</a></span></div></div><div class=post-info-line><div class=post-info-md><span><a href=/posts/04.cpu%E8%B0%83%E5%BA%A6/index.md title=阅读原始文档 class=link-to-markdown>阅读原始文档</a></span><span><a href="https://github.com/Lruihao/hugo-blog/blob/docs/content/posts/_develop/_system/ostep/04.CPU%e8%b0%83%e5%ba%a6.md?plain=1" title=查看源码 target=_blank rel="external nofollow noopener noreferrer" class=link-to-source>查看源码</a></span><span><a href=https://github.com/Lruihao/hugo-blog/edit/docs/content/posts/_develop/_system/ostep/04.CPU%e8%b0%83%e5%ba%a6.md title=编辑此页 target=_blank rel="external nofollow noopener noreferrer" class=link-to-edit>编辑此页</a></span><span><a href="https://github.com/Lruihao/hugo-blog/issues/new?title=[BUG]%20CPU%E8%B0%83%E5%BA%A6&amp;body=%7cField%7cValue%7c%0A%7c-%7c-%7c%0A%7cTitle%7cCPU%E8%B0%83%E5%BA%A6%7c%0A%7cURL%7chttps://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/%7c%0A%7cFilename%7chttps://github.com/Lruihao/hugo-blog/blob/docs/content/posts/_develop/_system/ostep/04.CPU%e8%b0%83%e5%ba%a6.md?plain=1%7c" title=报告问题 target=_blank rel="external nofollow noopener noreferrer" class=link-to-report>报告问题</a></span></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 X" data-sharer=twitter data-url=https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/ data-title=CPU调度 data-hashtags=OS><i class="fa-brands fa-x-twitter fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/ data-hashtag=OS><i class="fa-brands fa-facebook-square fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Linkedin" data-sharer=linkedin data-url=https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/><i class="fa-brands fa-linkedin fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/ data-title=CPU调度><i class="fa-brands fa-weibo fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 百度" data-sharer=baidu data-url=https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/ data-title=CPU调度><i data-svg-src=https://unpkg.com/simple-icons@9.19.0/icons/baidu.svg aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fa-solid fa-tags fa-fw me-1" aria-hidden=true></i><a href=/tags/os/ class=post-tag title="标签 - OS">OS</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/05.%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97/ class=post-nav-item rel=prev title=多级反馈队列><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i>多级反馈队列</a>
+<a href=/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/ class=post-nav-item rel=next title=有限直接执行>有限直接执行<i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=giscus class=comment><script src=https://giscus.app/client.js data-repo=Lruihao/hugo-blog data-repo-id="MDEwOlJlcG9zaXRvcnk0MDQzNDY3MDk=" data-category=General data-category-id=DIC_kwDOGBnXVc4CApHL data-mapping=title data-strict=0 data-theme=preferred_color_scheme data-reactions-enabled=1 data-emit-metadata=0 data-input-position=bottom data-lang=zh-CN data-loading=lazy crossorigin=anonymous async defer></script></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/ rel="external nofollow noopener noreferrer">giscus</a>.</noscript></div></article><aside class=toc id=toc-auto aria-label=目录><h2 class=toc-title>目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden=true></i></h2><div class=toc-content id=toc-content-auto></div></aside></main><footer class=footer><div class=footer-container><div class="footer-line powered order-1">由 <a href=https://gohugo.io/ target=_blank rel="external nofollow noopener noreferrer" title="Hugo 0.129.0"><img class=hugo-icon src=/images/hugo.min.svg alt="Hugo logo"> Hugo</a> 强力驱动 | 主题 - <a href=https://github.com/hugo-fixit/FixIt target=_blank rel=external title="FixIt v0.3.9-RC"><img class=fixit-icon src=/images/fixit.min.svg alt="FixIt logo"> FixIt</a></div><div class="footer-line copyright order-2" itemscope itemtype=http://schema.org/CreativeWork><i class="fa-regular fa-copyright fa-fw" aria-hidden=true></i>
+<span itemprop=copyrightYear>2020 - 2024</span><span class=author itemprop=copyrightHolder>
+<a href=https://github.com/HeZephyr target=_blank rel="external nofollow noopener noreferrer">HeZephyr</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-sa/4.0/ target=_blank>CC BY-NC-SA 4.0</a></span></div><div class="footer-line statistics"><span class=site-time title=网站运行中……><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden=true></i><span class="ms-1 d-none">博客已运行</span><span class="run-times ms-1">网站运行中……</span></span></div><div class="footer-line visitor order-first"><span id=busuanzi_container_site_uv title=总访客数><i class="fa-regular fa-user fa-fw" aria-hidden=true></i>&nbsp;<span id=busuanzi_value_site_uv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span><span id=busuanzi_container_site_pv class=footer-divider title=总访问量><i class="fa-regular fa-eye fa-fw" aria-hidden=true></i>&nbsp;<span id=busuanzi_value_site_pv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span></div></div></footer></div><div class=widgets><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role=button aria-label=回到顶部><i class="fa-solid fa-arrow-up fa-fw" aria-hidden=true></i><span class=variant-numeric>0%</span></div><div class="fixed-button view-comments d-none" role=button aria-label=查看评论><i class="fa-solid fa-comment fa-fw" aria-hidden=true></i></div></div><a href=https://github.com/HeZephyr title="View on GitHub" target=_blank rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0 0 115 115h15l12 27L250 250V0z"/><path d="M128.3 109C113.8 99.7 119 89.6 119 89.6 122 82.7 120.5 78.6 120.5 78.6 119.2 72 123.4 76.3 123.4 76.3 127.3 80.9 125.5 87.3 125.5 87.3 122.9 97.6 130.6 101.9 134.4 103.2" fill="currentcolor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115 115C114.9 115.1 118.7 116.5 119.8 115.4l13.9-13.8C136.9 99.2 139.9 98.4 142.2 98.6 133.8 88 127.5 74.4 143.8 58 148.5 53.4 154 51.2 159.7 51 160.3 49.4 163.2 43.6 171.4 40.1 171.4 40.1 176.1 42.5 178.8 56.2 183.1 58.6 187.2 61.8 190.9 65.4 194.5 69 197.7 73.2 200.1 77.6 213.8 80.2 216.3 84.9 216.3 84.9 212.7 93.1 206.9 96 205.4 96.6 205.1 102.4 203 107.8 198.3 112.5 181.9 128.9 168.3 122.5 157.7 114.1 157.9 116.9 156.7 120.9 152.7 124.9L141 136.5C139.8 137.7 141.6 141.9 141.8 141.8z" fill="currentcolor" class="octo-body"/></svg></a><div id=mask></div><div class=reading-progress-bar style=left:0;top:0;--bg-progress:#8581dd;--bg-progress-dark:#fff></div><noscript><div class=noscript-warning>该网站在启用 JavaScript 的情况下效果最佳。</div></noscript></div><link rel=stylesheet href=https://unpkg.com/lightgallery@2.7.2/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://unpkg.com/cookieconsent@3.1.1/build/cookieconsent.min.css><link rel=stylesheet href=https://unpkg.com/pace-js@1.2.4/themes/blue/pace-theme-minimal.css><script src=https://unpkg.com/autocomplete.js@0.38.1/dist/autocomplete.min.js defer></script><script src=https://unpkg.com/algoliasearch@4.20.0/dist/algoliasearch-lite.umd.js defer></script><script src=https://unpkg.com/instant.page@5.2.0/instantpage.js async defer type=module></script><script src=https://unpkg.com/lightgallery@2.7.2/lightgallery.min.js defer></script><script src=https://unpkg.com/lightgallery@2.7.2/plugins/thumbnail/lg-thumbnail.min.js defer></script><script src=https://unpkg.com/lightgallery@2.7.2/plugins/zoom/lg-zoom.min.js defer></script><script src=https://unpkg.com/sharer.js@0.5.1/sharer.min.js async defer></script><script src=https://unpkg.com/cookieconsent@3.1.1/build/cookieconsent.min.js defer></script><script src=https://unpkg.com/pangu@4.0.7/dist/browser/pangu.min.js defer></script><script src=https://unpkg.com/cell-watermark@1.0.3/src/watermark.min.js defer></script><script src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js async defer></script><script src=https://unpkg.com/pace-js@1.2.4/pace.min.js async defer></script><script src=/js/flyfish.js defer></script><script>window.config={autoBookmark:!0,code:{copyTitle:"复制到剪贴板",editLockTitle:"锁定可编辑代码块",editUnLockTitle:"解锁可编辑代码块",editable:!0,maxShownLines:50},comment:{enable:!0,expired:!1,giscus:{darkTheme:"dark_dimmed",lightTheme:"light",origin:"https://giscus.app"}},cookieconsent:{content:{dismiss:"同意",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验。"},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},enablePWA:!0,lightgallery:!0,pangu:{enable:!0,selector:"article"},search:{algoliaAppID:"MTJNHU0JVB",algoliaIndex:"index",algoliaSearchKey:"5486225134d99f43826da401ee9bad57",highlightTag:"em",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"algolia"},siteTime:"2020-06-10T15:42:01+08:00",version:"v0.3.9-RC",watermark:{colspacing:30,content:'<img style="height: 0.85rem;" src="/logo.png" alt="logo" /> 贺志飞',enable:!0,fontfamily:"LiuJianMaoCao-Regular, 钟齐流江毛草",fontsize:1.1,height:20,opacity:.0125,rotate:15,rowspacing:60,width:150}}</script><script src=/js/theme.min.js defer></script><script src=/js/custom.min.js defer></script></body></html>

@@ -1,0 +1,109 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>CodeBlocks - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/codeblocks/</link><description>CodeBlocks - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 24 Nov 2020 22:50:50 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/codeblocks/" rel="self" type="application/rss+xml"/><item><title>CodeBlocks快捷键及一些常用设置</title><link>https://lruihao.cn/posts/03.codeblocks%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%8F%8A%E4%B8%80%E4%BA%9B%E5%B8%B8%E7%94%A8%E8%AE%BE%E7%BD%AE/</link><pubDate>Tue, 24 Nov 2020 22:50:50 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/03.codeblocks%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%8F%8A%E4%B8%80%E4%BA%9B%E5%B8%B8%E7%94%A8%E8%AE%BE%E7%BD%AE/</guid><description><![CDATA[<h2 id="常用设置" class="heading-element"><span>1 常用设置</span>
+  <a href="#%e5%b8%b8%e7%94%a8%e8%ae%be%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>按住Ctrl滚滚轮，代码的字体会随你心意变大变小。</li>
+<li>在编辑区按住右键可拖动代码，省去拉（尤其是横向）滚动条之麻烦；相关设置：Mouse Drag Scrolling。</li>
+<li>Ctrl+D可复制当前行或选中块。</li>
+<li>Ctrl+Shift+C注释掉当前行或选中块，Ctrl+Shift+X则解除注释。</li>
+<li>Tab缩进当前行或选中块,Shift+Tab减少缩进。</li>
+<li>可拖动选中块使其移动到新位置，按住Ctrl则为复制到新位置。</li>
+<li>按下Atl，再拖动鼠标，可以实现部分选择（即只选中一个区域内的字符，而不会包含它们所在行的其他字符)。</li>
+<li>需要更大编辑空间时，F2和Shift+F2分别可以显隐下方Logs &amp; others栏和左方的Management栏。</li>
+<li>Ctrl+R可以替换；</li>
+</ul>
+<h2 id="优化代码自动完成功能" class="heading-element"><span>2 优化代码自动完成功能：</span>
+  <a href="#%e4%bc%98%e5%8c%96%e4%bb%a3%e7%a0%81%e8%87%aa%e5%8a%a8%e5%ae%8c%e6%88%90%e5%8a%9f%e8%83%bd" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>进Settings里的Editor：在Code-completion and symbol browser中，</p>
+<ul>
+<li>将Automatically launch when typed # letter中的4改成2，这样打两个字母就会有提示了。</li>
+<li>将Keyword sets to additionally include中1到9都勾上（可在Syntax highlighting 的keywords&hellip;中设置，其中1是C++关键字，3是Doxygen关键字；我曾将wxWidgets的类名都加入7并设置相应的字体（粗黑 体），看代码时特别爽）</li>
+<li>将Delay for auto-kick-in when typing [.::-&gt;]拉到 200ms，这样快点出来提示</li>
+<li>选中Case-sensitive match，防止一些无关的东西干扰，如果你想它帮你纠正大小写，那就去掉勾</li>
+</ul>
+<p>设置快捷键：</p>
+<ul>
+<li>进Settings里的Editor：</li>
+<li>在Keyboard short-cuts中将Edit-&gt;Code complete的快捷键由Ctrl+Space改为Alt+/，因为前者与中文输入法切换冲突，该快捷键为已经输入的（不是正在输入的）词提供自动完成。</li>
+</ul>
+<h2 id="多学一招" class="heading-element"><span>3 多学一招</span>
+  <a href="#%e5%a4%9a%e5%ad%a6%e4%b8%80%e6%8b%9b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><blockquote>
+<p>看Abbreviation一栏，里面定义了许多缩写（还可以自定义），只要输入这些缩写，并按Ctrl+J，就可以自动完成常用的代码框架，并将光标放在恰当的地方（自定义时用|表达）。常用的有：guard、class、switch等。</p>
+</blockquote>
+<blockquote>
+<p>如果你声明了一个类，你可以在cpp文件中右击，Insert-&gt;All class methods without implementation&hellip;来插入你还没定义的方法的定义（省去不少打字的功夫哦），也可使用Insert-&gt;Class Method declaration/implementation&hellip;来插入一个方法的声明或定义。</p>
+</blockquote>
+<h2 id="导航相关" class="heading-element"><span>4 导航相关</span>
+  <a href="#%e5%af%bc%e8%88%aa%e7%9b%b8%e5%85%b3" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>
+<p>Ctrl+G 到达指定行，ALT+G 到达指定文件，Ctrl+Alt+G 到达指定函数（支持头文件中的函数定义），F11 切换源文件与头文件。</p>
+</li>
+<li>
+<p>Ctrl+PageUp 到达上一个函数，Ctrl+PageDown 到达下一个函数。</p>
+</li>
+<li>
+<p>Ctrl+B 添加书签，Alt+PageUp和Alt+PageDown可以切换书签。</p>
+</li>
+<li>
+<p>Ctrl+Shift+B可找到匹配的括号。</p>
+</li>
+<li>
+<p>看长代码时，可右击，Folding-&gt;Fold All，然后慢慢展开来看，也可充分利用左方Management栏的Symbol浏览器。</p>
+</li>
+<li>
+<p>在一个变量、函数或宏上右击，三个以Find开头的菜单项，分别可以为你转到它的声明、定义和找到所有出现的地方（按F2在下方Thread Search那里查看）。
+其他：</p>
+</li>
+<li>
+<p>General Settings中可以设置缩进、自动换行等细节。</p>
+</li>
+<li>
+<p>让Code::Blocks永远记住你的Layout，尤其是debug的layout，善用debug工具栏。</p>
+</li>
+<li>
+<p>备份C:/Documents and Settings/[你的用户名]/Application Data/codeblocks/Default.conf，如遇重装，将其放在codeblocks.exe所在目录，就不会丢失你的配置；这样也可以 打造出Code::Blocks的绿色版。</p>
+</li>
+<li>
+<p>Ctrl+L 剪切选中行</p>
+</li>
+<li>
+<p>F11 切换源文件与头文件</p>
+</li>
+<li>
+<p>F10 全屏</p>
+</li>
+<li>
+<p>Ctrl+Shift+B 括号匹配</p>
+</li>
+<li>
+<p>按下ATL，再拖动鼠标，可以实现部分选择</p>
+</li>
+<li>
+<p>Ctrl+B 添加书签，ALT+PageUp和PageDown可以切换书签。</p>
+</li>
+<li>
+<p>Ctrl+G 到达指定行</p>
+</li>
+<li>
+<p>ALT+G 到达指定文件</p>
+</li>
+<li>
+<p>Ctrl+Alt+G 到达指定函数（支持头文件中的函数定义）</p>
+</li>
+<li>
+<p>Ctrl+PageUp 到达上一个函数</p>
+</li>
+<li>
+<p>Ctrl+PageDown 到达下一个函数</p>
+</li>
+</ul>
+]]></description></item></channel></rss>

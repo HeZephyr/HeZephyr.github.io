@@ -1,208 +1,41 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>SSH - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/ssh/</link><description>SSH - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 22 Oct 2023 18:59:31 +0800</lastBuildDate><atom:link href="https://lruihao.cn/tags/ssh/" rel="self" type="application/rss+xml"/><item><title>SSH 提交签名验证</title><link>https://lruihao.cn/posts/ssh-sign/</link><pubDate>Sun, 22 Oct 2023 18:59:31 +0800</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/ssh-sign/</guid><description><![CDATA[<p>Git 支持使用 GPG 来签名提交记录。但 GPG 用起来很复杂，一直赖得搞。Git 从 2.34 开始支持使用 SSH 签名，所以本文将介绍如何使用 SSH 对提交进行签名。</p>
-<h2 id="操作步骤" class="heading-element"><span>1 操作步骤</span>
-  <a href="#%e6%93%8d%e4%bd%9c%e6%ad%a5%e9%aa%a4" class="heading-mark">
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>SSH - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/ssh/</link><description>SSH - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 23 Jan 2022 13:12:04 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/ssh/" rel="self" type="application/rss+xml"/><item><title>SSH教程</title><link>https://lruihao.cn/posts/02.ssh%E6%95%99%E7%A8%8B/</link><pubDate>Sun, 23 Jan 2022 13:12:04 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/02.ssh%E6%95%99%E7%A8%8B/</guid><description><![CDATA[<h2 id="ssh基本知识" class="heading-element"><span>1 SSH基本知识</span>
+  <a href="#ssh%e5%9f%ba%e6%9c%ac%e7%9f%a5%e8%af%86" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><p>可以使用 SSH 通过自己生成的 SSH 密钥对提交进行签名。有关详细信息，请查看 <code>user.Signingkey</code> 的 <a href="https://git-scm.com/docs/git-config#Documentation/git-config.txt-usersigningKey"target="_blank" rel="external nofollow noopener noreferrer">Git 参考文档<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>。如果已使用 SSH 密钥向 GitHub 进行了身份验证，还可以再次上传该相同密钥以用作签名密钥。可以添加到帐户的签名密钥数没有限制。</p>
-<p>GitHub 使用 <a href="https://github.com/github/ssh_data"target="_blank" rel="external nofollow noopener noreferrer">ssh_data<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>（一种开放源代码 Ruby 库）来确认本地签名的提交和标记是否根据在 GitHub.com 上添加到帐户的公钥进行加密验证。</p>
-<blockquote>
-<p>注意：SSH 签名验证可用于 Git 2.34 或更高版本。若要更新 Git 版本，请参阅 <a href="https://git-scm.com/downloads"target="_blank" rel="external nofollow noopener noreferrer">Git<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a> 网站。</p>
-</blockquote>
-<p>要使用 SSH 对提交签名并在 GitHub 上验证这些提交，请执行以下步骤：</p>
-<ol>
-<li><a href="https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/checking-for-existing-ssh-keys"target="_blank" rel="external nofollow noopener noreferrer">检查现有 SSH 密钥<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
-<li><a href="https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"target="_blank" rel="external nofollow noopener noreferrer">生成新的 SSH 密钥<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
-<li><a href="https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"target="_blank" rel="external nofollow noopener noreferrer">将 SSH 签名密钥添加到 GitHub 帐户<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
-<li><a href="https://docs.github.com/zh/authentication/managing-commit-signature-verification/telling-git-about-your-signing-key"target="_blank" rel="external nofollow noopener noreferrer">将你的签名密钥告诉 Git<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
-<li><a href="https://docs.github.com/zh/authentication/managing-commit-signature-verification/signing-commits"target="_blank" rel="external nofollow noopener noreferrer">对提交签名<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
-<li><a href="https://docs.github.com/zh/authentication/managing-commit-signature-verification/signing-tags"target="_blank" rel="external nofollow noopener noreferrer">对标记签名<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
-</ol>
-<h2 id="检查现有-ssh-密钥" class="heading-element"><span>2 检查现有 SSH 密钥</span>
-  <a href="#%e6%a3%80%e6%9f%a5%e7%8e%b0%e6%9c%89-ssh-%e5%af%86%e9%92%a5" class="heading-mark">
+</h2><h3 id="ssh是什么" class="heading-element"><span>1.1 SSH是什么</span>
+  <a href="#ssh%e6%98%af%e4%bb%80%e4%b9%88" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><ol>
-<li>
-<p>打开终端。</p>
-</li>
-<li>
-<p>输入 <code>ls -al ~/.ssh</code> 以查看是否存在现有的 SSH 密钥。</p>
+</h3><p>SSH为Secure Shell的缩写，是一种网络协议，用于加密两台计算机之间的通信，保证不被窃听或篡改，并且支持各种身份验证机制。在事务中，它主要用户保证远程登录贺远程通信的安全，任何网络服务都可以用这个协议来加密。</p>
+<h3 id="ssh架构" class="heading-element"><span>1.2 SSH架构</span>
+  <a href="#ssh%e6%9e%b6%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>SSH的软件架构是C/S模式，即客户端-服务器模式。在这个架构中，SSH软件分成了两个部分：向服务器发出请求的部分，称为客户端，OpenSSH的实现为ssh；接受客户端发出的请求的部分，称为服务器，OpenSSH的实现为sshd。
+其中大写的SSH表示协议，小写的ssh表示客户端软件。
+OpenSSH的客户端是二进制程序ssh。它在Linux/Unix系统的位置是<code>/usr/local/bin/ssh</code>，windows系统的位置是<code>/Program Files/OpenSSH/bin/ssh.exe</code>。Linux系统一般都自带ssh，如果没有则需要自己安装。安装命令如下：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl"><span class="c1"># Lists the files in your .ssh directory, if they exist</span>
-</span></span><span class="line"><span class="cl">ls -al ~/.ssh</span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="c"># Ubuntu 和 Debian</span>
+</span></span><span class="line"><span class="cl"><span class="n">sudo</span> <span class="n">apt</span> <span class="n">install</span> <span class="nb">openssh-client</span>
+</span></span><span class="line"><span class="cl"><span class="c"># CentOS 和 Fedora</span>
+</span></span><span class="line"><span class="cl"><span class="n">sudo</span> <span class="n">dnf</span> <span class="n">install</span> <span class="nb">openssh-clients</span></span></span></code></pre></td></tr></table>
 </div>
-</div></li>
-<li>
-<p>检查目录列表以查看是否已经有 SSH 公钥。默认情况下，GitHub 的一个支持的公钥的文件名是以下之一。</p>
-<ul>
-<li>id_rsa.pub</li>
-<li>id_ecdsa.pub</li>
-<li>id_ed25519.pub</li>
-</ul>
-</li>
-</ol>
-<h2 id="生成新的-ssh-密钥" class="heading-element"><span>3 生成新的 SSH 密钥</span>
-  <a href="#%e7%94%9f%e6%88%90%e6%96%b0%e7%9a%84-ssh-%e5%af%86%e9%92%a5" class="heading-mark">
+</div><h2 id="ssh登录" class="heading-element"><span>2 ssh登录</span>
+  <a href="#ssh%e7%99%bb%e5%bd%95" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><div class="details admonition note open">
-    <div class="details-summary admonition-title">
-      <i class="icon fa-solid fa-pencil-alt fa-fw" aria-hidden="true"></i>注意<i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden="true"></i>
-    </div>
-    <div class="details-content">
-      <div class="admonition-content"><p>注意：GitHub 通过在 2022 年 3 月 15 日删除旧的、不安全的密钥类型来提高安全性。</p>
-<p>自该日期起，不再支持 DSA 密钥 (<code>ssh-dss</code>)。无法在 GitHub.com 上向个人帐户添加新的 DSA 密钥。</p>
-<p>2021 年 11 月 2 日之前带有 <code>valid_after</code> 的 RSA 密钥 (<code>ssh-rsa</code>) 可以继续使用任何签名算法。在该日期之后生成的 RSA 密钥必须使用 SHA-2 签名算法。一些较旧的客户端可能需要升级才能使用 SHA-2 签名。</p>
-</div>
-    </div>
-  </div>
-<ol>
-<li>
-<p>打开终端。</p>
-</li>
-<li>
-<p>粘贴下面的文本（替换为你的 GitHub 电子邮件地址）。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ssh-keygen -t ed25519 -C <span class="s2">&#34;your_email@example.com&#34;</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>注意：如果你使用的是不支持 Ed25519 算法的旧系统，请使用以下命令：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">ssh-keygen -t rsa -b <span class="m">4096</span> -C <span class="s2">&#34;your_email@example.com&#34;</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>这将以提供的电子邮件地址为标签创建新 SSH 密钥。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">&gt; Generating public/private ALGORITHM key pair.</span></span></code></pre></td></tr></table>
-</div>
-</div><p>当系统提示你“Enter a file in which to save the key（输入要保存密钥的文件）”时，可以按 Enter 键接受默认文件位置。请注意，如果以前创建了 SSH 密钥，则 ssh-keygen 可能会要求重写另一个密钥，在这种情况下，我们建议创建自定义命名的 SSH 密钥。为此，请键入默认文件位置，并将 id_ssh_keyname 替换为自定义密钥名称。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">&gt; Enter a file in which to save the key <span class="o">(</span>/Users/YOU/.ssh/id_ALGORITHM<span class="o">)</span>: <span class="o">[</span>Press enter<span class="o">]</span></span></span></code></pre></td></tr></table>
-</div>
-</div></li>
-<li>
-<p>在提示符下，键入安全密码。有关详细信息，请参阅“<a href="https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/working-with-ssh-key-passphrases"target="_blank" rel="external nofollow noopener noreferrer">使用 SSH 密钥密码<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>”。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">&gt; Enter passphrase <span class="o">(</span>empty <span class="k">for</span> no passphrase<span class="o">)</span>: <span class="o">[</span>Type a passphrase<span class="o">]</span>
-</span></span><span class="line"><span class="cl">&gt; Enter same passphrase again: <span class="o">[</span>Type passphrase again<span class="o">]</span></span></span></code></pre></td></tr></table>
-</div>
-</div></li>
-</ol>
-<p>更多请查看 <a href="https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent"target="_blank" rel="external nofollow noopener noreferrer">生成新的 SSH 密钥<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>。</p>
-<h2 id="新增-ssh-密钥到-github-帐户" class="heading-element"><span>4 新增 SSH 密钥到 GitHub 帐户</span>
-  <a href="#%e6%96%b0%e5%a2%9e-ssh-%e5%af%86%e9%92%a5%e5%88%b0-github-%e5%b8%90%e6%88%b7" class="heading-mark">
+</h2><h3 id="基本用法" class="heading-element"><span>2.1 基本用法</span>
+  <a href="#%e5%9f%ba%e6%9c%ac%e7%94%a8%e6%b3%95" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><p>注意：添加 SSH 密钥的类型选择 <code>Signing Key</code>，细节略，详见 <a href="https://docs.github.com/zh/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account"target="_blank" rel="external nofollow noopener noreferrer">将 SSH 签名密钥添加到 GitHub 帐户<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>。</p>
-<h2 id="将-ssh-密钥告知-git" class="heading-element"><span>5 将 SSH 密钥告知 Git</span>
-  <a href="#%e5%b0%86-ssh-%e5%af%86%e9%92%a5%e5%91%8a%e7%9f%a5-git" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><ol>
-<li>
-<p>打开终端。</p>
-</li>
-<li>
-<p>配置 Git 使用 SSH 对提交和标记签名：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git config --global gpg.format ssh</span></span></code></pre></td></tr></table>
-</div>
-</div></li>
-<li>
-<p>若要在 Git 中设置 SSH 签名密钥，请粘贴下面的文本，将 <code>/PATH/TO/KEY.PUB</code> 替换为要使用的公钥路径（例如：<code>~/.ssh/id_ed25519.pub</code>）。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git config --global user.signingkey /PATH/TO/.SSH/KEY.PUB</span></span></code></pre></td></tr></table>
-</div>
-</div></li>
-</ol>
-<h2 id="对提交签名" class="heading-element"><span>6 对提交签名</span>
-  <a href="#%e5%af%b9%e6%8f%90%e4%ba%a4%e7%ad%be%e5%90%8d" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>当本地分支中的提交更改时，可以将 <code>-S</code> 添加到 <code>git commit</code> 命令：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># Creates a signed commit</span>
-</span></span><span class="line"><span class="cl">git commit -S -m <span class="s2">&#34;YOUR_COMMIT_MESSAGE&#34;</span></span></span></code></pre></td></tr></table>
-</div>
-</div><p>若要将 Git 客户端配置为默认对本地存储库的提交进行签名，请在 Git 版本 2.0.0 及更高版本中，运行：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git config commit.gpgsign true</span></span></code></pre></td></tr></table>
-</div>
-</div><p>要在计算机上的任何本地存储库中默认对所有提交进行签名，请运行：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git config --global commit.gpgsign true</span></span></code></pre></td></tr></table>
-</div>
-</div><p>在本地完成创建提交后，将其推送到 GitHub 上的远程仓库，在 GitHub 上查看提交记录就能看到 <code>Verified</code> 的标志了。</p>
-<h2 id="对标记签名" class="heading-element"><span>7 对标记签名</span>
-  <a href="#%e5%af%b9%e6%a0%87%e8%ae%b0%e7%ad%be%e5%90%8d" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>若要对标记进行签名，请将 <code>-s</code> 添加到 <code>git tag</code> 命令。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># Creates a signed tag</span>
-</span></span><span class="line"><span class="cl">git tag -s MYTAG</span></span></code></pre></td></tr></table>
-</div>
-</div><p>通过运行 <code>git tag -v [tag-name]</code> 验证已签名的标记。</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl"><span class="c1"># Verifies the signed tag</span>
-</span></span><span class="line"><span class="cl">git tag -v MYTAG</span></span></code></pre></td></tr></table>
-</div>
-</div><p>或者，可以将 <code>gpgsign</code> 设置为 <code>true</code>，以便在创建标记时自动对其进行签名：</p>
+</h3><p>远程登录服务器有以下几种方式：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
@@ -210,63 +43,137 @@
 </span><span class="lnt">3
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git config tag.gpgsign <span class="nb">true</span>
-</span></span><span class="line"><span class="cl"><span class="c1"># 或者</span>
-</span></span><span class="line"><span class="cl">git config --global tag.gpgsign true</span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">ssh</span> <span class="n">hostname</span> <span class="c"># 没有指定用户名，将使用客户端的当前用户名</span>
+</span></span><span class="line"><span class="cl"><span class="n">ssh</span> <span class="n">user</span><span class="nv">@hostname</span> <span class="c"># 指定用户名</span>
+</span></span><span class="line"><span class="cl"><span class="n">ssh</span> <span class="n">user</span><span class="nv">@hostname</span> <span class="n">-p</span> <span class="mf">22</span> <span class="c"># 登录端口为22，使用-p可以登录到某一特定的端口。</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="其他" class="heading-element"><span>8 其他</span>
-  <a href="#%e5%85%b6%e4%bb%96" class="heading-mark">
+</div><p>其中<code>user</code>为用户名，<code>hostname</code>为IP地址或域名
+第一次登录时会提示：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">The</span> <span class="n">authenticity</span> <span class="n">of</span> <span class="n">host</span> <span class="s1">&#39;123.57.47.211 (123.57.47.211)&#39;</span> <span class="n">can</span><span class="err">&#39;</span><span class="n">t</span> <span class="n">be</span> <span class="n">established</span><span class="p">.</span>
+</span></span><span class="line"><span class="cl"><span class="n">ECDSA</span> <span class="n">key</span> <span class="n">fingerprint</span> <span class="n">is</span> <span class="n">SHA256</span><span class="err">:</span><span class="n">iy237yysfCe013</span><span class="p">/</span><span class="n">l</span><span class="p">+</span><span class="n">kpDGfEG9xxHxm0dnxnAbJTPpG8</span><span class="p">.</span>
+</span></span><span class="line"><span class="cl"><span class="n">Are</span> <span class="n">you</span> <span class="n">sure</span> <span class="n">you</span> <span class="n">want</span> <span class="n">to</span> <span class="k">continue</span> <span class="n">connecting</span> <span class="p">(</span><span class="n">yes</span><span class="p">/</span><span class="n">no</span><span class="p">/[</span><span class="no">fingerprint</span><span class="p">])?</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>上述这段文字告诉用户，这台服务器的指纹是陌生的，让用户选择是否要继续连接（输入yes或no）。
+所谓“服务器指纹”，指的是 SSH 服务器公钥的哈希值。每台 SSH 服务器都有唯一一对密钥，用于跟客户端通信，其中公钥的哈希值就可以用来识别服务器。</p>
+<p>输入yes，然后回车即可。这样会将服务器的信息记录在<code>~/.ssh//known_hosts</code>文件中，然后输入密码即可登录到远程服务器。
+在<code>~/.ssh/known_hosts</code>文件中保存了本机连接过的所有服务器的公钥指纹信息，每次通过ssh连接一台服务器，系统会通过该文件判断当前需要连接的服务器是否为陌生主机。而如果之前ssh登陆过的服务器的密钥发生了更改，那么登录就会收到提示<code>Host key verification failed</code>，由于发生改变了，所以西我们需要删除之前的主机的指纹信息，添加新的。这个可以使用<code>ssh-keygen -R &lt;hostname&gt;</code>来进行删除。</p>
+<p>如果我们需要退出登录，输入<code>logout</code>或<code>exit</code>都可以实现，也可以使用快捷键<code>Ctrl+d</code>退出。</p>
+<h3 id="配置文件" class="heading-element"><span>2.2 配置文件</span>
+  <a href="#%e9%85%8d%e7%bd%ae%e6%96%87%e4%bb%b6" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><p>创建可信公钥列表文件：</p>
+</h3><p>创建文件<code>~/.ssh/config</code>，此为用户的个人配置文件，其保存相关配置信息。我们可以在文件中输入：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">Host</span> <span class="n">myServer1</span>
+</span></span><span class="line"><span class="cl">    <span class="n">HostName</span> <span class="n">IP地址或域名</span>
+</span></span><span class="line"><span class="cl">    <span class="n">User</span> <span class="n">用户名</span>
+</span></span><span class="line"><span class="cl"><span class="n">Host</span> <span class="n">myServer2</span>
+</span></span><span class="line"><span class="cl">    <span class="n">HostName</span> <span class="n">IP地址或域名</span>
+</span></span><span class="line"><span class="cl">    <span class="n">User</span> <span class="n">用户名</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>之后再使用服务器时，就可以直接使用别名<code>myServer1</code>、<code>myServer2</code>进行登录。
+<a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_19%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546561.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a>
+SSH客户端的全局配置文件为<code>/etc/ssh/ssh_config</code>，其优先级低于用户个人配置文件。除了配置文件，<code>~/.ssh</code>还有一些用户个人的密钥文件和其他文件</p>
+<h3 id="密钥登录" class="heading-element"><span>2.3 密钥登录</span>
+  <a href="#%e5%af%86%e9%92%a5%e7%99%bb%e5%bd%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>创建密钥</strong>
+首先在本台主机上创建密钥，输入<code>ssh-keygen</code>指令，然后一直回车即可。该命令会为本机生成公私钥对，通过密钥来进行远程登录的验证机制使用了密码学中的非对称加密体系。执行命令后，会在<code>~/.ssh/</code>文件夹下生成两个新的文件：</p>
+<pre><code>  1. `id_rsa`：私钥
+  2. `id_rsa.pub`：公钥
+
+注意，一定要保护好生成的私钥`id_rsa`，一旦暴露，利用上述指令可以重新生成新的密钥。
+</code></pre>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215546692.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</li>
+<li>
+<p><strong>免密登录</strong>
+如果想要免密登录某个服务器，我们只需要将刚才生成的公钥保存在需要登录的远程服务器<code>~/.ssh/authorized_keys</code>文件中。例如我想免密登录到<code>myServer1</code>服务器，则将<code>~/.ssh/id_rsa.pub</code>公钥中的内容，复制到<code>myServer1</code>中的<code>~/.ssh/authorized_keys</code>文件中。也可以使用如下命令一键添加公钥：
+<code>ssh-copy-id myServer1</code>。
+第一次应用<code>ssh-copy-id</code>系统会提示输入远程服务器的密码，之后登录时就可以免密登录了。
+<a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_d3F5LXplbmhlaQ%2Cshadow_50%2Ctext_Q1NETiBAdW5pcXVlX3B1cnN1aXQ%3D%2Csize_20%2Ccolor_FFFFFF%2Ct_70%2Cg_se%2Cx_16-20231125215556717.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</li>
+</ul>
+<p>一般来说，应用密钥登录比使用密码登录更加安全，所以启用密钥登录之后，最好关闭服务器的密码登录。如果需要在远程服务器上关闭密码登录。具体方法是先远程登录到服务器中，然后找到sshd的配置文件<code>/etc/ssh/sshd_config</code>，最后将<code>PasswordAuthentication</code>这一项设置为<code>no</code>。
+<code>PasswordAuthentication no</code>
+sshd是服务器运行的后台进程，当我们修改配置文件以后，需要重新启动sshd，然后修改才能生效。可应用下面语句重启远程服务器上的<code>ssh</code>和<code>sshd</code>服务。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span><span class="lnt">2
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">mkdir -p ~/.config/git
-</span></span><span class="line"><span class="cl">touch ~/.config/git/allowed_signers</span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">sudo</span> <span class="n">systemctl</span> <span class="n">restart</span> <span class="n">ssh</span><span class="p">.</span><span class="py">service</span>
+</span></span><span class="line"><span class="cl"><span class="n">sudo</span> <span class="n">systemctl</span> <span class="n">restart</span> <span class="n">sshd</span><span class="p">.</span><span class="n">service</span></span></span></code></pre></td></tr></table>
 </div>
-</div><p>可信公钥列表文件内容格式如下，每个公钥占一行：</p>
+</div><ul>
+<li><strong>执行远程命令</strong>
+免密登录后，我们可以在命令行下直接执行远程命令：<code>ssh user@hostname command</code>。这样的命令会使SSH在登录成功后，立刻在远程主机上执行命令<code>comand</code>。但并不是真正的登录，执行完命令后还在原主机。
+测试：<code>ssh myServer1 ls</code>
+<a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5876c7802840d48072d1687b483a4c.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></li>
+</ul>
+<h2 id="scp传文件" class="heading-element"><span>3 scp传文件</span>
+  <a href="#scp%e4%bc%a0%e6%96%87%e4%bb%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="scp命令简介" class="heading-element"><span>3.1 scp命令简介</span>
+  <a href="#scp%e5%91%bd%e4%bb%a4%e7%ae%80%e4%bb%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><code>scp</code>是secure copy的缩写，相当于<code>cp</code>命令+SSH。它的底层是SSH协议，默认端口是22，相当于先使用<code>ssh</code>命令登录远程主机，然后再进行拷贝操作。
+<code>scp</code>主要用于以下三种复制操作：</p>
+<ul>
+<li>本地复制到远程。</li>
+<li>远程复制到本地。</li>
+<li>两个远程系统之间的复制。</li>
+</ul>
+<p>使用<code>scp</code>传输数据时，文件和密码都是加密的，不会泄露敏感信息。</p>
+<h3 id="基本语法" class="heading-element"><span>3.2 基本语法</span>
+  <a href="#%e5%9f%ba%e6%9c%ac%e8%af%ad%e6%b3%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><code>scp</code>的语法类似<code>cp</code>的语法。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-plain" data-lang="plain"><span class="line"><span class="cl">公钥的身份 公钥内容</span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">scp</span> <span class="n">source</span> <span class="n">destination</span></span></span></code></pre></td></tr></table>
 </div>
-</div><p>例如，可以将 <code>~/.ssh/id_ed25519.pub</code> 公钥复制然后粘贴：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span><span class="lnt">2
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">pbcopy &lt; ~/.ssh/id_ed25519.pub
-</span></span><span class="line"><span class="cl">open ~/.config/git/allowed_signers</span></span></code></pre></td></tr></table>
-</div>
-</div><div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-plain" data-lang="plain"><span class="line"><span class="cl">Cell ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIE5bRSsXZ5HnUkMMEWS5/jxEQaqbLb+i6xjMyC6qiXsb xxx@xxx.com</span></span></code></pre></td></tr></table>
-</div>
-</div><p>将可信公钥列表文件路径添加到 Git 配置中：</p>
+</div><p>上面命令中，<code>source</code>是文件当前的位置，<code>destination</code>是文件所要复制到的位置。它们都可以包含用户名和主机名。例如：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
 </span></code></pre></td>
 <td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git config --global gpg.ssh.allowedSignersFile <span class="s2">&#34;~/.config/git/allowed_signers&#34;</span></span></span></code></pre></td></tr></table>
+<pre tabindex="0" class="chroma"><code class="language-powershell" data-lang="powershell"><span class="line"><span class="cl"><span class="n">scp</span> <span class="n">myServer1</span><span class="err">:</span><span class="n">main</span><span class="p">.</span><span class="nb">cpp </span><span class="n">main</span><span class="p">.</span><span class="n">cpp</span></span></span></code></pre></td></tr></table>
 </div>
-</div><p>本地查看提交日志签名状况：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">1
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">git log --show-signature</span></span></code></pre></td></tr></table>
-</div>
-</div>]]></description></item></channel></rss>
+</div><p>上面命令即是将远程主机（myServer1）用户主目录下的<code>main.cpp</code>复制为本机当前目录下的<code>main.cpp</code>。注意主机与文件之间要使用<code>:</code>分隔。
+<code>scp</code>会先用SSH登录到远程主机，然后在加密连接之中复制文件。客户端发起连接后，会提示用户输入密码。其中用户名和主机名若省略则是代表当前主机下的当前用户名。</p>
+<p><code>scp</code>支持一次复制多个文件。<code>scp source1 source2 destination</code>。如果存在同名文件，<code>scp</code>会在没有警告的情况下覆盖同名文件。</p>
+<h2 id="参考文献" class="heading-element"><span>4 参考文献</span>
+  <a href="#%e5%8f%82%e8%80%83%e6%96%87%e7%8c%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><a href="https://www.acwing.com/activity/content/57/"target="_blank" rel="external nofollow noopener noreferrer">Linux基础课<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>
+<a href="https://www.runoob.com/"target="_blank" rel="external nofollow noopener noreferrer">菜鸟教程<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+]]></description></item></channel></rss>

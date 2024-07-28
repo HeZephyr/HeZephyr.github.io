@@ -1,0 +1,1502 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>数位DP - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E6%95%B0%E4%BD%8Ddp/</link><description>数位DP - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Thu, 13 May 2021 22:02:01 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E6%95%B0%E4%BD%8Ddp/" rel="self" type="application/rss+xml"/><item><title>HDU 4507 恨7不成妻 （数位DP套路题）</title><link>https://lruihao.cn/posts/03.hdu-4507-%E6%81%A87%E4%B8%8D%E6%88%90%E5%A6%BB-%E6%95%B0%E4%BD%8Ddp%E5%A5%97%E8%B7%AF%E9%A2%98%E8%AF%A6%E7%BB%86%E8%A7%A3%E6%9E%90/</link><pubDate>Thu, 13 May 2021 22:02:01 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/03.hdu-4507-%E6%81%A87%E4%B8%8D%E6%88%90%E5%A6%BB-%E6%95%B0%E4%BD%8Ddp%E5%A5%97%E8%B7%AF%E9%A2%98%E8%AF%A6%E7%BB%86%E8%A7%A3%E6%9E%90/</guid><description><![CDATA[<p>不会数位$DP$的这里指路一篇介绍非常详细的数位$DP$的$blog$:<a href="https://unique-pure.github.io/pages/243023/"target="_blank" rel="external nofollow noopener noreferrer">点这里。<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<ul>
+<li>
+<p><strong>链接</strong>
+<a href="http://acm.hdu.edu.cn/showproblem.php?pid=4507"target="_blank" rel="external nofollow noopener noreferrer">恨7不成妻<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+</li>
+<li>
+<p><strong>题面</strong></p>
+<blockquote>
+<p>单身!
+依然单身！
+吉哥依然单身！
+DS级码农吉哥依然单身！
+所以，他生平最恨情人节，不管是214还是77，他都讨厌！
+吉哥观察了214和77这两个数，发现：
+$2+1+4=7$　
+$7+7=7<em>2$
+$77=7</em>11$
+最终，他发现原来这一切归根到底都是因为和7有关！所以，他现在甚至讨厌一切和7有关的数！什么样的数和7有关呢？如果一个整数符合下面3个条件之一，那么我们就说这个整数和7有关——
+　　　1、整数中某一位是7；
+　　　2、整数的每一位加起来的和是7的整数倍；
+　　　3、这个整数是7的整数倍；</p>
+<p>　现在问题来了：吉哥想知道在一定区间内和7无关的数字的平方和。
+　Input
+　输入数据的第一行是case数T(1 &lt;= T &lt;= 50)，然后接下来的T行表示T个case;每个case在一行内包含两个正整数L, R(1 &lt;= L &lt;= R &lt;= 10^18)。
+　Output
+　请计算[L,R]中和7无关的数字的平方和，并将结果对10^9 + 7 求模后输出。
+　Sample Input</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mi">3</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="mi">9</span>
+</span></span><span class="line"><span class="cl"><span class="mi">10</span> <span class="mi">11</span>
+</span></span><span class="line"><span class="cl"><span class="mi">17</span> <span class="mi">17</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>　Sample Output</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mi">236</span>
+</span></span><span class="line"><span class="cl"><span class="mi">221</span>
+</span></span><span class="line"><span class="cl"><span class="mi">0</span></span></span></code></pre></td></tr></table>
+</div>
+</div></blockquote>
+</li>
+<li>
+<p><strong>解题思路</strong></p>
+<p>根据题意我们做出预处理，利用闫式$DP$分析法分析如下：</p>
+</li>
+</ul>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2f5f90205e029c3471d7dc4d0dea96de.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>以上只是简单分析，我们还并没有真正的进行状态转移和计算，那么根据题意，首先是需要知道整数的每一位加起来的和是$7$的整数倍以及该整数是$7$的整数倍，这个好处理，在我们的前面的题中有类似的题型，这已经在我们的$f$数组的第三维和第四维了。所以难点就在于怎么处理整数的平方和。我们看下面的公式推导：</p>
+<p>==我们用$jA$来表示$i$位数，而其中的$A$为$i-1$位数。设这个状态有$t$个符合要求的数，分别是$A_1$~$A_t$。== 那么，平方和易得为：</p>
+<p>$(jA_1)^2+(jA_2)^2+(jA_3)^2+&hellip;+(jA_{t-1})^2+(jA_t)^2$</p>
+<p>（我们分割表示将$A$提取出来。）</p>
+<p>$=(j<em>10^{i-1}+A_1)^2+(j</em>10^{i-1}+A_2)^2+(j<em>10^{i-1}+A_3)^2+&hellip;+(j</em>10^{i-1}+A_{t-1})^2+(j*10^{i-1}+A_t)^2$</p>
+<p>（平方和公式）</p>
+<p>$=t*(j<em>10^{i-1})^2+2</em>(j<em>10^{i-1})</em>(A_1+&hellip;+A_t)+(A_1^2+&hellip;+A^2)$</p>
+<p>这样，在这个式子中，由于$j$已知，所以我们发现$f$数组需要保存三个值。$A$的$0$次方之和，也就是符合要求的数，$A$的$1$次方之和，也就是符合要求的除去$j$的$i-1$位数相加，$A$的$2$次方之和，也就是符合要求的除去$j$的$i-1$位数平方相加。我们分别用$s_0,s_1,s_2$</p>
+<p>分别代表上述的三个值。</p>
+<p>那么这里我们需要怎么求$s_1$，如下：</p>
+<p>注：这里的$s_1$为$i+1$位的$s_1$，而它存储的就是$i$位的$A$。</p>
+<p>$jA_1+&hellip;+jA_t$</p>
+<p>$=j*10^{i-1}+(A_1+&hellip;+A_t)$</p>
+<p>所以我们的$f$应该是一个结构体数组，它需要存取$s_0,s_1,s_2$。那么预处理根据上述分析其实就简单了。那么就按照数位$DP$的套路解决这道题即可。需要注意这道题好多坑点，多取模，足够细心才可以解决。（调$Bug$调了好久。快绝望了。）</p>
+<ul>
+<li><strong>代码</strong></li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">  1
+</span><span class="lnt">  2
+</span><span class="lnt">  3
+</span><span class="lnt">  4
+</span><span class="lnt">  5
+</span><span class="lnt">  6
+</span><span class="lnt">  7
+</span><span class="lnt">  8
+</span><span class="lnt">  9
+</span><span class="lnt"> 10
+</span><span class="lnt"> 11
+</span><span class="lnt"> 12
+</span><span class="lnt"> 13
+</span><span class="lnt"> 14
+</span><span class="lnt"> 15
+</span><span class="lnt"> 16
+</span><span class="lnt"> 17
+</span><span class="lnt"> 18
+</span><span class="lnt"> 19
+</span><span class="lnt"> 20
+</span><span class="lnt"> 21
+</span><span class="lnt"> 22
+</span><span class="lnt"> 23
+</span><span class="lnt"> 24
+</span><span class="lnt"> 25
+</span><span class="lnt"> 26
+</span><span class="lnt"> 27
+</span><span class="lnt"> 28
+</span><span class="lnt"> 29
+</span><span class="lnt"> 30
+</span><span class="lnt"> 31
+</span><span class="lnt"> 32
+</span><span class="lnt"> 33
+</span><span class="lnt"> 34
+</span><span class="lnt"> 35
+</span><span class="lnt"> 36
+</span><span class="lnt"> 37
+</span><span class="lnt"> 38
+</span><span class="lnt"> 39
+</span><span class="lnt"> 40
+</span><span class="lnt"> 41
+</span><span class="lnt"> 42
+</span><span class="lnt"> 43
+</span><span class="lnt"> 44
+</span><span class="lnt"> 45
+</span><span class="lnt"> 46
+</span><span class="lnt"> 47
+</span><span class="lnt"> 48
+</span><span class="lnt"> 49
+</span><span class="lnt"> 50
+</span><span class="lnt"> 51
+</span><span class="lnt"> 52
+</span><span class="lnt"> 53
+</span><span class="lnt"> 54
+</span><span class="lnt"> 55
+</span><span class="lnt"> 56
+</span><span class="lnt"> 57
+</span><span class="lnt"> 58
+</span><span class="lnt"> 59
+</span><span class="lnt"> 60
+</span><span class="lnt"> 61
+</span><span class="lnt"> 62
+</span><span class="lnt"> 63
+</span><span class="lnt"> 64
+</span><span class="lnt"> 65
+</span><span class="lnt"> 66
+</span><span class="lnt"> 67
+</span><span class="lnt"> 68
+</span><span class="lnt"> 69
+</span><span class="lnt"> 70
+</span><span class="lnt"> 71
+</span><span class="lnt"> 72
+</span><span class="lnt"> 73
+</span><span class="lnt"> 74
+</span><span class="lnt"> 75
+</span><span class="lnt"> 76
+</span><span class="lnt"> 77
+</span><span class="lnt"> 78
+</span><span class="lnt"> 79
+</span><span class="lnt"> 80
+</span><span class="lnt"> 81
+</span><span class="lnt"> 82
+</span><span class="lnt"> 83
+</span><span class="lnt"> 84
+</span><span class="lnt"> 85
+</span><span class="lnt"> 86
+</span><span class="lnt"> 87
+</span><span class="lnt"> 88
+</span><span class="lnt"> 89
+</span><span class="lnt"> 90
+</span><span class="lnt"> 91
+</span><span class="lnt"> 92
+</span><span class="lnt"> 93
+</span><span class="lnt"> 94
+</span><span class="lnt"> 95
+</span><span class="lnt"> 96
+</span><span class="lnt"> 97
+</span><span class="lnt"> 98
+</span><span class="lnt"> 99
+</span><span class="lnt">100
+</span><span class="lnt">101
+</span><span class="lnt">102
+</span><span class="lnt">103
+</span><span class="lnt">104
+</span><span class="lnt">105
+</span><span class="lnt">106
+</span><span class="lnt">107
+</span><span class="lnt">108
+</span><span class="lnt">109
+</span><span class="lnt">110
+</span><span class="lnt">111
+</span><span class="lnt">112
+</span><span class="lnt">113
+</span><span class="lnt">114
+</span><span class="lnt">115
+</span><span class="lnt">116
+</span><span class="lnt">117
+</span><span class="lnt">118
+</span><span class="lnt">119
+</span><span class="lnt">120
+</span><span class="lnt">121
+</span><span class="lnt">122
+</span><span class="lnt">123
+</span><span class="lnt">124
+</span><span class="lnt">125
+</span><span class="lnt">126
+</span><span class="lnt">127
+</span><span class="lnt">128
+</span><span class="lnt">129
+</span><span class="lnt">130
+</span><span class="lnt">131
+</span><span class="lnt">132
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@filename:恨7不成妻
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@author: pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@csdn:unique_pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@email: 2825841950@qq.com
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@created: 2021-05-12 21:19
+</span></span></span><span class="line"><span class="cl"><span class="cm">**/</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">N</span> <span class="o">=</span> <span class="mi">20</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="n">ll</span> <span class="n">P</span> <span class="o">=</span> <span class="mf">1e9</span><span class="o">+</span><span class="mi">7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//需要满足三个性质。
+</span></span></span><span class="line"><span class="cl"><span class="c1">//1.不含7.
+</span></span></span><span class="line"><span class="cl"><span class="c1">//2.各位数字之和模7不为0.an-1+...+a0%7!=0. 
+</span></span></span><span class="line"><span class="cl"><span class="c1">//3.该数模7不为0.an-1*pow(10,n-1)+...+a0+pow(10,0)%7!=0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">F</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ll</span> <span class="n">s0</span><span class="p">,</span><span class="n">s1</span><span class="p">,</span><span class="n">s2</span><span class="p">;</span><span class="c1">//s0为符合要求的数。s1为符合要求的数1次方之和，s2为符合要求的数的2次方之和。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span><span class="n">f</span><span class="p">[</span><span class="n">N</span><span class="p">][</span><span class="mi">10</span><span class="p">][</span><span class="mi">7</span><span class="p">][</span><span class="mi">7</span><span class="p">];</span><span class="c1">//f[i][j][k][u]表示总共有i位数且最高位是j，该数值模7为k，各位数数字之和模7为u的所有数的s0,s1,s2.
+</span></span></span><span class="line"><span class="cl"><span class="c1">//进行初始化。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">t</span><span class="p">;</span><span class="c1">//测试数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">ll</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="n">ll</span> <span class="n">power7</span><span class="p">[</span><span class="n">N</span><span class="p">],</span><span class="n">power9</span><span class="p">[</span><span class="n">N</span><span class="p">];</span><span class="c1">//power7[i]存储10^i余7的余数，power9[i]存储10^i余P的余数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">ll</span> <span class="nf">mod</span><span class="p">(</span><span class="n">ll</span> <span class="n">x</span><span class="p">,</span><span class="n">ll</span> <span class="n">y</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">%</span><span class="n">y</span><span class="o">+</span><span class="n">y</span><span class="p">)</span><span class="o">%</span><span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//确定初始值，位数为1的情况。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="o">==</span><span class="mi">7</span><span class="p">)</span><span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//根据性质排除不符合要求的。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">F</span> <span class="o">&amp;</span><span class="n">v</span><span class="o">=</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">j</span><span class="o">%</span><span class="mi">7</span><span class="p">][</span><span class="n">j</span><span class="o">%</span><span class="mi">7</span><span class="p">];</span><span class="c1">//这里用引用减少代码量。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">v</span><span class="p">.</span><span class="n">s0</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v</span><span class="p">.</span><span class="n">s1</span><span class="o">+=</span><span class="n">j</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v</span><span class="p">.</span><span class="n">s2</span><span class="o">+=</span><span class="n">j</span><span class="o">*</span><span class="n">j</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ll</span> <span class="n">power</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span><span class="c1">//辅助作用，表示10的i-1次方。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">,</span><span class="n">power</span><span class="o">*=</span><span class="mi">10</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="o">==</span><span class="mi">7</span><span class="p">)</span><span class="k">continue</span><span class="p">;</span><span class="c1">//排除不符合要求的数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">k</span><span class="o">&lt;</span><span class="mi">7</span><span class="p">;</span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">u</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">u</span><span class="o">&lt;</span><span class="mi">7</span><span class="p">;</span><span class="n">u</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">q</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">q</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">q</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                        <span class="c1">//枚举i-1的最高位。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                        <span class="k">if</span><span class="p">(</span><span class="n">q</span><span class="o">==</span><span class="mi">7</span><span class="p">)</span><span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">F</span> <span class="o">&amp;</span><span class="n">x</span><span class="o">=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="n">u</span><span class="p">],</span><span class="n">y</span><span class="o">=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">q</span><span class="p">][</span><span class="n">mod</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">j</span><span class="o">*</span><span class="p">(</span><span class="n">power</span><span class="o">%</span><span class="mi">7</span><span class="p">),</span><span class="mi">7</span><span class="p">)][</span><span class="n">mod</span><span class="p">(</span><span class="n">u</span><span class="o">-</span><span class="n">j</span><span class="p">,</span><span class="mi">7</span><span class="p">)];</span>
+</span></span><span class="line"><span class="cl">                        <span class="c1">//s0,s1,s2都是通过公式就算得到。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                        <span class="n">x</span><span class="p">.</span><span class="n">s0</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">s0</span><span class="o">+</span><span class="n">y</span><span class="p">.</span><span class="n">s0</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">x</span><span class="p">.</span><span class="n">s1</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">s1</span><span class="o">+</span><span class="mi">1LL</span><span class="o">*</span><span class="n">j</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">power</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="n">y</span><span class="p">.</span><span class="n">s0</span><span class="o">%</span><span class="n">P</span><span class="o">+</span><span class="n">y</span><span class="p">.</span><span class="n">s1</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                        <span class="n">x</span><span class="p">.</span><span class="n">s2</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">x</span><span class="p">.</span><span class="n">s2</span><span class="o">+</span>
+</span></span><span class="line"><span class="cl">                            <span class="mi">1LL</span><span class="o">*</span><span class="n">j</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="n">y</span><span class="p">.</span><span class="n">s0</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">power</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="n">j</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">power</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">+</span>
+</span></span><span class="line"><span class="cl">                            <span class="mi">1LL</span><span class="o">*</span><span class="n">y</span><span class="p">.</span><span class="n">s1</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="mi">2</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="n">j</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">power</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">+</span><span class="n">y</span><span class="p">.</span><span class="n">s2</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//这里处理为了方便以及降低时间复杂度。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">power7</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span><span class="n">power9</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">N</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">power7</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">power7</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">%</span><span class="mi">7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">power9</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">power9</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span><span class="o">%</span><span class="n">P</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">F</span> <span class="nf">get</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="p">,</span><span class="kt">int</span> <span class="n">j</span><span class="p">,</span><span class="kt">int</span> <span class="n">k</span><span class="p">,</span><span class="kt">int</span> <span class="n">u</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//因为f[i][j][k][u]是本身模7等于k，且各位数之和模7等于u的，所以我们需要找出符合条件的集合。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ll</span> <span class="n">s0</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">s1</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">s2</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">7</span><span class="p">;</span><span class="n">x</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">y</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">y</span><span class="o">&lt;</span><span class="mi">7</span><span class="p">;</span><span class="n">y</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">==</span><span class="n">k</span><span class="o">||</span><span class="n">y</span><span class="o">==</span><span class="n">u</span><span class="p">)</span><span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">F</span> <span class="n">v</span><span class="o">=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">y</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">s0</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">s0</span><span class="o">+</span><span class="n">v</span><span class="p">.</span><span class="n">s0</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">s1</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">s1</span><span class="o">+</span><span class="n">v</span><span class="p">.</span><span class="n">s1</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">s2</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">s2</span><span class="o">+</span><span class="n">v</span><span class="p">.</span><span class="n">s2</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="p">{</span><span class="n">s0</span><span class="p">,</span><span class="n">s1</span><span class="p">,</span><span class="n">s2</span><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">ll</span> <span class="nf">dp</span><span class="p">(</span><span class="n">ll</span> <span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">n</span><span class="p">)</span><span class="k">return</span> <span class="mi">0</span><span class="p">;</span><span class="c1">//0的平方和为0.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ll</span> <span class="n">temp</span><span class="o">=</span><span class="n">n</span><span class="o">%</span><span class="n">P</span><span class="p">;</span><span class="c1">//备份一个n，供后面判断n使用。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="n">a</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="mi">10</span><span class="p">),</span><span class="n">n</span><span class="o">/=</span><span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">ll</span> <span class="n">last_a</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">last_b</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//这里我们需要存储前缀的本身值和前缀的个位数之和。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ll</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//答案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//走左分支。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="o">==</span><span class="mi">7</span><span class="p">)</span><span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//我们需要将符合条件的数筛出来，这里要用到一个get函数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">//求得本身模7不等于a，并且各位数之和模7不等b的集合，此时就可以使用预处理出来的结构体
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="kt">int</span> <span class="n">k</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="o">-</span><span class="n">last_a</span><span class="o">*</span><span class="n">power7</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">],</span><span class="mi">7</span><span class="p">),</span><span class="n">u</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="o">-</span><span class="n">last_b</span><span class="p">,</span><span class="mi">7</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">F</span> <span class="n">v</span><span class="o">=</span><span class="n">get</span><span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">j</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">u</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//cout&lt;&lt;v.s0&lt;&lt;&#34; &#34;&lt;&lt;v.s1&lt;&lt;&#34; &#34;&lt;&lt;v.s2&lt;&lt;endl;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">//根据公式求解s2.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="c1">//j就是last_a.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">ans</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">ans</span><span class="o">+</span>
+</span></span><span class="line"><span class="cl">                <span class="mi">1LL</span><span class="o">*</span><span class="p">(</span><span class="n">last_a</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="n">last_a</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">power9</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">power9</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="n">v</span><span class="p">.</span><span class="n">s0</span><span class="o">%</span><span class="n">P</span><span class="o">+</span>
+</span></span><span class="line"><span class="cl">                <span class="mi">1LL</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">last_a</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="p">(</span><span class="n">power9</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span><span class="o">%</span><span class="n">P</span><span class="p">)</span><span class="o">%</span><span class="n">P</span><span class="o">*</span><span class="n">v</span><span class="p">.</span><span class="n">s1</span><span class="o">%</span><span class="n">P</span><span class="o">+</span>
+</span></span><span class="line"><span class="cl">                <span class="n">v</span><span class="p">.</span><span class="n">s2</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//cout&lt;&lt;ans&lt;&lt;endl;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//判断x。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">==</span><span class="mi">7</span><span class="p">)</span><span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//走右分支更新。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">last_a</span><span class="o">=</span><span class="n">last_a</span><span class="o">*</span><span class="mi">10</span><span class="o">+</span><span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">last_b</span><span class="o">+=</span><span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//判断自己本身是否符合要求。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">i</span><span class="o">&amp;&amp;</span><span class="n">last_a</span><span class="o">%</span><span class="mi">7</span><span class="o">&amp;&amp;</span><span class="n">last_b</span><span class="o">%</span><span class="mi">7</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ans</span><span class="o">=</span><span class="n">mod</span><span class="p">(</span><span class="n">ans</span><span class="o">+</span><span class="n">temp</span><span class="o">*</span><span class="n">temp</span><span class="o">%</span><span class="n">P</span><span class="p">,</span><span class="n">P</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">init</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">t</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">t</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">l</span><span class="o">&gt;&gt;</span><span class="n">r</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">mod</span><span class="p">(</span><span class="n">dp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">-</span><span class="n">dp</span><span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span><span class="n">P</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="cm">/*
+</span></span></span><span class="line"><span class="cl"><span class="cm">1
+</span></span></span><span class="line"><span class="cl"><span class="cm">1 1000000000000000000
+</span></span></span><span class="line"><span class="cl"><span class="cm">*/</span></span></span></code></pre></td></tr></table>
+</div>
+</div>]]></description></item><item><title>数位DP学习整理</title><link>https://lruihao.cn/posts/01.%E6%95%B0%E4%BD%8Ddp/</link><pubDate>Wed, 12 May 2021 18:20:58 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/01.%E6%95%B0%E4%BD%8Ddp/</guid><description><![CDATA[<h2 id="数位dp介绍" class="heading-element"><span>1 数位DP介绍</span>
+  <a href="#%e6%95%b0%e4%bd%8ddp%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>数位DP往往都是这样的题型，给定一个闭区间$[l,r]$，让你求这个区间中满足某种条件的数的总数。而这个区间可能很大，简单的暴力代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">l</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;=</span><span class="n">r</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="n">check</span><span class="p">(</span><span class="n">i</span><span class="p">))</span><span class="n">ans</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>我们发现，若区间长度超过$1e8$，我们暴力枚举就会超时了，而数位$DP$则可以解决这样的题型。数位$DP$实际上就是在数位上进行$DP$。</p>
+<h2 id="数位dp解法" class="heading-element"><span>2 数位DP解法</span>
+  <a href="#%e6%95%b0%e4%bd%8ddp%e8%a7%a3%e6%b3%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>数位$DP$就是换一种暴力枚举的方式，使得新的枚举方式符合$DP$的性质，然后预处理好即可。我们来看：我们可以用$f(n)$表示$[0,n]$的所有满足条件的个数，那么对于$[l,r]$我们就可以用$[l,r]\iff f(r)-f(l-1)$，相当于前缀和思想。那么也就是说我们只要求出$f(n)$即可。那么数位$DP$关键的思想就是从树的角度来考虑。将数拆分成位，从高位到低位开始枚举。我们可以视$N$为$n$位数，那么我们拆分$N:a_{n}、a_{n-1}&hellip;a_1$。那么我们就可以开始分解建树，如下。之后我们就可以预处理再求解$f(n)$了，个人认为求解$f(n)$是最难的一步。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/cfc37954b97e29aa1d848925105fec1b.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>听完是不是有点绕，我们可以来点题目练习一下，做完就会发现了数位$DP$的套路了。</p>
+<h2 id="数位dp经典例题" class="heading-element"><span>3 数位DP经典例题</span>
+  <a href="#%e6%95%b0%e4%bd%8ddp%e7%bb%8f%e5%85%b8%e4%be%8b%e9%a2%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="31-度的数量httpswwwacwingcomactivitycontent11" class="heading-element"><span>3.1 <a href="https://www.acwing.com/activity/content/11/"target="_blank" rel="external nofollow noopener noreferrer">3.1 度的数量<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></span>
+  <a href="#31-%e5%ba%a6%e7%9a%84%e6%95%b0%e9%87%8fhttpswwwacwingcomactivitycontent11" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>题面</strong></p>
+<blockquote>
+<p>求给定区间$ [X,Y]$ 中满足下列条件的整数个数：这个数恰好等于 $K$ 个互不相等的 $B$ 的整数次幂之和。例如，设 $X=15,Y=20,K=2,B=2$，则有且仅有下列三个数满足题意：
+$17=2^4+2^0$
+$18=2^4+2^1$
+$20=2^4+2^2$
+输入格式
+第一行包含两个整数 X 和 Y，接下来两行包含整数 $K$ 和 $B$。
+输出格式
+只包含一个整数，表示满足条件的数的个数。
+数据范围
+$1≤X≤Y≤2^{31}−1,$
+$1≤K≤20,$
+$2≤B≤10$
+输入样例：
+15 20
+2
+2
+输出样例：
+3</p>
+</blockquote>
+</li>
+<li>
+<p><strong>解题思路</strong></p>
+<p>此题实际上就是将十进制数转化为$B$进制数，判断位数上的值是否为$1$。那么我们可以视$N$为$n$位数，那么我们拆分$N:a_{n}、a_{n-1}&hellip;a_1$。从树的角度考虑：我们设$N=76543210,B=10$，那么我们从高位往最低位开始枚举如下；枚举$a_n$时，我们有两种选择：</p>
+<ol>
+<li>走右边分支，那么我们填$7(a_n)$，而题目要求每一位只能填$1$或者$0$,而$a_n&gt;1$，所以不是合法方案，我们直接剔除。</li>
+<li>走左边分支，那么我们可以填$0$~$6$，即$0-{a_n}-1$，那么由于每一位只能填$1$或者$0$，所以我们累加这两种选择的方案。</li>
+</ol>
+<p>记住，走到了左边分支是可以直接累加的。</p>
+<p>所以我们实际上还是要做一个预处理的，我们用$f[i][j]$表示还剩下$i$位没有填，且需要填写$j$个$1$的方案数。那么在$(i,j)$这个状态，我们可以选择填$1$，那么接下来的状态就是$f[i-1][j-1]$，而如果填$0$，那么接下来的状态就是$f[i-1][j]$，那么状态转移方程就是$f[i][j]=f[i-1][j]+f[i][j-1]$。而初始状态即是当$j=0$时，$f[i][0]=1$。这样我们就可以预处理$f$数组了。</p>
+<p>处理完之后我们就可以直接模拟做了。</p>
+</li>
+<li>
+<p><strong>代码</strong></p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@filename:度的数量
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@author: pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@csdn:unique_pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@email: 2825841950@qq.com
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@created: 2021-05-12 11:23
+</span></span></span><span class="line"><span class="cl"><span class="cm">**/</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mi">100000</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">mod</span> <span class="o">=</span> <span class="mf">1e9</span><span class="o">+</span><span class="mi">7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">k</span><span class="p">,</span><span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">f</span><span class="p">[</span><span class="mi">35</span><span class="p">][</span><span class="mi">35</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl"><span class="c1">//首先我们先预处理f数组。其中f[i][j]表示剩下还有i个没填，需要填写j个1的方案数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">35</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;=</span><span class="n">i</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">j</span><span class="p">)</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">+</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="o">-</span><span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">dp</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//求解f(n)。我们需要避免n为0的情况，这里需要特判。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">n</span><span class="p">)</span><span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">nums</span><span class="p">;</span><span class="c1">//将n分割，存储位数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">nums</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="n">b</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">n</span><span class="o">/=</span><span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//答案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">last</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//前面的信息，这里代表的是前面分支选取了多少个1.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//说明x&gt;0，我们可以选择左边分支填0.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="o">-</span><span class="n">last</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">&gt;</span><span class="mi">1</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">//当x&gt;1我们才可以枚举左边分支填1.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="k">if</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">last</span><span class="o">-</span><span class="mi">1</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                    <span class="c1">//如果还可以填1的话。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                    <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">k</span><span class="o">-</span><span class="n">last</span><span class="o">-</span><span class="mi">1</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">                <span class="k">break</span><span class="p">;</span><span class="c1">//因为右边分支只能为0或1，所以不符合条件。break。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="k">else</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">//当x=1就可以进入右边的分支继续讨论。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="n">last</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span><span class="p">(</span><span class="n">last</span><span class="o">&gt;</span><span class="n">k</span><span class="p">)</span><span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//考虑到最后一位，如果符合条件那么末位填0也算一种方案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">i</span><span class="o">&amp;&amp;</span><span class="n">last</span><span class="o">==</span><span class="n">k</span><span class="p">)</span><span class="n">ans</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">solve</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">l</span><span class="o">&gt;&gt;</span><span class="n">r</span><span class="o">&gt;&gt;</span><span class="n">k</span><span class="o">&gt;&gt;</span><span class="n">b</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">init</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">dp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">-</span><span class="n">dp</span><span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">solve</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="32-计数问题httpswwwacwingcomproblemcontent340" class="heading-element"><span>3.2 <a href="https://www.acwing.com/problem/content/340/"target="_blank" rel="external nofollow noopener noreferrer">3.2 计数问题<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></span>
+  <a href="#32-%e8%ae%a1%e6%95%b0%e9%97%ae%e9%a2%98httpswwwacwingcomproblemcontent340" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>题面</strong></p>
+<blockquote>
+<p>给定两个整数 a 和 b，求 a 和 b 之间的所有数字中 0∼90∼9 的出现次数。</p>
+<p>例如，$a=1024，b=1032$，则 a 和 b 之间共有 99 个数如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">1024 1025 1026 1027 1028 1029 1030 1031 1032</span></span></code></pre></td></tr></table>
+</div>
+</div><p>其中 <code>0</code> 出现 10次，<code>1</code> 出现 10 次，<code>2</code> 出现 7 次，<code>3</code> 出现 3 次等等…</p>
+<p>输入格式</p>
+<p>输入包含多组测试数据。</p>
+<p>每组测试数据占一行，包含两个整数 a 和 b。</p>
+<p>当读入一行为 <code>0 0</code> 时，表示输入终止，且该行不作处理。</p>
+<p>输出格式</p>
+<p>每组数据输出一个结果，每个结果占一行。</p>
+<p>每个结果包含十个用空格隔开的数字，第一个数字表示 <code>0</code> 出现的次数，第二个数字表示 <code>1</code> 出现的次数，以此类推。</p>
+<p>数据范围</p>
+<p>$0&lt;a,b&lt;1000000000&lt;a,b&lt;100000000$</p>
+<p>输入样例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mi">1</span> <span class="mi">10</span>
+</span></span><span class="line"><span class="cl"><span class="mi">44</span> <span class="mi">497</span>
+</span></span><span class="line"><span class="cl"><span class="mi">346</span> <span class="mi">542</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1199</span> <span class="mi">1748</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1496</span> <span class="mi">1403</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1004</span> <span class="mi">503</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1714</span> <span class="mi">190</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1317</span> <span class="mi">854</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1976</span> <span class="mi">494</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1001</span> <span class="mi">1960</span>
+</span></span><span class="line"><span class="cl"><span class="mi">0</span> <span class="mi">0</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>输出样例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mi">1</span> <span class="mi">2</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl"><span class="mi">85</span> <span class="mi">185</span> <span class="mi">185</span> <span class="mi">185</span> <span class="mi">190</span> <span class="mi">96</span> <span class="mi">96</span> <span class="mi">96</span> <span class="mi">95</span> <span class="mi">93</span>
+</span></span><span class="line"><span class="cl"><span class="mi">40</span> <span class="mi">40</span> <span class="mi">40</span> <span class="mi">93</span> <span class="mi">136</span> <span class="mi">82</span> <span class="mi">40</span> <span class="mi">40</span> <span class="mi">40</span> <span class="mi">40</span>
+</span></span><span class="line"><span class="cl"><span class="mi">115</span> <span class="mi">666</span> <span class="mi">215</span> <span class="mi">215</span> <span class="mi">214</span> <span class="mi">205</span> <span class="mi">205</span> <span class="mi">154</span> <span class="mi">105</span> <span class="mi">106</span>
+</span></span><span class="line"><span class="cl"><span class="mi">16</span> <span class="mi">113</span> <span class="mi">19</span> <span class="mi">20</span> <span class="mi">114</span> <span class="mi">20</span> <span class="mi">20</span> <span class="mi">19</span> <span class="mi">19</span> <span class="mi">16</span>
+</span></span><span class="line"><span class="cl"><span class="mi">107</span> <span class="mi">105</span> <span class="mi">100</span> <span class="mi">101</span> <span class="mi">101</span> <span class="mi">197</span> <span class="mi">200</span> <span class="mi">200</span> <span class="mi">200</span> <span class="mi">200</span>
+</span></span><span class="line"><span class="cl"><span class="mi">413</span> <span class="mi">1133</span> <span class="mi">503</span> <span class="mi">503</span> <span class="mi">503</span> <span class="mi">502</span> <span class="mi">502</span> <span class="mi">417</span> <span class="mi">402</span> <span class="mi">412</span>
+</span></span><span class="line"><span class="cl"><span class="mi">196</span> <span class="mi">512</span> <span class="mi">186</span> <span class="mi">104</span> <span class="mi">87</span> <span class="mi">93</span> <span class="mi">97</span> <span class="mi">97</span> <span class="mi">142</span> <span class="mi">196</span>
+</span></span><span class="line"><span class="cl"><span class="mi">398</span> <span class="mi">1375</span> <span class="mi">398</span> <span class="mi">398</span> <span class="mi">405</span> <span class="mi">499</span> <span class="mi">499</span> <span class="mi">495</span> <span class="mi">488</span> <span class="mi">471</span>
+</span></span><span class="line"><span class="cl"><span class="mi">294</span> <span class="mi">1256</span> <span class="mi">296</span> <span class="mi">296</span> <span class="mi">296</span> <span class="mi">296</span> <span class="mi">287</span> <span class="mi">286</span> <span class="mi">286</span> <span class="mi">247</span></span></span></code></pre></td></tr></table>
+</div>
+</div></blockquote>
+</li>
+<li>
+<p><strong>解题思路</strong></p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9cff4c573361692ac8f6cef1b47a916-20231125213409021.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>我们需要预处理$f$数组，那么我们可以用$f[i,j,u]$表示$i$位，最高位为$j$的数拥有$u$的个数。那么如果$j$不等于$u$时，则$f[i][j][u]+=f[i-1][k][u],0\leq k \leq 9$。这个应该不难理解，因为这个状态就是由之前的状态得到的。 而当$j$等于$u$时，那么同样也可以由之前的$9$个状态得到。为$f[i][j][u]+=f[i-1][k][u],0\leq k \leq 9$。记住，我们是还没有计算最高位的$u$个数的，因为最高位本身就为$u$，也是一种可能，所以我们需要加上。那么总共有$10^{i-1}$多的数，所以增加的u的数量为$10^{i-1}$。初始状态就是$f[1][i][i]=1$，到这，我们的$f$数组就初始化完了，那么接下来。就是拆位分支的数位$DP$套路讨论了，这里不在叙述，代码附详细注释。</p>
+</li>
+<li>
+<p><strong>代码</strong></p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@filename:计数问题
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@author: pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@csdn:unique_pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@email: 2825841950@qq.com
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@created: 2021-05-12 13:12
+</span></span></span><span class="line"><span class="cl"><span class="cm">**/</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mi">100000</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">mod</span> <span class="o">=</span> <span class="mf">1e9</span><span class="o">+</span><span class="mi">7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">f</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">10</span><span class="p">][</span><span class="mi">10</span><span class="p">];</span><span class="c1">//预处理f数组。其中f[i][j][u]表示i位最高位为j的数拥有u的个数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">11</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">u</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">u</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">u</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">//判断j是否等于u。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="o">==</span><span class="n">u</span><span class="p">)</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">u</span><span class="p">]</span><span class="o">+=</span><span class="n">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">                <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">k</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">u</span><span class="p">]</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">][</span><span class="n">u</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="n">ll</span> <span class="nf">dp</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span><span class="kt">int</span> <span class="n">u</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//1~n,求x的出现次数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">n</span><span class="p">)</span><span class="k">return</span> <span class="n">u</span><span class="o">?</span><span class="mi">0</span><span class="o">:</span><span class="mi">1</span><span class="p">;</span><span class="c1">//特判n是否为0.根据u的值确定返回值。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">nums</span><span class="p">;</span><span class="c1">//存储分割后的位数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="n">nums</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="mi">10</span><span class="p">),</span><span class="n">n</span><span class="o">/=</span><span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">last</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//last记录前面u出现的次数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ll</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//答案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//左边分支，0~x。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="n">j</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//由于此题不能有前导0.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">u</span><span class="p">];</span><span class="c1">//注意这里i需要+1，因为我们i下标从0开始。而位数从1开始。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//走左边分支，那么我们需要加上前面的个数。注意这里需要乘上x，因为左边分支有x中选择。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">ans</span><span class="o">+=</span><span class="n">x</span><span class="o">*</span><span class="n">last</span><span class="o">*</span><span class="n">pow</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span><span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">==</span><span class="n">u</span><span class="p">)</span><span class="n">last</span><span class="o">++</span><span class="p">;</span><span class="c1">//记录last。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">i</span><span class="p">)</span><span class="n">ans</span><span class="o">+=</span><span class="n">last</span><span class="p">;</span><span class="c1">//加上这个数本身含有的。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//由于我们前面都是枚举n位数的，我们还需要统计所有0~n-1位数的方案数量。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//例如000011是不合法的，但11是合法的。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//这一步确实很容易忽略，没办法，数位DP就是这么难。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="p">(</span><span class="n">i</span><span class="o">!=</span><span class="mi">1</span><span class="p">);</span><span class="n">j</span><span class="o">&lt;=</span><span class="mi">9</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">u</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">solve</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">init</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">l</span><span class="o">&gt;&gt;</span><span class="n">r</span><span class="o">&amp;&amp;</span><span class="p">(</span><span class="n">l</span><span class="o">||</span><span class="n">r</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">l</span><span class="o">&gt;</span><span class="n">r</span><span class="p">)</span><span class="n">swap</span><span class="p">(</span><span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;=</span><span class="mi">9</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">dp</span><span class="p">(</span><span class="n">r</span><span class="p">,</span><span class="n">i</span><span class="p">)</span><span class="o">-</span><span class="n">dp</span><span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="n">i</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">            <span class="n">i</span><span class="o">==</span><span class="mi">9</span><span class="o">?</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="nl">endl</span><span class="p">:</span><span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&#34; &#34;</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">solve</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="33-数字游戏httpswwwacwingcomactivitycontent11" class="heading-element"><span>3.3 <a href="https://www.acwing.com/activity/content/11/"target="_blank" rel="external nofollow noopener noreferrer">3.3 数字游戏<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></span>
+  <a href="#33-%e6%95%b0%e5%ad%97%e6%b8%b8%e6%88%8fhttpswwwacwingcomactivitycontent11" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>题面</strong></p>
+<blockquote>
+<p>科协里最近很流行数字游戏。</p>
+<p>某人命名了一种不降数，这种数字必须满足从左到右各位数字呈非下降关系，如 123，446。</p>
+<p>现在大家决定玩一个游戏，指定一个整数闭区间 [a,b]，问这个区间内有多少个不降数。</p>
+<p><strong>输入格式</strong>
+输入包含多组测试数据。</p>
+<p>每组数据占一行，包含两个整数 a 和 b。</p>
+<p><strong>输出格式</strong>
+每行给出一组测试数据的答案，即 [a,b] 之间有多少不降数。</p>
+<p><strong>数据范围</strong>
+$1≤ a ≤ b ≤2^{31}−1$</p>
+<p><strong>样例输入</strong>
+1 9
+1 19
+<strong>样例输出</strong>
+9
+18</p>
+</blockquote>
+</li>
+<li>
+<p><strong>解题思路</strong></p>
+<p>同样的套路， 先预处理$f$数组，我们用$f[i][j]$表示$i$位数，且最高位为$j$的不降数方案数。那么我们来列写一下状态转移方程，对于$f[i][j]$，要满足不降数的要求，则$f[i-1][k]$，$k$需满足$j \leq k \leq 9$，那么自然$f[i][j]=\sum_{k=j}^9 f[i-1][k]$。而初始状态自然是$f[1][j]=1$。预处理完之后，我们就好做了，直接按数位$DP$的思想处理即可。代码附详细注释。</p>
+</li>
+<li>
+<p><strong>代码</strong></p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@filename:数字游戏
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@author: pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@csdn:unique_pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@email: 2825841950@qq.com
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@created: 2021-05-12 14:57
+</span></span></span><span class="line"><span class="cl"><span class="cm">**/</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mi">100000</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">mod</span> <span class="o">=</span> <span class="mf">1e9</span><span class="o">+</span><span class="mi">7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">f</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">11</span><span class="p">];</span><span class="c1">//预处理f数组。其中f[i][j]表示i位数，且最高位为j的不降数方案数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">11</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="o">=</span><span class="n">j</span><span class="p">;</span><span class="n">k</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">dp</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//1~n，这里我们需要特判n=0。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">n</span><span class="p">)</span><span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">nums</span><span class="p">;</span><span class="c1">//存储分割位数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="n">nums</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="mi">10</span><span class="p">),</span><span class="n">n</span><span class="o">/=</span><span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">last</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//last存储上一位的最大值。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//答案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//走左边的分支。因为要保持不降序，所以我们j&gt;=last。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="n">last</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">];</span><span class="c1">//注意是i+1位。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">last</span><span class="o">&gt;</span><span class="n">x</span><span class="p">)</span><span class="k">break</span><span class="p">;</span><span class="c1">//说明上一位比x大，不能构成降序了，直接退出。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">last</span><span class="o">=</span><span class="n">x</span><span class="p">;</span><span class="c1">//走右分支了，更新last。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">i</span><span class="p">)</span><span class="n">ans</span><span class="o">++</span><span class="p">;</span><span class="c1">//全部枚举完了，自身也同样构成了一种方案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">init</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">l</span><span class="o">&gt;&gt;</span><span class="n">r</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">dp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">-</span><span class="n">dp</span><span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="34-windy数httpswwwluogucomcnproblemp2657" class="heading-element"><span>3.4 <a href="https://www.luogu.com.cn/problem/P2657"target="_blank" rel="external nofollow noopener noreferrer">3.4 windy数<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></span>
+  <a href="#34-windy%e6%95%b0httpswwwluogucomcnproblemp2657" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>题面</strong></p>
+<blockquote>
+<p>windy 定义了一种 windy 数。</p>
+<p>不含前导零且相邻两个数字之差至少为 2 的正整数被称为 windy 数。windy 想知道，在 a 和 b 之间，包括 <em>a</em> 和 <em>b</em> ，总共有多少个 windy 数？</p>
+<p><strong>输入格式</strong></p>
+<p>输入只有一行两个整数，分别表示 <em>a</em> 和 <em>b</em>。</p>
+<p><strong>输出格式</strong></p>
+<p>输出一行一个整数表示答案。</p>
+<p><strong>输入输出样例</strong></p>
+<p><strong>输入 #1</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">1 10</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>输出 #1</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">9</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>输入 #2</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">25 50</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>输出 #2</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">20</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>说明/提示</strong></p>
+<p><strong>数据规模与约定</strong></p>
+<p>对于全部的测试点，保证 $1 \leq a \leq b \leq 2 \times 10^9$。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>解题思路</strong></p>
+<p>同样，我们先进行预处理$f$数组，其中$f[i][j]$表示$i$位，其中最高位为$j$的方案数。那么根据题意，状态转移方程即为$f[i][j]=\sum_{}f[i-1][k]$，其中$0 \leq k \leq 9 \space and \space abs(k-j)&gt;=2$。而初始状态即为$dp[1][i]=1$。预处理完之后就好处理了，这里不再提供思路，请大家自己画出树结构并完成此题。</p>
+</li>
+<li>
+<p><strong>代码</strong></p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@filename:windy数
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@author: pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@csdn:unique_pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@email: 2825841950@qq.com
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@created: 2021-05-12 15:43
+</span></span></span><span class="line"><span class="cl"><span class="cm">**/</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mi">100000</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">mod</span> <span class="o">=</span> <span class="mf">1e9</span><span class="o">+</span><span class="mi">7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">f</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">10</span><span class="p">];</span><span class="c1">//f数组。其中f[i][j]表示i位，其中最高位为j的方案数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">11</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">k</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span><span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">j</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">2</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">dp</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//特判n为0的情况，避免对之后操作造成影响。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">nums</span><span class="p">;</span><span class="c1">//存储分割位数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">last</span><span class="o">=-</span><span class="mi">2</span><span class="p">;</span><span class="c1">//存储上一位的值。这里初值为-2,是因为我们需要确定1可以。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//答案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="n">nums</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="mi">10</span><span class="p">),</span><span class="n">n</span><span class="o">/=</span><span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="n">nums</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//左分支。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span><span class="n">j</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">j</span><span class="o">-</span><span class="n">last</span><span class="p">)</span><span class="o">&gt;=</span><span class="mi">2</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">//说明符合要求。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">abs</span><span class="p">(</span><span class="n">x</span><span class="o">-</span><span class="n">last</span><span class="p">)</span><span class="o">&lt;</span><span class="mi">2</span><span class="p">)</span><span class="k">break</span><span class="p">;</span><span class="c1">//不满足要去。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">last</span><span class="o">=</span><span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">i</span><span class="p">)</span><span class="n">ans</span><span class="o">++</span><span class="p">;</span><span class="c1">//枚举到最后一位，自身也形成了一种方案。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//特殊枚举有前导0的数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">nums</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;=</span><span class="mi">9</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">solve</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">init</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">l</span><span class="o">&gt;&gt;</span><span class="n">r</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">dp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">-</span><span class="n">dp</span><span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">solve</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="35-数字游戏httpswwwacwingcomactivitycontent11" class="heading-element"><span>3.5 <a href="https://www.acwing.com/activity/content/11/"target="_blank" rel="external nofollow noopener noreferrer">3.5 数字游戏Ⅱ<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></span>
+  <a href="#35-%e6%95%b0%e5%ad%97%e6%b8%b8%e6%88%8fhttpswwwacwingcomactivitycontent11" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>题面</strong></p>
+<blockquote>
+<p>由于科协里最近真的很流行数字游戏。</p>
+<p>某人又命名了一种取模数，这种数字必须满足各位数字之和$modN$为 0。</p>
+<p>现在大家又要玩游戏了，指定一个整数闭区间 [a.b]，问这个区间内有多少个取模数。</p>
+<p>数据范围
+$1≤a,b≤2^{31}−1$,
+$1≤N&lt;100$
+样例
+输入
+1 19 9</p>
+<p>输出
+2</p>
+</blockquote>
+</li>
+<li>
+<p><strong>解题思路</strong></p>
+<p>虽然这道题看起来很复杂，但是本质还是还是数位DP的套路，只不过现在性质是满足各位数字之和$mod N$为0。那么此题实际上困难点在于预处理，我们发现预处理这其实就是一个$dp$，我们用闫式$DP$分析法分析如下：
+<a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/d9a440fdaf5a847c7cdc37227b76acf5.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>我们得到这个$f$数组有什么用呢？我们发现，如果我现在已知前面的位数相加为$last$，在左分支处，由于后面的数可以随便枚举，所以我们利用这个性质直接累加$f[i+1][j][mod(-last,p)]$即可得到种类数。故此按照数位$DP$步骤易解。</p>
+</li>
+<li>
+<p><strong>代码</strong></p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@filename:数字游戏Ⅱ
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@author: pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@csdn:unique_pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@email: 2825841950@qq.com
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@created: 2021-05-12 18:23
+</span></span></span><span class="line"><span class="cl"><span class="cm">**/</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mi">100000</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">,</span><span class="n">p</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">f</span><span class="p">[</span><span class="mi">12</span><span class="p">][</span><span class="mi">12</span><span class="p">][</span><span class="mi">110</span><span class="p">];</span><span class="c1">//f[i][j][k]表示i位数，最高位是j，其模n的余数是k的方案数。
+</span></span></span><span class="line"><span class="cl"><span class="c1">//预处理也是一个dp过程。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="nf">mod</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">,</span><span class="kt">int</span> <span class="n">y</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//由于c++中的%负数会得到负数，所以我们需要做一个偏移。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">return</span> <span class="p">(</span><span class="n">x</span><span class="o">%</span><span class="n">y</span><span class="o">+</span><span class="n">y</span><span class="p">)</span><span class="o">%</span><span class="n">y</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">memset</span><span class="p">(</span><span class="n">f</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="k">sizeof</span><span class="p">(</span><span class="n">f</span><span class="p">));</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//预处理f数组。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">][</span><span class="n">i</span><span class="o">%</span><span class="n">p</span><span class="p">]</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">12</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">k</span><span class="o">&lt;</span><span class="n">p</span><span class="p">;</span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">x</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">x</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                    <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">k</span><span class="p">]</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">x</span><span class="p">][</span><span class="n">mod</span><span class="p">(</span><span class="n">k</span><span class="o">-</span><span class="n">j</span><span class="p">,</span><span class="n">p</span><span class="p">)];</span>
+</span></span><span class="line"><span class="cl">                <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">dp</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">n</span><span class="p">)</span><span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">;</span><span class="c1">//存储切出来的位数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="n">a</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="mi">10</span><span class="p">),</span><span class="n">n</span><span class="o">/=</span><span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">last</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//last存储前面数字之和。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//走左边分支。为了凑成模n余0，则接下来的所有位数相加+last模n为0，所以我们来个-last即可。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">][</span><span class="n">mod</span><span class="p">(</span><span class="o">-</span><span class="n">last</span><span class="p">,</span><span class="n">p</span><span class="p">)];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">last</span><span class="o">+=</span><span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">i</span><span class="o">&amp;&amp;</span><span class="n">last</span><span class="o">%</span><span class="n">p</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span><span class="n">ans</span><span class="o">++</span><span class="p">;</span><span class="c1">//判断本身是否符合条件。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">solve</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">l</span><span class="o">&gt;&gt;</span><span class="n">r</span><span class="o">&gt;&gt;</span><span class="n">p</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">init</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">dp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">-</span><span class="n">dp</span><span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">solve</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="36-不要62httpacmhdueducnshowproblemphppid2089" class="heading-element"><span>3.6 <a href="http://acm.hdu.edu.cn/showproblem.php?pid=2089"target="_blank" rel="external nofollow noopener noreferrer">3.6 不要62<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></span>
+  <a href="#36-%e4%b8%8d%e8%a6%8162httpacmhdueducnshowproblemphppid2089" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>题面</strong></p>
+<blockquote>
+<p>杭州人称那些傻乎乎粘嗒嗒的人为62（音：laoer）。
+杭州交通管理局经常会扩充一些的士车牌照，新近出来一个好消息，以后上牌照，不再含有不吉利的数字了，这样一来，就可以消除个别的士司机和乘客的心理障碍，更安全地服务大众。
+不吉利的数字为所有含有4或62的号码。例如：
+62315 73418 88914
+都属于不吉利号码。但是，61152虽然含有6和2，但不是62连号，所以不属于不吉利数字之列。
+你的任务是，对于每次给出的一个牌照区间号，推断出交管局今次又要实际上给多少辆新的士车上牌照了。</p>
+<p>Input</p>
+<p>输入的都是整数对n、m（0&lt;n≤m&lt;1000000），如果遇到都是0的整数对，则输入结束。</p>
+<p>Output</p>
+<p>对于每个整数对，输出一个不含有不吉利数字的统计个数，该数值占一行位置。</p>
+<p>Sample Input</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">1 100
+</span></span><span class="line"><span class="cl">0 0</span></span></code></pre></td></tr></table>
+</div>
+</div><p>Sample Output</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-c++" data-lang="c++"><span class="line"><span class="cl"><span class="mi">80</span></span></span></code></pre></td></tr></table>
+</div>
+</div></blockquote>
+</li>
+<li>
+<p><strong>解题思路</strong></p>
+<p>这道题相对来说比较简单，因为预处理这一部分我们很容易想到。用$f[i][j]$表示$i$位数字且最高位为$j$的方案数。那么我们排除掉特殊情况进行状态转移即可。代码附详细注释。</p>
+</li>
+<li>
+<p><strong>代码</strong></p>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cm">/**
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@filename:不要62
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@author: pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@csdn:unique_pursuit
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@email: 2825841950@qq.com
+</span></span></span><span class="line"><span class="cl"><span class="cm">  *@created: 2021-05-12 19:56
+</span></span></span><span class="line"><span class="cl"><span class="cm">**/</span>
+</span></span><span class="line"><span class="cl"><span class="cp">#include</span> <span class="cpf">&lt;bits/stdc++.h&gt;</span><span class="cp">
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mi">100000</span> <span class="o">+</span> <span class="mi">5</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">mod</span> <span class="o">=</span> <span class="mf">1e9</span><span class="o">+</span><span class="mi">7</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">l</span><span class="p">,</span><span class="n">r</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">f</span><span class="p">[</span><span class="mi">11</span><span class="p">][</span><span class="mi">11</span><span class="p">];</span><span class="c1">//f[i][j]表示i位数且最高位为j的方案数。
+</span></span></span><span class="line"><span class="cl"><span class="c1">//那么我们来对这个进行分析，对于f[i][j]这个状态，我们根据题意我们转移的f[i-1][k]必须满足k!=4,j!=4.
+</span></span></span><span class="line"><span class="cl"><span class="c1">//并且jk!=62.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">init</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span><span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//排除4的情况。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">f</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="mi">2</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="mi">11</span><span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="o">==</span><span class="mi">4</span><span class="p">)</span><span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">k</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">k</span><span class="o">&lt;</span><span class="mi">10</span><span class="p">;</span><span class="n">k</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span><span class="p">((</span><span class="n">j</span><span class="o">==</span><span class="mi">6</span><span class="o">&amp;&amp;</span><span class="n">k</span><span class="o">==</span><span class="mi">2</span><span class="p">)</span><span class="o">||</span><span class="n">k</span><span class="o">==</span><span class="mi">4</span><span class="p">)</span><span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">                <span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">k</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">dp</span><span class="p">(</span><span class="kt">int</span> <span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">n</span><span class="p">)</span><span class="k">return</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">vector</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span> <span class="n">a</span><span class="p">;</span><span class="c1">//存储分割位数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">ans</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span><span class="n">last</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//last保存上一位的值。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">while</span><span class="p">(</span><span class="n">n</span><span class="p">)</span><span class="n">a</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">n</span><span class="o">%</span><span class="mi">10</span><span class="p">),</span><span class="n">n</span><span class="o">/=</span><span class="mi">10</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">i</span><span class="o">=</span><span class="n">a</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">i</span><span class="o">&gt;=</span><span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">--</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">x</span><span class="o">=</span><span class="n">a</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span><span class="p">(</span><span class="kt">int</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">j</span><span class="o">&lt;</span><span class="n">x</span><span class="p">;</span><span class="n">j</span><span class="o">++</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//走左边分支，我们需要判断。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">if</span><span class="p">(</span><span class="n">j</span><span class="o">==</span><span class="mi">4</span><span class="o">||</span><span class="p">(</span><span class="n">j</span><span class="o">==</span><span class="mi">2</span><span class="o">&amp;&amp;</span><span class="n">last</span><span class="o">==</span><span class="mi">6</span><span class="p">))</span><span class="k">continue</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">ans</span><span class="o">+=</span><span class="n">f</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">x</span><span class="o">==</span><span class="mi">4</span><span class="o">||</span><span class="p">(</span><span class="n">last</span><span class="o">==</span><span class="mi">6</span><span class="o">&amp;&amp;</span><span class="n">x</span><span class="o">==</span><span class="mi">2</span><span class="p">))</span><span class="k">break</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">last</span><span class="o">=</span><span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="o">!</span><span class="n">i</span><span class="p">)</span><span class="n">ans</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">ans</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">solve</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">init</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">l</span><span class="o">&gt;&gt;</span><span class="n">r</span><span class="o">&amp;&amp;</span><span class="p">(</span><span class="n">l</span><span class="o">||</span><span class="n">r</span><span class="p">)){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">dp</span><span class="p">(</span><span class="n">r</span><span class="p">)</span><span class="o">-</span><span class="n">dp</span><span class="p">(</span><span class="n">l</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">solve</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="37-恨7不成妻httpacmhdueducnshowproblemphppid4507" class="heading-element"><span>3.7 <a href="http://acm.hdu.edu.cn/showproblem.php?pid=4507"target="_blank" rel="external nofollow noopener noreferrer">3.7 恨7不成妻<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></span>
+  <a href="#37-%e6%81%a87%e4%b8%8d%e6%88%90%e5%a6%bbhttpacmhdueducnshowproblemphppid4507" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>由于此题太过变态，已单开一篇blog讲解： <a href="https://unique-pure.github.io/pages/243024/"target="_blank" rel="external nofollow noopener noreferrer">点这里<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>。</p>
+<h2 id="数位dp总结" class="heading-element"><span>4 数位DP总结</span>
+  <a href="#%e6%95%b0%e4%bd%8ddp%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>做了这么多的题，我们发现数位$DP$确实是有套路的，难点就在于预处理，通常就是要用$DP$来预处理，这里推荐大家学一下闫式$DP$分析法。预处理完之后，就可以套路做题了。当然，学$DP$一定要多刷题，所以请各位一定要多多刷题哦！</p>
+]]></description></item></channel></rss>

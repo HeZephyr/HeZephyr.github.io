@@ -1,0 +1,54 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>学习 - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E5%AD%A6%E4%B9%A0/</link><description>学习 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sat, 11 May 2024 21:46:26 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E5%AD%A6%E4%B9%A0/" rel="self" type="application/rss+xml"/><item><title>优秀的CS学习网站</title><link>https://lruihao.cn/posts/01.%E8%AF%BE%E7%A8%8B%E7%BD%91%E7%AB%99/</link><pubDate>Sat, 11 May 2024 21:46:26 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/01.%E8%AF%BE%E7%A8%8B%E7%BD%91%E7%AB%99/</guid><description><![CDATA[<h2 id="操作系统" class="heading-element"><span>1 操作系统</span>
+  <a href="#%e6%93%8d%e4%bd%9c%e7%b3%bb%e7%bb%9f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="nju操作系统设计与实现" class="heading-element"><span>1.1 NJU操作系统：设计与实现</span>
+  <a href="#nju%e6%93%8d%e4%bd%9c%e7%b3%bb%e7%bb%9f%e8%ae%be%e8%ae%a1%e4%b8%8e%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>先修要求：</p>
+<ul>
+<li>C语言</li>
+<li>一些汇编语言基础</li>
+<li>计算机基础</li>
+</ul>
+<p>这是NJU jyy老师的操作系统课程，每年都会在B站更新最新的操作系统课程视频，当然过往课程也可以找到。</p>
+<p><a href="https://jyywiki.cn/OS/2022/index.html"target="_blank" rel="external nofollow noopener noreferrer">2022年OS 网站<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://www.bilibili.com/video/BV1Cm4y1d7Ur/?spm_id_from=333.788&amp;vd_source=cf653f235f52de98cb93354b5c75a0bc"target="_blank" rel="external nofollow noopener noreferrer">2022年OS 视频<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://pages.cs.wisc.edu/~remzi/OSTEP/"target="_blank" rel="external nofollow noopener noreferrer">课程教程OSTEP<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://jyywiki.cn/OS/2022/index.html"target="_blank" rel="external nofollow noopener noreferrer">2022年OS Lab<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h3 id="mit6s081-operating-system-engineering" class="heading-element"><span>1.2 MIT6.S081: Operating System Engineering</span>
+  <a href="#mit6s081-operating-system-engineering" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>先修要求：</p>
+<ul>
+<li>C语言</li>
+<li>一些汇编语言基础</li>
+<li>计算机基础</li>
+</ul>
+<p><a href="https://pdos.csail.mit.edu/6.828/2021/schedule.html"target="_blank" rel="external nofollow noopener noreferrer">课程网站<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://www.youtube.com/watch?v=L6YqHxYHa7A"target="_blank" rel="external nofollow noopener noreferrer">课程视频<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://mit-public-courses-cn-translatio.gitbook.io/mit6-s081/"target="_blank" rel="external nofollow noopener noreferrer">课程视频翻译文档<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://pdos.csail.mit.edu/6.828/2021/xv6/book-riscv-rev2.pdf"target="_blank" rel="external nofollow noopener noreferrer">课程教材<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://pdos.csail.mit.edu/6.828/2021/schedule.html"target="_blank" rel="external nofollow noopener noreferrer">课程作业<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h2 id="分布式系统" class="heading-element"><span>2 分布式系统</span>
+  <a href="#%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="mit6824after-2022-65840-distributed-system" class="heading-element"><span>2.1 MIT6.824(after 2022, 6.5840): Distributed System</span>
+  <a href="#mit6824after-2022-65840-distributed-system" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>先修要求：</p>
+<ul>
+<li>Go语言</li>
+<li>操作系统</li>
+<li>并发编程</li>
+<li>计算机体系结构</li>
+</ul>
+<p><a href="https://pdos.csail.mit.edu/6.824/"target="_blank" rel="external nofollow noopener noreferrer">课程网站<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://www.bilibili.com/video/BV1CU4y1P7PE/?spm_id_from=333.337.search-card.all.click"target="_blank" rel="external nofollow noopener noreferrer">课程视频-中文字幕<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://mit-public-courses-cn-translatio.gitbook.io/mit6-824"target="_blank" rel="external nofollow noopener noreferrer">课程中文文档<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="http://nil.csail.mit.edu/6.824/2022/"target="_blank" rel="external nofollow noopener noreferrer">课程作业<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+]]></description></item></channel></rss>

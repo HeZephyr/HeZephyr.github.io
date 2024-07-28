@@ -1,0 +1,606 @@
+<!doctype html><html itemscope itemtype=http://schema.org/WebPage lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=2"><meta name=robots content="noodp"><title>锁 | ZephyrHe</title><meta name=author content="HeZephyr">
+<meta name=author-link content="https://github.com/HeZephyr"><meta name=description content="1 锁：基本思想 举个例子，假设我们的临界区如下所示，共享变量的规范更新： 1 balance = balance + 1; 当然，其他临界区也是可能的，例如向链表添加元素或对共享结构进行其他更复杂的更新，但我们现在只保留这个简单的示例。要使用锁，我们在临界区周围添加一些代码，如下所示： 1 2 3 4 5 lock_t mutex; // some globally-allocated lock ’mutex’ ... lock(&amp;mutex); balance = balance + 1; unlock(&amp;mutex); 锁只"><meta name=keywords content='OS'><meta itemprop=name content="锁"><meta itemprop=description content="1 锁：基本思想 举个例子，假设我们的临界区如下所示，共享变量的规范更新： 1 balance = balance + 1; 当然，其他临界区也是可能的，例如向链表添加元素或对共享结构进行其他更复杂的更新，但我们现在只保留这个简单的示例。要使用锁，我们在临界区周围添加一些代码，如下所示： 1 2 3 4 5 lock_t mutex; // some globally-allocated lock ’mutex’ ... lock(&amp;mutex); balance = balance + 1; unlock(&amp;mutex); 锁只"><meta itemprop=datePublished content="2024-05-11T20:38:09+00:00"><meta itemprop=dateModified content="2024-07-28T09:02:18+00:00"><meta itemprop=wordCount content="11648"><meta itemprop=image content="https://lruihao.cn/images/apple-devices-preview.webp"><meta itemprop=keywords content="OS"><meta property="og:url" content="https://lruihao.cn/posts/21.%E9%94%81/"><meta property="og:site_name" content="ZephyrHe"><meta property="og:title" content="锁"><meta property="og:description" content="1 锁：基本思想 举个例子，假设我们的临界区如下所示，共享变量的规范更新： 1 balance = balance + 1; 当然，其他临界区也是可能的，例如向链表添加元素或对共享结构进行其他更复杂的更新，但我们现在只保留这个简单的示例。要使用锁，我们在临界区周围添加一些代码，如下所示： 1 2 3 4 5 lock_t mutex; // some globally-allocated lock ’mutex’ ... lock(&amp;mutex); balance = balance + 1; unlock(&amp;mutex); 锁只"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-05-11T20:38:09+00:00"><meta property="article:modified_time" content="2024-07-28T09:02:18+00:00"><meta property="article:tag" content="OS"><meta property="og:image" content="https://lruihao.cn/images/apple-devices-preview.webp"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://lruihao.cn/images/apple-devices-preview.webp"><meta name=twitter:title content="锁"><meta name=twitter:description content="1 锁：基本思想 举个例子，假设我们的临界区如下所示，共享变量的规范更新： 1 balance = balance + 1; 当然，其他临界区也是可能的，例如向链表添加元素或对共享结构进行其他更复杂的更新，但我们现在只保留这个简单的示例。要使用锁，我们在临界区周围添加一些代码，如下所示： 1 2 3 4 5 lock_t mutex; // some globally-allocated lock ’mutex’ ... lock(&amp;mutex); balance = balance + 1; unlock(&amp;mutex); 锁只"><meta name=application-name content="Zephyr's Blog"><meta name=apple-mobile-web-app-title content="Zephyr's Blog"><meta name=theme-color data-light=#ffffff data-dark=#252627 content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://lruihao.cn/posts/21.%E9%94%81/><link rel=prev href=https://lruihao.cn/posts/20.%E7%BA%BF%E7%A8%8Bapi/><link rel=next href=https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://unpkg.com/@fortawesome/fontawesome-free@6.4.2/css/all.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=https://unpkg.com/@fortawesome/fontawesome-free@6.4.2/css/all.min.css></noscript><link rel=preload href=https://unpkg.com/animate.css@4.1.1/animate.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=https://unpkg.com/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"锁","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/lruihao.cn\/posts\/21.%E9%94%81\/"},"image":[{"@type":"ImageObject","url":"https:\/\/lruihao.cn\/images\/apple-devices-preview.webp","width":2880,"height":1508}],"genre":"posts","keywords":"OS","wordcount":11648,"url":"https:\/\/lruihao.cn\/posts\/21.%E9%94%81\/","datePublished":"2024-05-11T20:38:09+00:00","dateModified":"2024-07-28T09:02:18+00:00","license":"本站内容采用 CC BY-NC-SA 4.0 国际许可协议。","publisher":{"@type":"Organization","name":"Lruihao","logo":"https:\/\/lruihao.cn\/images\/avatar.jpg"},"author":{"@type":"Person","name":"HeZephyr"},"description":""}</script></head><body data-header-desktop=sticky data-header-mobile=auto><script>(window.localStorage?.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("data-theme","dark")</script><div class=wrapper data-page-style=normal><header class="desktop animate__faster" id=header-desktop><div class=header-wrapper data-github-corner=right><div class=header-title><a href=/ title=ZephyrHe><img loading=lazy src=/images/logo.png alt=ZephyrHe data-title=ZephyrHe width=26 height=26 class=logo style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span class=header-title-text>HeZephyr</span></a><span class=header-subtitle>贺志飞的博客</span></div><nav><ul class=menu><li class="menu-item has-children"><a class=menu-link href=/archives/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 归档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/collections/><i class="fa-solid fa-layer-group fa-fw fa-sm" aria-hidden=true></i> 合集</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends/ title=友情链接><i class="fa-solid fa-users-viewfinder fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/guestbook/><i class="fa-solid fa-comments fa-fw fa-sm" aria-hidden=true></i> 留言</a></li><li class=menu-item><a class=menu-link href=/about/><i class="fa-solid fa-signature fa-fw fa-sm" aria-hidden=true></i> 关于</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id=search-desktop><input type=text placeholder=搜索文章标题或内容…… id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></li><li class="menu-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></li></ul></nav></div></header><header class="mobile animate__faster" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=ZephyrHe><img loading=lazy src=/images/logo.png alt=ZephyrHe data-title=ZephyrHe width=26 height=26 class=logo style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span class=header-title-text>HeZephyr</span></a><span class=header-subtitle>贺志飞的博客</span></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><nav><ul class=menu id=menu-mobile><li class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章标题或内容…… id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=/archives/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 归档</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/collections/><i class="fa-solid fa-layer-group fa-fw fa-sm" aria-hidden=true></i> 合集</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends/ title=友情链接><i class="fa-solid fa-users-viewfinder fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/guestbook/><i class="fa-solid fa-comments fa-fw fa-sm" aria-hidden=true></i> 留言</a></li><li class=menu-item><a class=menu-link href=/about/><i class="fa-solid fa-signature fa-fw fa-sm" aria-hidden=true></i> 关于</a></li><li class="menu-item text-center"><a class=menu-link href=https://github.com/Lruihao/hugo-blog title=GitHub rel="noopener noreferrer" target=_blank><i class='fa-brands fa-github fa-fw' aria-hidden=true></i></a></li><li class="menu-item menu-system"><span class="menu-system-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></span></li></ul></nav></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><nav aria-label=breadcrumb class="breadcrumb-container sticky"><ol class=breadcrumb><li class=breadcrumb-item><a href=/posts/ title=Posts>文章</a></li><li class="breadcrumb-item active" aria-current=page>锁</li></ol></nav><main class=container><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label=合集><div class="details collection-details open"><div class="details-summary collection-summary"><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i>
+<span class=collection-name data-collections=合集>OSTEP</span>
+<span class=collection-count>39</span><i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden=true></i></div><div class="details-content collection-content"><nav><ul class=collection-list><li class=collection-item><a href=/posts/01.%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D/ title=进程介绍>进程介绍</a></li><li class=collection-item><a href=/posts/02.%E8%BF%9B%E7%A8%8Bapi/ title=进程API>进程API</a></li><li class=collection-item><a href=/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/ title=有限直接执行>有限直接执行</a></li><li class=collection-item><a href=/posts/04.cpu%E8%B0%83%E5%BA%A6/ title=CPU调度>CPU调度</a></li><li class=collection-item><a href=/posts/05.%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97/ title=多级反馈队列>多级反馈队列</a></li><li class=collection-item><a href=/posts/06.%E6%AF%94%E4%BE%8B%E4%BB%BD%E9%A2%9D%E8%B0%83%E5%BA%A6/ title=比例份额调度>比例份额调度</a></li><li class=collection-item><a href=/posts/07.%E5%A4%9Acpu%E8%B0%83%E5%BA%A6/ title=多CPU调度>多CPU调度</a></li><li class=collection-item><a href=/posts/08.%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/ title=地址空间>地址空间</a></li><li class=collection-item><a href=/posts/09.%E5%86%85%E5%AD%98api/ title=内存API>内存API</a></li><li class=collection-item><a href=/posts/10.%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2/ title=地址转换>地址转换</a></li><li class=collection-item><a href=/posts/11.%E6%AE%B5/ title=段>段</a></li><li class=collection-item><a href=/posts/12.%E7%A9%BA%E9%97%B2%E7%A9%BA%E9%97%B4%E7%AE%A1%E7%90%86/ title=空闲空间管理>空闲空间管理</a></li><li class=collection-item><a href=/posts/13.%E9%A1%B5/ title=页>页</a></li><li class=collection-item><a href=/posts/14.%E5%BF%AB%E8%A1%A8/ title=快表>快表</a></li><li class=collection-item><a href=/posts/15.%E9%AB%98%E7%BA%A7%E9%A1%B5%E8%A1%A8/ title=高级页表>高级页表</a></li><li class=collection-item><a href=/posts/16.%E9%A1%B5%E9%9D%A2%E4%BA%A4%E6%8D%A2/ title=页面交换>页面交换</a></li><li class=collection-item><a href=/posts/17.%E4%BA%A4%E6%8D%A2%E7%AD%96%E7%95%A5/ title=交换策略>交换策略</a></li><li class=collection-item><a href=/posts/18.%E5%AE%8C%E6%95%B4vm%E7%B3%BB%E7%BB%9F/ title=完整VM系统>完整VM系统</a></li><li class=collection-item><a href=/posts/19.%E5%B9%B6%E5%8F%91%E5%92%8C%E7%BA%BF%E7%A8%8B/ title=并发和线程>并发和线程</a></li><li class=collection-item><a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ title=线程API>线程API</a></li><li class=collection-item><span class=active title=锁>锁</span></li><li class=collection-item><a href=/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ title=锁定数据结构>锁定数据结构</a></li><li class=collection-item><a href=/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/ title=条件变量>条件变量</a></li><li class=collection-item><a href=/posts/24.%E4%BF%A1%E5%8F%B7%E9%87%8F/ title=信号量>信号量</a></li><li class=collection-item><a href=/posts/25.%E5%B9%B6%E5%8F%91bug/ title=并发bug>并发bug</a></li><li class=collection-item><a href=/posts/26.%E5%9F%BA%E4%BA%8E%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%B9%B6%E5%8F%91/ title=基于事件的并发>基于事件的并发</a></li><li class=collection-item><a href=/posts/27.io%E8%AE%BE%E5%A4%87/ title=IO设备>IO设备</a></li><li class=collection-item><a href=/posts/28.%E7%A1%AC%E7%9B%98%E9%A9%B1%E5%8A%A8%E5%99%A8/ title=硬盘驱动器>硬盘驱动器</a></li><li class=collection-item><a href=/posts/29.%E5%BB%89%E4%BB%B7%E7%A3%81%E7%9B%98%E5%86%97%E4%BD%99%E9%98%B5%E5%88%97/ title=廉价磁盘冗余阵列>廉价磁盘冗余阵列</a></li><li class=collection-item><a href=/posts/30.%E6%96%87%E4%BB%B6%E5%92%8C%E7%9B%AE%E5%BD%95/ title=文件和目录>文件和目录</a></li><li class=collection-item><a href=/posts/31.%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%AE%9E%E7%8E%B0/ title=文件系统实现>文件系统实现</a></li><li class=collection-item><a href=/posts/32.%E5%BF%AB%E9%80%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=快速文件系统>快速文件系统</a></li><li class=collection-item><a href=/posts/33.fsck%E5%92%8C%E6%97%A5%E5%BF%97/ title=FSCK和日志>FSCK和日志</a></li><li class=collection-item><a href=/posts/34.%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=日志结构文件系统>日志结构文件系统</a></li><li class=collection-item><a href=/posts/35.%E5%9F%BA%E4%BA%8E%E9%97%AA%E5%AD%98%E7%9A%84ssd/ title=基于闪存的SSD>基于闪存的SSD</a></li><li class=collection-item><a href=/posts/36.%E6%95%B0%E6%8D%AE%E5%AE%8C%E6%95%B4%E6%80%A7%E5%92%8C%E4%BF%9D%E6%8A%A4/ title=数据完整性和保护>数据完整性和保护</a></li><li class=collection-item><a href=/posts/37.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/ title=分布式系统>分布式系统</a></li><li class=collection-item><a href=/posts/38.%E7%BD%91%E7%BB%9C%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=网络文件系统>网络文件系统</a></li><li class=collection-item><a href=/posts/39.andrew%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=Andrew文件系统>Andrew文件系统</a></li></ul><div class=collection-nav-simple><a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ class=collection-nav-item rel=prev title=线程API><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i></a><span class=text-secondary>21/39</span><a href=/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ class=collection-nav-item rel=next title=锁定数据结构><i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></nav></div></div></aside><article class="page single"><div class=header><h1 class="single-title animate__animated animate__flipInX"><span>锁</span></h1></div><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://github.com/HeZephyr title=作者 target=_blank rel="external nofollow noopener noreferrer author" class=author><img loading=lazy src="https://cn.gravatar.com/avatar/65f6ab71abcb9d540eb32a2704884927?s=32&amp;d=mp" alt=HeZephyr data-title=HeZephyr width=20 height=20 class=avatar style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'>&nbsp;HeZephyr</a></span><span class=post-included-in>&nbsp;收录于 <a href=/categories/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/ class=post-category title="分类 - 系统架构"><i class="fa-regular fa-folder fa-fw" aria-hidden=true></i> 系统架构</a> 和 <a href=/collections/ostep/ class=post-collection title="合集 - OSTEP"><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i> OSTEP</a></span></div><div class=post-meta-line><span title="发布于 2024-05-11 20:38:09"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden=true></i><time datetime=2024-05-11>2024-05-11</time></span>&nbsp;<span title="更新于 2024-07-28 09:02:18"><i class="fa-regular fa-calendar-check fa-fw me-1" aria-hidden=true></i><time datetime=2024-07-28>2024-07-28</time></span>&nbsp;<span title="11648 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden=true></i>约 11700 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden=true></i>预计阅读 24 分钟</span>&nbsp;<span id=busuanzi_container_page_pv class="busuanzi_visitors comment-visitors" data-flag-title=锁>
+<i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_page_pv>-</span>&nbsp;次阅读
+</span>&nbsp;</div></div><div class="details toc" id=toc-static data-kept=false><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fa-solid fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ol><li><a href=#锁基本思想>锁：基本思想</a></li><li><a href=#pthread-锁>Pthread 锁</a></li><li><a href=#评估锁基本标准>评估锁—基本标准</a></li><li><a href=#控制中断>控制中断</a></li><li><a href=#失败的尝试仅使用加载存储>失败的尝试：仅使用加载/存储</a></li><li><a href=#用test-and-set构建工作自旋锁>用Test-And-Set构建工作自旋锁</a></li><li><a href=#评估自旋锁>评估自旋锁</a></li><li><a href=#compare-and-swap>Compare-And-Swap</a></li><li><a href=#load-linked-and-store-conditional>Load-Linked and Store-Conditional</a></li><li><a href=#fetch-and-add>Fetch-And-Add</a></li><li><a href=#太多自旋现在怎么办>太多自旋：现在怎么办？</a></li><li><a href=#一个简单的方法只需yield>一个简单的方法：只需yield</a></li><li><a href=#使用队列睡眠而不是自旋>使用队列：睡眠而不是自旋</a></li><li><a href=#不同的操作系统不同的支持>不同的操作系统，不同的支持</a></li><li><a href=#两阶段锁>两阶段锁</a></li><li><a href=#dekker算法和peterson算法>Dekker算法和Peterson算法</a></li></ol></nav></div></div><div class=content id=content data-end-flag="「本文完，更多内容汇总在我的 GitHub与CSDN，持续更新，求关注、求 star、求订阅！」"><h2 id=锁基本思想 class=heading-element><span>1 锁：基本思想</span>
+<a href=#%e9%94%81%e5%9f%ba%e6%9c%ac%e6%80%9d%e6%83%b3 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>举个例子，假设我们的临界区如下所示，共享变量的规范更新：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=n>balance</span> <span class=o>=</span> <span class=n>balance</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span></span></span></code></pre></td></tr></table></div></div><p>当然，其他临界区也是可能的，例如向链表添加元素或对共享结构进行其他更复杂的更新，但我们现在只保留这个简单的示例。要使用锁，我们在临界区周围添加一些代码，如下所示：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>lock_t</span> <span class=n>mutex</span><span class=p>;</span> <span class=c1>// some globally-allocated lock ’mutex’
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>...</span>
+</span></span><span class=line><span class=cl><span class=nf>lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>mutex</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=n>balance</span> <span class=o>=</span> <span class=n>balance</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=nf>unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>mutex</span><span class=p>);</span></span></span></code></pre></td></tr></table></div></div><p>锁只是一个变量，因此要使用它，您必须声明某种类型的<strong>锁变量</strong>（例如上面的<code>mutex</code>）。该锁变量（或简称“锁”）保存任意时刻锁的状态。它要么<strong>可用</strong>（或<strong>未锁定</strong>或<strong>空闲</strong>），因此没有线程持有该锁，要么<strong>已获取</strong>（或<strong>锁定</strong>或<strong>持有</strong>），因此恰好有一个线程持有该锁，并且可能位于临界区中。我们还可以在数据类型中存储其他信息，例如哪个线程持有锁，或者用于获取锁的顺序队列，但此类信息对锁的用户是隐藏的。</p><p><code>lock()</code> 和<code>unlock()</code> 例程的语义很简单。调用例程 <code>lock()</code> 尝试获取锁；如果没有其他线程持有该锁（即它是空闲的），则该线程将获取该锁并进入临界区；该线程有时被称为锁的<strong>所有者</strong>。如果另一个线程随后对同一个锁变量（本例中为<code>mutex</code>）调用 <code>lock()</code>，则当锁被另一个线程持有时，它不会返回；这样，当第一个持有锁的线程位于临界区时，其他线程就无法进入临界区。</p><p>一旦锁的所有者调用<code>unlock()</code>，锁就再次可用（空闲）。如果没有其他线程正在等待锁（即没有其他线程调用<code>lock()</code> 并被卡在其中），则锁的状态将简单地更改为空闲。如果有等待线程（卡在 lock() 中），其中一个线程将（最终）注意到（或被告知）锁状态的这一变化，获取锁，并进入临界区。</p><p>锁为程序员提供了对调度的最小程度的控制。一般来说，我们将线程视为由程序员创建但由操作系统以操作系统选择的任何方式调度的实体。锁将部分控制权交还给程序员；通过在一段代码周围放置一个锁，程序员可以保证该代码中最多只有一个线程处于活动状态。因此，锁有助于将传统操作系统调度的混乱转变为更受控制的活动。</p><h2 id=pthread-锁 class=heading-element><span>2 Pthread 锁</span>
+<a href=#pthread-%e9%94%81 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>POSIX 库为锁使用的名称是 <code>mutex</code>，因为它用于提供线程之间的<strong>互斥</strong>，也就是说，如果一个线程处于临界区，它将禁止其他线程进入，直到它完成该临界区。因此，当你看到下面的 POSIX 线程代码时，你应该明白它在做与上面相同的事情（我们再次使用我们的封装器，在锁定和解锁时检查错误）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>pthread_mutex_t</span> <span class=n>lock</span> <span class=o>=</span> <span class=n>PTHREAD_MUTEX_INITIALIZER</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=nf>Pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=p>);</span> <span class=c1>// wrapper; exits on failure
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>balance</span> <span class=o>=</span> <span class=n>balance</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=nf>Pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=p>);</span></span></span></code></pre></td></tr></table></div></div><p>你可能还会注意到，POSIX 版本会通过传递一个变量来加锁和解锁，因为我们可能会使用不同的锁来保护不同的变量。这样做可以提高并发性：我们通常会使用不同的锁来保护不同的数据和数据结构，而不是在访问任何临界区时使用一个大锁（<strong>粗粒度锁定策略</strong>），从而允许更多线程同时进入锁定代码（<strong>更细粒度的方法</strong>）。</p><h2 id=评估锁基本标准 class=heading-element><span>3 评估锁—基本标准</span>
+<a href=#%e8%af%84%e4%bc%b0%e9%94%81%e5%9f%ba%e6%9c%ac%e6%a0%87%e5%87%86 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>在构建任何锁之前，我们首先应该了解我们的目标是什么，因此我们会问如何评估特定锁实现的有效性。要评估一个锁是否有效（而且效果很好），我们首先应该建立一些如下的基本标准。</p><ol><li><p>首先是锁是否完成了它的基本任务，即<font color=red>提供互斥</font>。基本上，锁是否能阻止多个线程进入临界区？</p></li><li><p>其次是<font color=red>公平性</font>。一旦锁被释放，每个争夺锁的线程是否都能公平地获得锁？另一种方法是考察更极端的情况：是否有任何线程在争夺锁的过程中陷入饥饿，从而永远无法获得锁？</p></li><li><p>最后一个标准是<font color=red>性能</font>，特别是使用锁所增加的时间开销。这里有几种不同的情况值得考虑。</p><ul><li>一种是无竞争的情况；当单线程运行并抓取和释放锁时，这样做的开销是多少？</li><li>另一种情况是多个线程在单个 CPU 上争夺锁；在这种情况下，是否存在性能问题？</li><li>最后，当涉及多个 CPU 且每个 CPU 上的线程都在争夺锁时，锁的性能如何？</li></ul><p>通过比较这些不同的情况，我们可以更好地了解使用各种锁技术对性能的影响。</p></li></ol><h2 id=控制中断 class=heading-element><span>4 控制中断</span>
+<a href=#%e6%8e%a7%e5%88%b6%e4%b8%ad%e6%96%ad class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>最早用于提供互斥的解决方案之一是禁用临界区的中断；<font color=red>这种解决方案是为单处理器系统发明的</font>。代码如下</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>DisableInterrupts</span><span class=p>();</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>EnableInterrupts</span><span class=p>();</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>假设我们正在这样的单处理器系统上运行。通过在进入临界区之前<font color=red>关闭中断</font>（使用某种特殊的硬件指令），我们可以确保临界区内的代码不会被中断，从而像原子一样执行。当我们完成后，我们<font color=red>重新启用中断</font>（再次通过硬件指令），因此程序照常进行。</p><p>这种方法的主要优点是它的简单性。当然，您不必绞尽脑汁就能弄清楚为什么会这样。在没有中断的情况下，线程可以确保它执行的代码将会执行，并且没有其他线程会干扰它。</p><p>不幸的是，负面因素有很多。首先，这种方法要求我们允许任何调用线程执行特权操作（打开和关闭中断），因此相信该设施不会被滥用。正如您所知，每当我们需要信任任意程序时，我们都可能遇到麻烦。在这里，问题以多种方式表现出来：贪婪的程序可以在执行开始时调用<code>lock()</code>，从而独占处理器；更糟糕的是，错误或恶意程序可能调用 <code>lock()</code> 并进入无限循环。在后一种情况下，操作系统永远不会重新获得对系统的控制，只有一个办法：重新启动系统。使用中断禁用作为通用同步解决方案需要对应用程序过多的信任。</p><p>其次，该方法不适用于多处理器。如果多个线程运行在不同的CPU上，并且每个线程都尝试进入同一个临界区，那么是否禁用中断并不重要；线程将能够在其他处理器上运行，因此可以进入临界区。由于多处理器现在很常见，我们的通用解决方案必须比这做得更好。</p><p>第三，长时间关闭中断可能会导致中断丢失，从而导致严重的系统问题。例如，想象一下，如果 CPU 错过了磁盘设备已完成读取请求的事实。操作系统如何知道唤醒等待所述读取的进程？</p><p>最后，也许也是最不重要的一点是，这种方法可能效率低下。与正常指令执行相比，现代 CPU 执行屏蔽或取消屏蔽中断的代码往往执行速度较慢。</p><p>由于这些原因，关闭中断仅在有限的上下文中用作互斥原语。例如，在某些情况下，操作系统本身将使用中断屏蔽来保证访问其自己的数据结构时的原子性，或者至少防止出现某些混乱的中断处理情况。这种用法是有道理的，因为信任问题在操作系统内部消失了，操作系统始终相信自己能够执行特权操作。</p><h2 id=失败的尝试仅使用加载存储 class=heading-element><span>5 失败的尝试：仅使用加载/存储</span>
+<a href=#%e5%a4%b1%e8%b4%a5%e7%9a%84%e5%b0%9d%e8%af%95%e4%bb%85%e4%bd%bf%e7%94%a8%e5%8a%a0%e8%bd%bd%e5%ad%98%e5%82%a8 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>要想超越基于中断的技术，我们就必须依靠 CPU 硬件及其提供的指令来构建适当的锁。让我们首先尝试使用一个标志变量来构建一个简单的锁。在这次失败的尝试中，我们将看到构建锁所需的一些基本思想，并明白为什么仅仅使用单个变量并通过正常的加载和存储来访问它是不够的。</p><p>第一次尝试的代码如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__lock_t</span> <span class=p>{</span> <span class=kt>int</span> <span class=n>flag</span><span class=p>;</span> <span class=p>}</span> <span class=kt>lock_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>init</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>mutex</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// 0 -&gt; lock is available, 1 -&gt; held
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>mutex</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>mutex</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=n>mutex</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span> <span class=c1>// TEST the flag
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=p>;</span> <span class=c1>// spin-wait (do nothing)
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>mutex</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span> <span class=c1>// now SET it!
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>mutex</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>mutex</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>在第一次尝试中，我们的想法非常简单：使用一个简单的变量（<code>flag</code>）来指示某个线程是否拥有锁。进入临界区的第一个线程将调用 <code>lock()</code>，它将测试<code>flag</code>是否等于 1（在本例中不等于 1），然后将<code>flag</code>设置为 1，表示该线程现在持有锁。完成临界区后，线程会调用 <code>unlock()</code> 并清除<code>flag</code>，从而表明不再持有锁。</p><p>如果另一个线程在第一个线程处于临界区时调用了 <code>lock()</code>，那么它只需在 while 循环中自旋等待该线程调用 <code>unlock()</code>并清除<code>flag</code>。一旦第一个线程这样做了，等待的线程就会退出 <code>while</code> 循环，将自己的<code>flag</code>设置为 1，然后进入临界区。</p><p>不幸的是，该代码有两个问题：一个是正确性，另一个是性能。一旦您习惯于思考并发编程，正确性问题就很容易看出。想象一下下面的的代码交错；假设 <code>flag=0</code> 开始。</p><p><a class=lightgallery href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240407154637634.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240407154637634.png?size=small" data-sub-html="<h2>image-20240407154637634</h2>"><img loading=lazy src=https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240407154637634.png alt=image-20240407154637634 srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240407154637634.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240407154637634.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240407154637634.png?size=large 2x" data-title=image-20240407154637634 style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'></a></p><p>正如您从这种交错中看到的，通过及时（不及时？）中断，我们可以很容易地产生这样一种情况：两个线程都将<code>flag</code>设置为 1，因此两个线程都能进入临界区。我们显然没有满足最基本的要求**：提供互斥**。</p><p>我们稍后将详细讨论的性能问题是线程等待获取已持有的锁的方式：它无休止地检查<code>flag</code>的值，这是一种称为<font color=red>自旋等待</font>的技术。自旋等待会浪费时间等待另一个线程释放锁。在单处理器上浪费非常高，其中等待者正在等待的线程甚至无法运行（至少在发生上下文切换之前）！</p><h2 id=用test-and-set构建工作自旋锁 class=heading-element><span>6 用Test-And-Set构建工作自旋锁</span>
+<a href=#%e7%94%a8test-and-set%e6%9e%84%e5%bb%ba%e5%b7%a5%e4%bd%9c%e8%87%aa%e6%97%8b%e9%94%81 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>由于禁用中断在多处理器上不起作用，而且使用加载和存储（如上所示）的简单方法也不起作用，系统设计人员开始发明硬件支持锁定。最早的多处理器系统，如 20 世纪 60 年代初的 Burroughs B5000，就提供了这种支持；如今，所有系统都提供了这种支持，即使是单 CPU 系统也不例外。</p><p>最简单易懂的硬件支持被称为<code>test-and-set</code>（或<font color=red>原子交换</font>）指令。我们通过下面的 C 代码片段来定义 <code>test-and-set</code> 指令的作用：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>int</span> <span class=nf>TestAndSet</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>old_ptr</span><span class=p>,</span> <span class=kt>int</span> <span class=n>new</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>old</span> <span class=o>=</span> <span class=o>*</span><span class=n>old_ptr</span><span class=p>;</span> <span class=c1>// fetch old value at old_ptr
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=o>*</span><span class=n>old_ptr</span> <span class=o>=</span> <span class=n>new</span><span class=p>;</span> <span class=c1>// store ’new’ into old_ptr
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>return</span> <span class=n>old</span><span class=p>;</span> <span class=c1>// return the old value
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p><code>test-and-set</code>指令的作用如下。它返回 <code>ptr</code> 指向的<code>old</code>，同时将所述值更新为<code>new</code>。当然，关键在于这一系列操作都是以原子方式执行的。之所以称为 &ldquo;test-and-set&rdquo;，是因为它可以 &ldquo;test &ldquo;旧值（即返回值），同时将内存位置 &ldquo;设置 &ldquo;为新值；事实证明，这条功能稍强的指令足以构建一个简单的自旋锁，如下面这段代码所示。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__lock_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>flag</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>lock_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>init</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// 0: lock is available, 1: lock is held
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nf>TestAndSet</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>;</span> <span class=c1>// spin-wait (do nothing)
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>让我们先了解一下这种锁的工作原理。首先设想这样一种情况：线程调用 <code>lock()</code> 而当前没有其他线程持有锁；因此，<code>flag</code> 应为 0。当线程调用 <code>TestAndSet(flag, 1)</code> 时，例程将返回 <code>flag</code> 的旧值，即 0；因此，正在测试 <code>flag</code> 值的调用线程不会陷入 while 循环的自旋，并将获得锁。线程也会原子地将该值设置为 1，从而表明锁已被锁定。当线程完成其临界区后，会调用 unlock() 将<code>flag</code>置回 0。</p><p>我们可以想象的第二种情况是，一个线程已经持有锁（即<code>flag</code>为 1）。在这种情况下，该线程将调用 <code>lock()</code> 并调用 <code>TestAndSet(flag,1)</code>。这一次，<code>TestAndSet()</code> 将返回 flag 的旧值，即 1（因为锁已被持有），同时再次将其设置为 1。只要锁被另一个线程持有，<code>TestAndSet()</code> 就会反复返回 1，因此这个线程会自旋，直到锁最终被释放。当<code>flag</code>最终被其他线程设置为 0 时，该线程将再次调用 <code>TestAndSet()</code>，此时它将返回 0，同时原子地将该值设置为 1，从而获得锁并进入临界区。</p><p>通过将<code>test</code>（旧锁值）和 <code>set</code>（新锁值）作为单个原子操作，我们可以确保只有一个线程获得锁。这就是构建互斥原语的方法！</p><p>现在你可能也明白为什么这种锁通常被称为<font color=red>自旋锁</font>了。它是最简单的一种锁，只需使用 CPU 周期旋 转，直到锁可用为止。要在单处理器上正常工作，它需要一个<font color=red>抢占式调度程序（即通过定时器中断线程，以便不时运行不同的线程）</font>。如果没有抢占式调度，自旋锁在单 CPU 上的意义就不大，因为在 CPU 上旋转的线程永远不会放弃自旋锁。</p><h2 id=评估自旋锁 class=heading-element><span>7 评估自旋锁</span>
+<a href=#%e8%af%84%e4%bc%b0%e8%87%aa%e6%97%8b%e9%94%81 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>有了基本的自旋锁，我们现在就可以根据之前描述的标准来评估它的有效性。锁最重要的方面是<font color=red>正确性</font>：它能提供互斥吗？答案是肯定的：自旋锁每次只允许一个线程进入临界区。因此，我们拥有一个正确的锁。</p><p>下一个标准是<font color=red>公平性</font>。自旋锁对等待线程的公平性如何？你能保证等待线程永远不会进入临界区吗？不幸的是，自旋锁不提供任何公平性保证。事实上，一个正在自旋的线程可能会在竞争中永远自旋下去。简单的自旋锁（如前面所讨论的）是不公平的，可能会导致饥饿。</p><p>最后一个标准是<font color=red>性能</font>。使用自旋锁的代价是什么？为了更仔细地分析这个问题，我们建议考虑几种不同的情况。</p><ul><li><p>第一种情况是线程在单个处理器上竞争锁；</p><p>对于自旋锁，在单 CPU 的情况下，性能开销可能会相当大；想象一下持有锁的线程在临界区被抢占的情况。然后，调度程序可能会运行每个其他线程（假设有 N - 1 个其他线程），每个线程都试图获取锁。在这种情况下，每个线程在放弃 CPU 之前都会持续运行一个时间片，浪费了 CPU 周期。</p></li><li><p>第二种情况是线程分布在多个 CPU 上。</p><p>然而，在多个 CPU 上，自旋锁工作得相当好（如果线程数大致等于 CPU 数）。思路如下：想象 CPU 1 上的线程 A 和 CPU 2 上的线程 B，两者都竞争锁。如果线程 A (CPU 1) 获取锁，然后线程 B 尝试获取锁，则 B 将自旋（在 CPU 2 上）。然而，大概临界区很短，因此锁很快就变得可用，并被线程 B 获取。在这种情况下，自旋等待另一个处理器上持有的锁不会浪费很多周期，因此可能是有效的。</p></li></ul><h2 id=compare-and-swap class=heading-element><span>8 Compare-And-Swap</span>
+<a href=#compare-and-swap class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>某些系统提供的另一种硬件原语被称为 **&ldquo;compare-and-swap &ldquo;**指令（例如 SPARC 上的名称）或 **&ldquo;compare-and-exchange &ldquo;**指令（x86 上的名称）。下面是这条指令的 C 语言伪代码。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>int</span> <span class=nf>CompareAndSwap</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>ptr</span><span class=p>,</span> <span class=kt>int</span> <span class=n>expected</span><span class=p>,</span> <span class=kt>int</span> <span class=n>new</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>actual</span> <span class=o>=</span> <span class=o>*</span><span class=n>ptr</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>actual</span> <span class=o>==</span> <span class=n>expected</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=o>*</span><span class=n>ptr</span> <span class=o>=</span> <span class=n>new</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>actual</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>其基本思想是，<code>compare-and-swap</code>指令测试 <code>ptr</code> 指定地址上的值是否等于预期值；如果是，则用新值更新 <code>ptr</code> 指向的内存位置。如果不相等，则什么也不做。无论哪种情况，都会返回该内存位置的实际值，从而让调用<code>compare-and-swap</code>指令的代码知道它是否成功。</p><p>有了<code>compare-and-swap</code>指令，我们就可以用与<code>test-and-set</code>指令类似的方式建立锁。例如，我们可以将上面的 <code>lock()</code> 例程替换为下面的例程：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nf>CompareAndSwap</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>;</span> <span class=c1>// spin
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>代码的其余部分与上面的<code>test-and-set</code>示例相同。这段代码的工作原理非常相似；它只需检查<code>flag</code>是否为 0，如果为 0，则原子交换 1，从而获取锁。如果线程试图在锁被锁定时获取锁，就会被卡住，直到锁最终被释放。</p><p>下面是实际 C 代码（调用汇编）x86版本中显示的<code>compare-and-swap</code>的简单示例。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=cp>#include</span> <span class=cpf>&lt;stdio.h&gt;</span><span class=cp>
+</span></span></span><span class=line><span class=cl><span class=cp></span>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=n>global</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Function to perform a compare and swap operation
+</span></span></span><span class=line><span class=cl><span class=c1>// Parameters:
+</span></span></span><span class=line><span class=cl><span class=c1>//   ptr: pointer to the memory location where the operation will be performed
+</span></span></span><span class=line><span class=cl><span class=c1>//   old: expected value to compare against
+</span></span></span><span class=line><span class=cl><span class=c1>//   new: new value to store if the comparison succeeds
+</span></span></span><span class=line><span class=cl><span class=c1>// Returns:
+</span></span></span><span class=line><span class=cl><span class=c1>//   1 if the comparison succeeded and the value was updated, 0 otherwise
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>char</span> <span class=nf>compare_and_swap</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>ptr</span><span class=p>,</span> <span class=kt>int</span> <span class=n>old</span><span class=p>,</span> <span class=kt>int</span> <span class=n>new</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>unsigned</span> <span class=kt>char</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Assembly code to perform the compare and swap operation
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=c1>// Note: sete sets a byte not the word
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>__asm__</span> <span class=nf>__volatile__</span> <span class=p>(</span>
+</span></span><span class=line><span class=cl>        <span class=s>&#34; lock</span><span class=se>\n</span><span class=s>&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=s>&#34; cmpxchgl %2,%1</span><span class=se>\n</span><span class=s>&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=s>&#34; sete %0</span><span class=se>\n</span><span class=s>&#34;</span>
+</span></span><span class=line><span class=cl>        <span class=o>:</span> <span class=s>&#34;=q&#34;</span> <span class=p>(</span><span class=n>ret</span><span class=p>),</span> <span class=s>&#34;=m&#34;</span> <span class=p>(</span><span class=o>*</span><span class=n>ptr</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=o>:</span> <span class=s>&#34;r&#34;</span> <span class=p>(</span><span class=n>new</span><span class=p>),</span> <span class=s>&#34;m&#34;</span> <span class=p>(</span><span class=o>*</span><span class=n>ptr</span><span class=p>),</span> <span class=s>&#34;a&#34;</span> <span class=p>(</span><span class=n>old</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=o>:</span> <span class=s>&#34;memory&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>ret</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>main</span><span class=p>(</span><span class=kt>int</span> <span class=n>argc</span><span class=p>,</span> <span class=kt>char</span> <span class=o>*</span><span class=n>argv</span><span class=p>[])</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Before successful compare and swap
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>printf</span><span class=p>(</span><span class=s>&#34;before successful cas: %d</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>global</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Perform successful compare and swap operation
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>int</span> <span class=n>success</span> <span class=o>=</span> <span class=nf>compare_and_swap</span><span class=p>(</span><span class=o>&amp;</span><span class=n>global</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>100</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Print result after successful compare and swap
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>printf</span><span class=p>(</span><span class=s>&#34;after successful cas: %d (success: %d)</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>global</span><span class=p>,</span> <span class=n>success</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    
+</span></span><span class=line><span class=cl>    <span class=c1>// Before failing compare and swap
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>printf</span><span class=p>(</span><span class=s>&#34;before failing cas: %d</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>global</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Perform failing compare and swap operation
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>success</span> <span class=o>=</span> <span class=nf>compare_and_swap</span><span class=p>(</span><span class=o>&amp;</span><span class=n>global</span><span class=p>,</span> <span class=mi>0</span><span class=p>,</span> <span class=mi>200</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Print result after failing compare and swap
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>printf</span><span class=p>(</span><span class=s>&#34;after failing cas: %d (old: %d)</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>global</span><span class=p>,</span> <span class=n>success</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>最后，正如你可能已经感觉到的，<code>compare-and-swap</code>是一条比<code>test-and-set</code>功能更强大的指令。今后，当我们深入探讨<font color=red>无锁同步</font>等主题时，我们将利用这一功能。不过，如果我们只是用它构建一个简单的自旋锁，其行为与我们上面分析的自旋锁完全相同。</p><h2 id=load-linked-and-store-conditional class=heading-element><span>9 Load-Linked and Store-Conditional</span>
+<a href=#load-linked-and-store-conditional class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>一些平台提供了一对协同工作的指令来帮助构建临界区。例如，在 MIPS 架构上，<strong>加载链接指令</strong>和<strong>存储条件指令</strong>可以串联使用来构建锁和其他并发结构。这些指令的 C 伪代码如下所示。 Alpha、PowerPC 和 ARM 提供类似的指令。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>int</span> <span class=nf>LoadLinked</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>ptr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=o>*</span><span class=n>ptr</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>StoreConditional</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>ptr</span><span class=p>,</span> <span class=kt>int</span> <span class=n>value</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>no</span> <span class=n>update</span> <span class=n>to</span> <span class=o>*</span><span class=n>ptr</span> <span class=n>since</span> <span class=n>LoadLinked</span> <span class=n>to</span> <span class=n>this</span> <span class=n>address</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=o>*</span><span class=n>ptr</span> <span class=o>=</span> <span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=mi>1</span><span class=p>;</span> <span class=c1>// success!
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=mi>0</span><span class=p>;</span> <span class=c1>// failed to update
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>加载链接的操作与典型的加载指令非常相似，只是从内存中获取一个值并将其放入寄存器中。关键的区别在于条件存储，只有在没有对地址进行干预存储的情况下，条件存储才会成功（并更新存储在刚刚加载链接的地址处的值）。如果成功，<code>store-conditional</code> 返回 1 并将 ptr 处的值更新为 value；如果失败，则 ptr 处的值不会更新并返回 0。</p><p>下面这段代码展示了如何使用加载链接和存储条件来构建自旋锁。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>while</span> <span class=p>(</span><span class=nf>LoadLinked</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=p>;</span> <span class=c1>// spin until it’s zero
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=nf>StoreConditional</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span><span class=p>;</span> <span class=c1>// if set-it-to-1 was a success: all done
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=c1>// otherwise: try it all over again
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p><code>lock()</code> 代码是唯一有趣的部分。首先，线程自旋，等待<code>flag</code>设置为 0（从而指示未持有锁）。一旦这样，线程尝试通过<code>store-conditional</code>获取锁；如果成功，线程会自动将<code>flag</code>的值更改为 1，从而可以进入临界区。</p><p>注意存储条件失败可能出现的情况。一个线程调用<code>lock()</code>并执行<code>load-linked</code>，返回0表示锁未被持有。在它尝试<code>store-conditional</code>之前，它被中断，另一个线程进入锁代码，同样执行<code>load-linked</code>指令，并得到0继续执行。此时，两个线程各自执行了<code>load-linked</code>，并且即将尝试<code>store-conditional</code>。这些指令的关键特点是这两个线程中只有一个会成功地将<code>flag</code>更新为1从而获取锁；第二个尝试<code>store-conditional</code>的线程会失败（因为另一个线程在其<code>load-linked</code>和<code>store-conditional</code>之间更新了flag值），因此必须再次尝试获取锁。</p><p>一种更简洁的<code>lock()</code>写法如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span><span class=lnt>6
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>while</span> <span class=p>(</span><span class=nf>LoadLinked</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span> <span class=o>||</span> <span class=o>!</span><span class=nf>StoreConditional</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>flag</span><span class=p>,</span> <span class=mi>1</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>            <span class=p>;</span> <span class=c1>// spin until the condition does not hold
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h2 id=fetch-and-add class=heading-element><span>10 Fetch-And-Add</span>
+<a href=#fetch-and-add class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>最后一个硬件原语是<code>fetch-and-add</code>指令，它以原子方式递增一个值，同时返回特定地址上的旧值。<code>fetch-and-add</code>指令的 C 语言伪代码如下：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span><span class=lnt>4
+</span><span class=lnt>5
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>int</span> <span class=nf>FetchAndAdd</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>ptr</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>old</span> <span class=o>=</span> <span class=o>*</span><span class=n>ptr</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=o>*</span><span class=n>ptr</span> <span class=o>=</span> <span class=n>old</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>old</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p><code>lock</code>和<code>unlock</code>代码如下所示。在这个例子中，我们将使用fetch-and-add来构建一个更有趣的票据锁，由Mellor-Crummey和Scott引入。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__lock_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>ticket</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>turn</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>lock_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock_init</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>lock</span><span class=o>-&gt;</span><span class=n>ticket</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>lock</span><span class=o>-&gt;</span><span class=n>turn</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>myturn</span> <span class=o>=</span> <span class=nf>FetchAndAdd</span><span class=p>(</span><span class=o>&amp;</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>ticket</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=n>lock</span><span class=o>-&gt;</span><span class=n>turn</span> <span class=o>!=</span> <span class=n>myturn</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>;</span> <span class=c1>// spin
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>lock</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>lock</span><span class=o>-&gt;</span><span class=n>turn</span> <span class=o>=</span> <span class=n>lock</span><span class=o>-&gt;</span><span class=n>turn</span> <span class=o>+</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>这个解决方案不是使用单一值，而是结合使用<code>ticket</code>和<code>turn</code>变量来构建一个自旋锁。 基本操作非常简单：当线程希望获取锁时，首先对<code>ticket</code>进行原子<code>fetch-and-add</code>操作；该值现在被视为此线程的“轮次”（<code>myturn</code>）。 然后全局共享的<code>lock->turn</code>用于确定哪个线程的轮次；当给定线程的(<code>myturn == turn</code>)时，就是该线程进入临界区的机会。 <code>unlock</code>只需通过增加<code>turn</code>即可完成，以便下一个等待的线程（如果有）现在可以进入临界区。</p><p>请注意这种解决方案与我们之前尝试过的方法之间存在一个重要差异：它确保所有线程都能取得进展。 一旦分配了某个线程自己的<code>ticket</code>，它将在未来某个时间点被调度执行（一旦排队等候其前面已经通过临界区并释放了锁）。 在我们之前尝试过的情况下，并不存在这样保证；例如，在<code>test-and-set</code>上自旋着等待，即使其他线程获取并释放了锁也可能永远自旋下去。</p><h2 id=太多自旋现在怎么办 class=heading-element><span>11 太多自旋：现在怎么办？</span>
+<a href=#%e5%a4%aa%e5%a4%9a%e8%87%aa%e6%97%8b%e7%8e%b0%e5%9c%a8%e6%80%8e%e4%b9%88%e5%8a%9e class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>我们基于硬件的简单锁非常简单（只有几行代码），而且能正常工作，这是任何系统或代码的两个优秀特性。然而，在某些情况下，这些解决方案的效率可能很低。想象一下，你在单个处理器上运行两个线程。现在假设一个线程（线程 0）正处于临界区，因此被锁定，并不幸被中断。第二个线程（线程 1）现在试图获取锁，但发现锁已被锁定。于是，它开始不停地自旋。然后又自旋了几圈。最后，定时器中断，线程 0 再次运行，释放了锁，最后（比如说下次运行时），线程 1 就不用自旋那么多圈了，就能获得锁。因此，在这种情况下，线程一旦陷入自旋，就会浪费一整个时间片，而只是检查一个不会改变的值外，什么也不做！如果有 N 个线程在争夺一个锁，问题就更严重了；N - 1 个时间片可能会以类似的方式被浪费掉，仅仅是在自旋并等待一个线程释放锁。这就是我们的下一个问题：如何避免自旋？我们怎样才能开发出一种不会无谓地浪费时间在 CPU 上自旋的锁？仅靠硬件支持无法解决问题。我们还需要操作系统的支持！现在就让我们来看看如何实现这一点。</p><h2 id=一个简单的方法只需yield class=heading-element><span>12 一个简单的方法：只需yield</span>
+<a href=#%e4%b8%80%e4%b8%aa%e7%ae%80%e5%8d%95%e7%9a%84%e6%96%b9%e6%b3%95%e5%8f%aa%e9%9c%80yield class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>硬件支持让我们取得了相当大的进展：工作锁，甚至（如票据锁）锁获取的公平性。然而，我们仍然面临一个问题：当上下文切换发生在临界区时，线程开始无休止地自旋，等待被中断的（持有锁的）线程再次运行，这时该怎么办？</p><p>我们首先尝试的是一种简单而友好的方法：当你要自旋时，把 CPU 让给另一个线程。或者，就像Al Davis说的那样，&ldquo;让一让，宝贝！"。下面这段代码展示了这种方法。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>void</span> <span class=nf>init</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nf>TestAndSet</span><span class=p>(</span><span class=o>&amp;</span><span class=n>flag</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=nf>yield</span><span class=p>();</span> <span class=c1>// 放弃 CPU 控制权
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>在这种方法中，我们假定一个线程在想要放弃 CPU 并让另一个线程运行时，可以调用操作系统原语 <code>yield()</code>。一个线程可以处于三种状态（运行、就绪或阻塞）之一；<code>yield</code> 只是一个系统调用，它将调用者从<strong>运行状态</strong>移到<strong>就绪状态</strong>，从而将另一个线程提升到<strong>运行状态</strong>。因此，<code>yield</code>过程本质上是自我取消调度的。</p><p>回想一下一个 CPU 上有两个线程的例子，在这种情况下，我们基于 <code>yield</code> 的方法就能很好地发挥作用。如果一个线程碰巧调用了 <code>lock()</code> 并发现锁被锁定，它就会简单地让出 CPU，这样另一个线程就会运行并完成其临界区。在这种简单的情况下，<code>yield</code>方法运行良好。</p><p>现在让我们考虑一下有多个线程（比如 100 个）重复争夺一个锁的情况。在这种情况下，如果一个线程获得了锁，并在释放锁之前被抢占，那么其他 99 个线程将分别调用 <code>lock()</code>，发现锁被持有，并让出 CPU。假设有某种循环调度程序，那么 99 个线程中的每一个都会在持有锁的线程再次运行之前执行这种<code>run-and-yield</code>模式。虽然这种方法比我们的 &ldquo;自旋"方法要好（&ldquo;自旋 &ldquo;会浪费 99 个时间片），但上下文切换的成本可能很高，因此会造成大量浪费。</p><p>更糟糕的是，我们根本没有解决饥饿问题。当其他线程反复进入和退出临界区时，一个线程可能会陷入无休止的<code>yield</code>循环。显然，我们需要一种能直接解决这一问题的方法。</p><h2 id=使用队列睡眠而不是自旋 class=heading-element><span>13 使用队列：睡眠而不是自旋</span>
+<a href=#%e4%bd%bf%e7%94%a8%e9%98%9f%e5%88%97%e7%9d%a1%e7%9c%a0%e8%80%8c%e4%b8%8d%e6%98%af%e8%87%aa%e6%97%8b class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>我们之前的方法的真正问题在于，它们留下了太多的偶然性。调度器决定下一个运行的线程；如果调度器做出了错误的选择，运行的线程要么必须自旋等待锁（我们的第一种方法），要么立即让出 CPU（我们的第二种方法）。无论哪种方法，都有可能造成浪费，而且无法避免饥饿。</p><p>因此，我们必须明确控制在当前持有者释放锁后，下一个获得锁的线程。为此，我们需要更多的操作系统支持，以及一个队列来跟踪哪些线程正在等待获取锁。</p><p>为简单起见，我们将使用 Solaris 提供的支持，即两个调用：<code>park()</code> 用于使调用线程休眠，<code>unpark(threadID)</code> 用于唤醒<code>threadID</code> 指定的特定线程。这两个例程可以配合使用，构建一个锁，当调用者试图获取一个被锁定的锁时，该锁会使调用者休眠，而当锁被释放时，调用者会被唤醒。</p><p>下面这段代码实现了简单的锁。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__lock_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>flag</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>guard</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>queue_t</span> <span class=o>*</span><span class=n>q</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>lock_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock_init</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>m</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>m</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>m</span><span class=o>-&gt;</span><span class=n>guard</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>queue_init</span><span class=p>(</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>q</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>m</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nf>TestAndSet</span><span class=p>(</span><span class=o>&amp;</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>guard</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>;</span> <span class=c1>// 通过自旋获取 guard 锁
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>m</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span> <span class=c1>// 获取锁
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=n>m</span><span class=o>-&gt;</span><span class=n>guard</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span> <span class=k>else</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nf>queue_add</span><span class=p>(</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>q</span><span class=p>,</span> <span class=nf>gettid</span><span class=p>());</span>
+</span></span><span class=line><span class=cl>        <span class=n>m</span><span class=o>-&gt;</span><span class=n>guard</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nf>park</span><span class=p>();</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>(</span><span class=kt>lock_t</span> <span class=o>*</span><span class=n>m</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=nf>TestAndSet</span><span class=p>(</span><span class=o>&amp;</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>guard</span><span class=p>,</span> <span class=mi>1</span><span class=p>)</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=p>;</span> <span class=c1>// 通过自旋获取 guard 锁
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=nf>queue_empty</span><span class=p>(</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>q</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>        <span class=n>m</span><span class=o>-&gt;</span><span class=n>flag</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=c1>// 释放锁；没有线程要获取它
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>else</span>
+</span></span><span class=line><span class=cl>        <span class=nf>unpark</span><span class=p>(</span><span class=nf>queue_remove</span><span class=p>(</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>q</span><span class=p>));</span> <span class=c1>// 保持锁（给下一个线程！）
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>m</span><span class=o>-&gt;</span><span class=n>guard</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>在这个例子中，我们做了几件有趣的事情。首先，我们将老式的<code>test-and-set</code>思想与显式的锁等待者队列相结合，以实现更高效的锁。其次，我们使用队列来帮助控制下一个获得锁的人，从而避免饥饿。</p><p>你可能会注意到 <code>guard</code> 是如何使用的，它基本上是围绕锁使用的标志和队列操作的自旋锁。因此，这种方法并不能完全避免自旋等待；线程在获取或释放锁时可能会被中断，从而导致其他线程自旋等待该线程再次运行。不过，自旋所花费的时间非常有限（只是<code>lock()</code>和<code>unlock()</code>代码中的几条指令，而不是用户定义的临界区），因此这种方法可能是合理的。</p><p>其次，你可能会注意到，在 <code>lock()</code> 中，当一个线程无法获取锁（它已被持有）时，我们会小心地将该线程加入一个队列（通过调用 <code>gettid()</code> 函数获取当前线程的<code>threadID</code>），将 <code>guard</code> 设为 0，并让出 CPU。但如果在 <code>park()</code> 之后而不是之前释放<code>guard</code>锁，会发生什么情况？这会导致其他线程暂时无法再获得 <code>guard</code> 锁，因为该锁仍然由先前的线程持有。如果其他线程试图获取锁，则会一直自旋等待 <code>guard</code> 锁被释放。而由于无法获取<code>guard</code>锁，其他线程无法执行 <code>unlock()</code> 函数，所以即使某个线程被唤醒，也无法继续执行<code>unlock</code>操作。这就导致了死锁状态，所有线程都被阻塞，无法正常运行。</p><p>你可能还会注意到一个有趣的事实，那就是当另一个线程被唤醒时，<code>flag</code>不会被设置回 0。这是为什么呢？这并不是一个错误，而是一种必然！当一个线程被唤醒时，它就像从 <code>park()</code> 返回一样；然而，它在代码中的这一点上并不持有<code>guard</code>，因此甚至无法尝试将<code>flag</code>设置为 1。因此，我们只是将锁从释放锁的线程直接传递给下一个获取锁的线程；在这中间，<code>flag</code>不会被设置为 0。</p><p>最后，你可能会注意到在解决方案中，就在调用 <code>park()</code> 之前出现了竞争条件。例如线程B在调用<code>park()</code>之前线程A释放了锁，那么线程B可能会永远休眠，因为在调用 <code>park()</code> 之前它已经错过了唤醒的时机。这个问题有时被称为<font colo=red>唤醒/等待竞争</font>。</p><p>Solaris 通过添加第三个系统调用 <code>setpark()</code> 来解决这个问题。通过调用该例程，线程可以表明它即将<code>park</code>。如果线程在调用 <code>park()</code> 之前被中断（例如收到了一个信号），而另一个线程在这个时候调用了 <code>unpark()</code> 来唤醒当前线程，则当前线程下一次调用 <code>park()</code> 不会真正进入休眠状态，而是立即返回，继续执行后续的代码。<code>lock()</code>内部的代码修改很小：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>1
+</span><span class=lnt>2
+</span><span class=lnt>3
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=nf>queue_add</span><span class=p>(</span><span class=n>m</span><span class=o>-&gt;</span><span class=n>q</span><span class=p>,</span> <span class=nf>gettid</span><span class=p>());</span>
+</span></span><span class=line><span class=cl><span class=nf>setpark</span><span class=p>();</span> <span class=c1>// new code , (before open guard)
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=n>m</span><span class=o>-&gt;</span><span class=n>guard</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span></span></span></code></pre></td></tr></table></div></div><p>另一种不同的解决方案是将<code>guard</code>传递给内核。在这种情况下，内核可以采取预防措施，以原子方式释放锁，并将运行中的线程出列。</p><h2 id=不同的操作系统不同的支持 class=heading-element><span>14 不同的操作系统，不同的支持</span>
+<a href=#%e4%b8%8d%e5%90%8c%e7%9a%84%e6%93%8d%e4%bd%9c%e7%b3%bb%e7%bb%9f%e4%b8%8d%e5%90%8c%e7%9a%84%e6%94%af%e6%8c%81 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>到目前为止，我们已经看到了操作系统为在线程库中建立更高效的锁而提供的一种支持。其他操作系统也提供类似的支持，但细节各有不同。</p><p>例如，Linux 提供的 <strong>futex</strong> 与 Solaris 接口类似，但提供了更多内核功能。具体来说，每个 futex 都关联了一个特定的物理内存位置，以及每个 futex 的内核队列。调用者可以根据需要使用 futex 调用来休眠和唤醒。具体来说，</p><p>有两种调用方式可用。调用 <code>futex_wait(address,expected)</code>后，调用线程将进入休眠状态，前提是地址中的值等于预期值。如果不相等，调用将立即返回。调用例程 <code>futex_wake(address)</code> 会唤醒一个正在队列中等待的线程。这些调用在 Linux <code>mutex</code>中的用法如下所示。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>void</span> <span class=nf>mutex_lock</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>mutex</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>v</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=cm>/* Bit 31 was clear, we got the mutex (the fastpath) */</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nf>atomic_bit_test_set</span><span class=p>(</span><span class=n>mutex</span><span class=p>,</span> <span class=mi>31</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// Atomic operations increase the number of waiters on the lock
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>atomic_increment</span><span class=p>(</span><span class=n>mutex</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=c1>// Spin waits for other threads to release the lock
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=k>if</span> <span class=p>(</span><span class=nf>atomic_bit_test_set</span><span class=p>(</span><span class=n>mutex</span><span class=p>,</span> <span class=mi>31</span><span class=p>)</span> <span class=o>==</span> <span class=mi>0</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=c1>// The current thread holds the lock and the number of waiters is reduced by 1
+</span></span></span><span class=line><span class=cl><span class=c1></span>            <span class=nf>atomic_decrement</span><span class=p>(</span><span class=n>mutex</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>            <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>        <span class=cm>/* We have to wait. First make sure the futex value
+</span></span></span><span class=line><span class=cl><span class=cm>           we are monitoring is truly negative (locked). */</span>
+</span></span><span class=line><span class=cl>        <span class=n>v</span> <span class=o>=</span> <span class=o>*</span><span class=n>mutex</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>v</span> <span class=o>&gt;=</span> <span class=mi>0</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>            <span class=k>continue</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nf>futex_wait</span><span class=p>(</span><span class=n>mutex</span><span class=p>,</span> <span class=n>v</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>mutex_unlock</span><span class=p>(</span><span class=kt>int</span> <span class=o>*</span><span class=n>mutex</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=cm>/* Adding 0x80000000 to counter results in 0 if and
+</span></span></span><span class=line><span class=cl><span class=cm>       only if there are not other interested threads */</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=nf>atomic_add_zero</span><span class=p>(</span><span class=n>mutex</span><span class=p>,</span> <span class=mh>0x80000000</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=cm>/* There are other threads waiting for this mutex,
+</span></span></span><span class=line><span class=cl><span class=cm>       wake one of them up. */</span>
+</span></span><span class=line><span class=cl>    <span class=nf>futex_wake</span><span class=p>(</span><span class=n>mutex</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>nptl 库（gnu libc 库的一部分） 中 lowlevellock.h的这段 代码片段之所以有趣，有几个原因。首先，它使用一个整数来跟踪锁是否被持有（整数的高位）以及锁上等待者的数量（所有其他位）。因此，如果锁是负数，它就是被持有的（因为高位被设置，而该位决定了整数的符号）。</p><p>其次，代码片段展示了如何针对常见情况进行优化，特别是在没有锁竞争的情况下；只有一个线程获取和释放锁，只需完成很少的工作（原子位<code>test-and-set</code>锁定以及原子位添加释放锁）。</p><h2 id=两阶段锁 class=heading-element><span>15 两阶段锁</span>
+<a href=#%e4%b8%a4%e9%98%b6%e6%ae%b5%e9%94%81 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>最后一点：Linux 方法有一种旧方法的味道，这种方法已经断断续续地使用了很多年，至少可以追溯到 1960 年代初的 Dahm Locks ，现在被称为两阶段锁。两阶段锁意识到自旋可能很有用，特别是在锁即将被释放的情况下。所以在第一阶段，锁会自旋一段时间，希望能够获取到锁。</p><p>但是，如果在第一个自旋阶段没有获取锁，则会进入第二个阶段，调用者将进入睡眠状态，只有在锁稍后释放时才会被唤醒。上面的 Linux 锁就是这种锁的一种形式，但它只自旋一次；对此的概括可以是在使用 futex 支持进入睡眠之前循环自旋固定的时间。两阶段锁是混合方法的另一个实例，其中结合两个好的想法确实可能会产生更好的想法。当然，它是否确实在很大程度上取决于很多因素，包括硬件环境、线程数量和其他工作负载细节。与往常一样，制作一个适合所有可能用例的通用锁是一个相当大的挑战。</p><h2 id=dekker算法和peterson算法 class=heading-element><span>16 Dekker算法和Peterson算法</span>
+<a href=#dekker%e7%ae%97%e6%b3%95%e5%92%8cpeterson%e7%ae%97%e6%b3%95 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>20 世纪 60 年代，Dijkstra 向他的朋友们提出了并发问题，其中一位名叫 Theodorus Jozef Dekker 的数学家提出了解决方案。与我们在此讨论的使用特殊硬件指令甚至操作系统支持的解决方案不同，Dekker 的算法仅使用加载和存储（假定它们之间是原子关系，这在早期的硬件上是正确的）。下面是Dekker算法的代码：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>int</span> <span class=n>flag</span><span class=p>[</span><span class=mi>2</span><span class=p>];</span>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=n>turn</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>init</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>flag</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=n>flag</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>turn</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>flag</span><span class=p>[</span><span class=n>self</span><span class=p>]</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>(</span><span class=n>flag</span><span class=p>[</span><span class=mi>1</span> <span class=o>-</span> <span class=n>self</span><span class=p>]</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=k>if</span> <span class=p>(</span><span class=n>turn</span> <span class=o>!=</span> <span class=n>self</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>            <span class=n>flag</span><span class=p>[</span><span class=n>self</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=k>while</span> <span class=p>(</span><span class=n>turn</span> <span class=o>!=</span> <span class=n>self</span><span class=p>)</span>
+</span></span><span class=line><span class=cl>                <span class=p>;</span>
+</span></span><span class=line><span class=cl>            <span class=n>flag</span><span class=p>[</span><span class=n>self</span><span class=p>]</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>flag</span><span class=p>[</span><span class=n>self</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>turn</span> <span class=o>=</span> <span class=mi>1</span> <span class=o>-</span> <span class=n>self</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>Dekker的方法后来被Peterson改进。同样，该算法只使用加载和存储，其目的是确保两个线程不会同时进入临界区。下面是 Peterson 的算法（两个线程）：</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=kt>int</span> <span class=n>flag</span><span class=p>[</span><span class=mi>2</span><span class=p>];</span>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=n>turn</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>init</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// indicate you intend to hold the lock w/ ’flag’
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>flag</span><span class=p>[</span><span class=mi>0</span><span class=p>]</span> <span class=o>=</span> <span class=n>flag</span><span class=p>[</span><span class=mi>1</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// whose turn is it? (thread 0 or 1)
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>turn</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>lock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// ’self’ is the thread ID of caller
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>flag</span><span class=p>[</span><span class=n>self</span><span class=p>]</span> <span class=o>=</span> <span class=mi>1</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// make it other thread’s turn
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>turn</span> <span class=o>=</span> <span class=mi>1</span> <span class=o>-</span> <span class=n>self</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>while</span> <span class=p>((</span><span class=n>flag</span><span class=p>[</span><span class=mi>1</span> <span class=o>-</span> <span class=n>self</span><span class=p>]</span> <span class=o>==</span> <span class=mi>1</span><span class=p>)</span> <span class=o>&amp;&amp;</span> <span class=p>(</span><span class=n>turn</span> <span class=o>==</span> <span class=mi>1</span> <span class=o>-</span> <span class=n>self</span><span class=p>))</span>
+</span></span><span class=line><span class=cl>        <span class=p>;</span> <span class=c1>// spin-wait while it’s not your turn
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>unlock</span><span class=p>()</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// simply undo your intent
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>flag</span><span class=p>[</span><span class=n>self</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>出于某种原因，开发无需特殊硬件支持就能工作的锁曾风靡一时，给理论家们带来了许多难题。当然，当人们意识到假定有一点硬件支持会容易得多时，这一行就变得毫无用处了（事实上，这种支持在多进程的早期就已经存在了）。此外，类似上述的算法在现代硬件上也行不通（因为内存一致性模型被放宽了），因此它们的用处比以前更小了。然而，更多的研究已被历史尘封&mldr;&mldr;</p></div><hr class=awesome-hr><h2 id=see-also>相关内容</h2><ul><li><a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ title=线程API>线程API</a></li><li><a href=/posts/19.%E5%B9%B6%E5%8F%91%E5%92%8C%E7%BA%BF%E7%A8%8B/ title=并发和线程>并发和线程</a></li><li><a href=/posts/18.%E5%AE%8C%E6%95%B4vm%E7%B3%BB%E7%BB%9F/ title=完整VM系统>完整VM系统</a></li><li><a href=/posts/17.%E4%BA%A4%E6%8D%A2%E7%AD%96%E7%95%A5/ title=交换策略>交换策略</a></li><li><a href=/posts/16.%E9%A1%B5%E9%9D%A2%E4%BA%A4%E6%8D%A2/ title=页面交换>页面交换</a></li></ul><div class=post-reward><div class=comment>Buy me a coffee~</div><input type=checkbox class=reward-input name=reward id=fi-reward hidden>
+<label class=reward-button for=fi-reward><i class="fa-solid fa-qrcode fa-fw" aria-hidden=true></i>赞赏</label><div class=reward-ways data-mode=fixed><div><img loading=lazy src=/images/alipay.png alt="HeZephyr 支付宝" data-title="HeZephyr 支付宝" style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span data-animation>支付宝</span></div><div><img loading=lazy src=/images/wechatpay.jpg alt="HeZephyr 微信" data-title="HeZephyr 微信" style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span data-animation>微信</span></div></div></div><div class=collection-card><div class="collection-title text-secondary">收录于 <a href=/collections/ostep/><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i> <span>合集・OSTEP</span></span></a> 39</div><div class=collection-nav><a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ class=collection-nav-item rel=prev title=线程API><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i><span>线程API</span>
+</a><a href=/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ class=collection-nav-item rel=next title=锁定数据结构><span>锁定数据结构</span><i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span title="更新于 2024-07-28 09:02:18">更新于 2024-07-28&nbsp;</span></div><div class=post-info-license><span><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-sa/4.0/ target=_blank>CC BY-NC-SA 4.0</a></span></div></div><div class=post-info-line><div class=post-info-md><span><a href=/posts/21.%E9%94%81/index.md title=阅读原始文档 class=link-to-markdown>阅读原始文档</a></span><span><a href="https://github.com/Lruihao/hugo-blog/blob/docs/content/posts/_develop/_system/ostep/21.%e9%94%81.md?plain=1" title=查看源码 target=_blank rel="external nofollow noopener noreferrer" class=link-to-source>查看源码</a></span><span><a href=https://github.com/Lruihao/hugo-blog/edit/docs/content/posts/_develop/_system/ostep/21.%e9%94%81.md title=编辑此页 target=_blank rel="external nofollow noopener noreferrer" class=link-to-edit>编辑此页</a></span><span><a href="https://github.com/Lruihao/hugo-blog/issues/new?title=[BUG]%20%E9%94%81&amp;body=%7cField%7cValue%7c%0A%7c-%7c-%7c%0A%7cTitle%7c%E9%94%81%7c%0A%7cURL%7chttps://lruihao.cn/posts/21.%E9%94%81/%7c%0A%7cFilename%7chttps://github.com/Lruihao/hugo-blog/blob/docs/content/posts/_develop/_system/ostep/21.%e9%94%81.md?plain=1%7c" title=报告问题 target=_blank rel="external nofollow noopener noreferrer" class=link-to-report>报告问题</a></span></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 X" data-sharer=twitter data-url=https://lruihao.cn/posts/21.%E9%94%81/ data-title=锁 data-hashtags=OS><i class="fa-brands fa-x-twitter fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://lruihao.cn/posts/21.%E9%94%81/ data-hashtag=OS><i class="fa-brands fa-facebook-square fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Linkedin" data-sharer=linkedin data-url=https://lruihao.cn/posts/21.%E9%94%81/><i class="fa-brands fa-linkedin fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://lruihao.cn/posts/21.%E9%94%81/ data-title=锁><i class="fa-brands fa-weibo fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 百度" data-sharer=baidu data-url=https://lruihao.cn/posts/21.%E9%94%81/ data-title=锁><i data-svg-src=https://unpkg.com/simple-icons@9.19.0/icons/baidu.svg aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fa-solid fa-tags fa-fw me-1" aria-hidden=true></i><a href=/tags/os/ class=post-tag title="标签 - OS">OS</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ class=post-nav-item rel=prev title=锁定数据结构><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i>锁定数据结构</a>
+<a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ class=post-nav-item rel=next title=线程API>线程API<i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=giscus class=comment><script src=https://giscus.app/client.js data-repo=Lruihao/hugo-blog data-repo-id="MDEwOlJlcG9zaXRvcnk0MDQzNDY3MDk=" data-category=General data-category-id=DIC_kwDOGBnXVc4CApHL data-mapping=title data-strict=0 data-theme=preferred_color_scheme data-reactions-enabled=1 data-emit-metadata=0 data-input-position=bottom data-lang=zh-CN data-loading=lazy crossorigin=anonymous async defer></script></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/ rel="external nofollow noopener noreferrer">giscus</a>.</noscript></div></article><aside class=toc id=toc-auto aria-label=目录><h2 class=toc-title>目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden=true></i></h2><div class=toc-content id=toc-content-auto></div></aside></main><footer class=footer><div class=footer-container><div class="footer-line powered order-1">由 <a href=https://gohugo.io/ target=_blank rel="external nofollow noopener noreferrer" title="Hugo 0.129.0"><img class=hugo-icon src=/images/hugo.min.svg alt="Hugo logo"> Hugo</a> 强力驱动 | 主题 - <a href=https://github.com/hugo-fixit/FixIt target=_blank rel=external title="FixIt v0.3.9-RC"><img class=fixit-icon src=/images/fixit.min.svg alt="FixIt logo"> FixIt</a></div><div class="footer-line copyright order-2" itemscope itemtype=http://schema.org/CreativeWork><i class="fa-regular fa-copyright fa-fw" aria-hidden=true></i>
+<span itemprop=copyrightYear>2020 - 2024</span><span class=author itemprop=copyrightHolder>
+<a href=https://github.com/HeZephyr target=_blank rel="external nofollow noopener noreferrer">HeZephyr</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-sa/4.0/ target=_blank>CC BY-NC-SA 4.0</a></span></div><div class="footer-line statistics"><span class=site-time title=网站运行中……><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden=true></i><span class="ms-1 d-none">博客已运行</span><span class="run-times ms-1">网站运行中……</span></span></div><div class="footer-line visitor order-first"><span id=busuanzi_container_site_uv title=总访客数><i class="fa-regular fa-user fa-fw" aria-hidden=true></i>&nbsp;<span id=busuanzi_value_site_uv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span><span id=busuanzi_container_site_pv class=footer-divider title=总访问量><i class="fa-regular fa-eye fa-fw" aria-hidden=true></i>&nbsp;<span id=busuanzi_value_site_pv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span></div></div></footer></div><div class=widgets><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role=button aria-label=回到顶部><i class="fa-solid fa-arrow-up fa-fw" aria-hidden=true></i><span class=variant-numeric>0%</span></div><div class="fixed-button view-comments d-none" role=button aria-label=查看评论><i class="fa-solid fa-comment fa-fw" aria-hidden=true></i></div></div><a href=https://github.com/HeZephyr title="View on GitHub" target=_blank rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0 0 115 115h15l12 27L250 250V0z"/><path d="M128.3 109C113.8 99.7 119 89.6 119 89.6 122 82.7 120.5 78.6 120.5 78.6 119.2 72 123.4 76.3 123.4 76.3 127.3 80.9 125.5 87.3 125.5 87.3 122.9 97.6 130.6 101.9 134.4 103.2" fill="currentcolor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115 115C114.9 115.1 118.7 116.5 119.8 115.4l13.9-13.8C136.9 99.2 139.9 98.4 142.2 98.6 133.8 88 127.5 74.4 143.8 58 148.5 53.4 154 51.2 159.7 51 160.3 49.4 163.2 43.6 171.4 40.1 171.4 40.1 176.1 42.5 178.8 56.2 183.1 58.6 187.2 61.8 190.9 65.4 194.5 69 197.7 73.2 200.1 77.6 213.8 80.2 216.3 84.9 216.3 84.9 212.7 93.1 206.9 96 205.4 96.6 205.1 102.4 203 107.8 198.3 112.5 181.9 128.9 168.3 122.5 157.7 114.1 157.9 116.9 156.7 120.9 152.7 124.9L141 136.5C139.8 137.7 141.6 141.9 141.8 141.8z" fill="currentcolor" class="octo-body"/></svg></a><div id=mask></div><div class=reading-progress-bar style=left:0;top:0;--bg-progress:#8581dd;--bg-progress-dark:#fff></div><noscript><div class=noscript-warning>该网站在启用 JavaScript 的情况下效果最佳。</div></noscript></div><link rel=stylesheet href=https://unpkg.com/lightgallery@2.7.2/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://unpkg.com/cookieconsent@3.1.1/build/cookieconsent.min.css><link rel=stylesheet href=https://unpkg.com/pace-js@1.2.4/themes/blue/pace-theme-minimal.css><script src=https://unpkg.com/autocomplete.js@0.38.1/dist/autocomplete.min.js defer></script><script src=https://unpkg.com/algoliasearch@4.20.0/dist/algoliasearch-lite.umd.js defer></script><script src=https://unpkg.com/instant.page@5.2.0/instantpage.js async defer type=module></script><script src=https://unpkg.com/lightgallery@2.7.2/lightgallery.min.js defer></script><script src=https://unpkg.com/lightgallery@2.7.2/plugins/thumbnail/lg-thumbnail.min.js defer></script><script src=https://unpkg.com/lightgallery@2.7.2/plugins/zoom/lg-zoom.min.js defer></script><script src=https://unpkg.com/sharer.js@0.5.1/sharer.min.js async defer></script><script src=https://unpkg.com/cookieconsent@3.1.1/build/cookieconsent.min.js defer></script><script src=https://unpkg.com/pangu@4.0.7/dist/browser/pangu.min.js defer></script><script src=https://unpkg.com/cell-watermark@1.0.3/src/watermark.min.js defer></script><script src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js async defer></script><script src=https://unpkg.com/pace-js@1.2.4/pace.min.js async defer></script><script src=/js/flyfish.js defer></script><script>window.config={autoBookmark:!0,code:{copyTitle:"复制到剪贴板",editLockTitle:"锁定可编辑代码块",editUnLockTitle:"解锁可编辑代码块",editable:!0,maxShownLines:50},comment:{enable:!0,expired:!1,giscus:{darkTheme:"dark_dimmed",lightTheme:"light",origin:"https://giscus.app"}},cookieconsent:{content:{dismiss:"同意",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验。"},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},enablePWA:!0,lightgallery:!0,pangu:{enable:!0,selector:"article"},search:{algoliaAppID:"MTJNHU0JVB",algoliaIndex:"index",algoliaSearchKey:"5486225134d99f43826da401ee9bad57",highlightTag:"em",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"algolia"},siteTime:"2020-06-10T15:42:01+08:00",version:"v0.3.9-RC",watermark:{colspacing:30,content:'<img style="height: 0.85rem;" src="/logo.png" alt="logo" /> 贺志飞',enable:!0,fontfamily:"LiuJianMaoCao-Regular, 钟齐流江毛草",fontsize:1.1,height:20,opacity:.0125,rotate:15,rowspacing:60,width:150}}</script><script src=/js/theme.min.js defer></script><script src=/js/custom.min.js defer></script></body></html>

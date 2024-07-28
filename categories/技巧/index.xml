@@ -1,0 +1,405 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>技巧 - 分类 | ZephyrHe</title><link>https://lruihao.cn/categories/%E6%8A%80%E5%B7%A7/</link><description>技巧 - 分类 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 21 Nov 2023 11:14:47 +0000</lastBuildDate><atom:link href="https://lruihao.cn/categories/%E6%8A%80%E5%B7%A7/" rel="self" type="application/rss+xml"/><item><title>Github搜索技巧</title><link>https://lruihao.cn/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/</link><pubDate>Tue, 21 Nov 2023 11:14:47 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/</guid><description><![CDATA[<h2 id="普通搜索" class="heading-element"><span>1 普通搜索</span>
+  <a href="#%e6%99%ae%e9%80%9a%e6%90%9c%e7%b4%a2" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>我们一般在github搜索项目，都是直接在根据仓库关键字搜索项目，可能还会用到图中的匹配条件进行筛选。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20231121105018626.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20231121105018626.png?size=small" data-sub-html="<h2>image-20231121105018626</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20231121105018626.png" alt="image-20231121105018626" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20231121105018626.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20231121105018626.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20231121105018626.png?size=large 2x" data-title="image-20231121105018626" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>这样虽然能实现我们的大部分需求，但还不足实现精确查找。而github有自己的一套搜索语法，能帮助我们实现精确查找。</p>
+<h2 id="高级搜索技巧" class="heading-element"><span>2 高级搜索技巧</span>
+  <a href="#%e9%ab%98%e7%ba%a7%e6%90%9c%e7%b4%a2%e6%8a%80%e5%b7%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><code>in:name &lt;关键字&gt;</code> 根据仓库名称搜索仓库。</p>
+<p><code>in:description &lt;关键字&gt;</code>：根据仓库描述搜索仓库。</p>
+<p><code>in:readme &lt;关键字&gt;</code>：根据 README 文件内容搜索仓库。</p>
+<p><code>stars(fork): &gt;(=) &lt;数字&gt; &lt;关键字&gt;</code>：搜索 star 或 fork 数大于（或等于）指定数字的仓库，并包含关键字。</p>
+<p><code>stars(fork): 10..20 &lt;关键词&gt;</code>：搜索 star 或 fork 数在 10 到 20 之间的仓库，并包含关键字。</p>
+<p><code>size:&gt;=5000 &lt;关键词&gt;</code>：搜索仓库大小$\geq$ <code>5000KB</code>，并包含关键字。</p>
+<p><code>pushed(created):&gt;2023-7-1 &lt;关键字&gt;</code>：搜索更新或创建日期在 2023 年 7 月 1 日之后的仓库，并包含关键字。</p>
+<p><code>license:mit &lt;关键字&gt;</code>：搜索 LICENSE 为 <code>MIT</code> 的仓库，并包含关键字。</p>
+<p><code>language:Go &lt;关键字&gt;</code>：搜索仓库语言为 <code>Go</code> 的仓库，并包含关键字。</p>
+<p><code>user:&lt;用户名&gt; &lt;关键字&gt;</code>：查询某个用户的项目，并包含关键字。</p>
+<p><code>org:&lt;组织名&gt; &lt;关键字&gt;</code>：查询某个组织的项目，并包含关键字。</p>
+<p><code>repo:owner/name</code>： 匹配特定仓库名称，例如<code>repo:unique-pure/unique-pure.github.io</code></p>
+<p><code>is:public/private &lt;关键字&gt;</code>：根据公有或私有仓库搜索，并包含关键字。当然，只有你具有访问权限的私有仓库才可以搜索到。</p>
+<p><code>topic:&lt;关键字&gt;</code>：根据主题搜索仓库。</p>
+<p><code>topics:&gt;5</code>：搜索具有3个以上主题的仓库。</p>
+<p><code>followers:n</code>：根据仓库关注者数量搜索仓库。</p>
+<h2 id="github-advance查找工具" class="heading-element"><span>3 github advance查找工具</span>
+  <a href="#github-advance%e6%9f%a5%e6%89%be%e5%b7%a5%e5%85%b7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>github开发了一套查找工具，非常全面，也可以使用这个工具进行精确查找。</p>
+<p><a href="https://github.com/search/advanced"target="_blank" rel="external nofollow noopener noreferrer">https://github.com/search/advanced<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+]]></description></item><item><title>CodeBlocks快捷键及一些常用设置</title><link>https://lruihao.cn/posts/03.codeblocks%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%8F%8A%E4%B8%80%E4%BA%9B%E5%B8%B8%E7%94%A8%E8%AE%BE%E7%BD%AE/</link><pubDate>Tue, 24 Nov 2020 22:50:50 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/03.codeblocks%E5%BF%AB%E6%8D%B7%E9%94%AE%E5%8F%8A%E4%B8%80%E4%BA%9B%E5%B8%B8%E7%94%A8%E8%AE%BE%E7%BD%AE/</guid><description><![CDATA[<h2 id="常用设置" class="heading-element"><span>1 常用设置</span>
+  <a href="#%e5%b8%b8%e7%94%a8%e8%ae%be%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>按住Ctrl滚滚轮，代码的字体会随你心意变大变小。</li>
+<li>在编辑区按住右键可拖动代码，省去拉（尤其是横向）滚动条之麻烦；相关设置：Mouse Drag Scrolling。</li>
+<li>Ctrl+D可复制当前行或选中块。</li>
+<li>Ctrl+Shift+C注释掉当前行或选中块，Ctrl+Shift+X则解除注释。</li>
+<li>Tab缩进当前行或选中块,Shift+Tab减少缩进。</li>
+<li>可拖动选中块使其移动到新位置，按住Ctrl则为复制到新位置。</li>
+<li>按下Atl，再拖动鼠标，可以实现部分选择（即只选中一个区域内的字符，而不会包含它们所在行的其他字符)。</li>
+<li>需要更大编辑空间时，F2和Shift+F2分别可以显隐下方Logs &amp; others栏和左方的Management栏。</li>
+<li>Ctrl+R可以替换；</li>
+</ul>
+<h2 id="优化代码自动完成功能" class="heading-element"><span>2 优化代码自动完成功能：</span>
+  <a href="#%e4%bc%98%e5%8c%96%e4%bb%a3%e7%a0%81%e8%87%aa%e5%8a%a8%e5%ae%8c%e6%88%90%e5%8a%9f%e8%83%bd" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>进Settings里的Editor：在Code-completion and symbol browser中，</p>
+<ul>
+<li>将Automatically launch when typed # letter中的4改成2，这样打两个字母就会有提示了。</li>
+<li>将Keyword sets to additionally include中1到9都勾上（可在Syntax highlighting 的keywords&hellip;中设置，其中1是C++关键字，3是Doxygen关键字；我曾将wxWidgets的类名都加入7并设置相应的字体（粗黑 体），看代码时特别爽）</li>
+<li>将Delay for auto-kick-in when typing [.::-&gt;]拉到 200ms，这样快点出来提示</li>
+<li>选中Case-sensitive match，防止一些无关的东西干扰，如果你想它帮你纠正大小写，那就去掉勾</li>
+</ul>
+<p>设置快捷键：</p>
+<ul>
+<li>进Settings里的Editor：</li>
+<li>在Keyboard short-cuts中将Edit-&gt;Code complete的快捷键由Ctrl+Space改为Alt+/，因为前者与中文输入法切换冲突，该快捷键为已经输入的（不是正在输入的）词提供自动完成。</li>
+</ul>
+<h2 id="多学一招" class="heading-element"><span>3 多学一招</span>
+  <a href="#%e5%a4%9a%e5%ad%a6%e4%b8%80%e6%8b%9b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><blockquote>
+<p>看Abbreviation一栏，里面定义了许多缩写（还可以自定义），只要输入这些缩写，并按Ctrl+J，就可以自动完成常用的代码框架，并将光标放在恰当的地方（自定义时用|表达）。常用的有：guard、class、switch等。</p>
+</blockquote>
+<blockquote>
+<p>如果你声明了一个类，你可以在cpp文件中右击，Insert-&gt;All class methods without implementation&hellip;来插入你还没定义的方法的定义（省去不少打字的功夫哦），也可使用Insert-&gt;Class Method declaration/implementation&hellip;来插入一个方法的声明或定义。</p>
+</blockquote>
+<h2 id="导航相关" class="heading-element"><span>4 导航相关</span>
+  <a href="#%e5%af%bc%e8%88%aa%e7%9b%b8%e5%85%b3" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>
+<p>Ctrl+G 到达指定行，ALT+G 到达指定文件，Ctrl+Alt+G 到达指定函数（支持头文件中的函数定义），F11 切换源文件与头文件。</p>
+</li>
+<li>
+<p>Ctrl+PageUp 到达上一个函数，Ctrl+PageDown 到达下一个函数。</p>
+</li>
+<li>
+<p>Ctrl+B 添加书签，Alt+PageUp和Alt+PageDown可以切换书签。</p>
+</li>
+<li>
+<p>Ctrl+Shift+B可找到匹配的括号。</p>
+</li>
+<li>
+<p>看长代码时，可右击，Folding-&gt;Fold All，然后慢慢展开来看，也可充分利用左方Management栏的Symbol浏览器。</p>
+</li>
+<li>
+<p>在一个变量、函数或宏上右击，三个以Find开头的菜单项，分别可以为你转到它的声明、定义和找到所有出现的地方（按F2在下方Thread Search那里查看）。
+其他：</p>
+</li>
+<li>
+<p>General Settings中可以设置缩进、自动换行等细节。</p>
+</li>
+<li>
+<p>让Code::Blocks永远记住你的Layout，尤其是debug的layout，善用debug工具栏。</p>
+</li>
+<li>
+<p>备份C:/Documents and Settings/[你的用户名]/Application Data/codeblocks/Default.conf，如遇重装，将其放在codeblocks.exe所在目录，就不会丢失你的配置；这样也可以 打造出Code::Blocks的绿色版。</p>
+</li>
+<li>
+<p>Ctrl+L 剪切选中行</p>
+</li>
+<li>
+<p>F11 切换源文件与头文件</p>
+</li>
+<li>
+<p>F10 全屏</p>
+</li>
+<li>
+<p>Ctrl+Shift+B 括号匹配</p>
+</li>
+<li>
+<p>按下ATL，再拖动鼠标，可以实现部分选择</p>
+</li>
+<li>
+<p>Ctrl+B 添加书签，ALT+PageUp和PageDown可以切换书签。</p>
+</li>
+<li>
+<p>Ctrl+G 到达指定行</p>
+</li>
+<li>
+<p>ALT+G 到达指定文件</p>
+</li>
+<li>
+<p>Ctrl+Alt+G 到达指定函数（支持头文件中的函数定义）</p>
+</li>
+<li>
+<p>Ctrl+PageUp 到达上一个函数</p>
+</li>
+<li>
+<p>Ctrl+PageDown 到达下一个函数</p>
+</li>
+</ul>
+]]></description></item><item><title>算法竞赛常用技巧——输入输出优化（防止TLE）</title><link>https://lruihao.cn/posts/04.%E7%AE%97%E6%B3%95%E7%AB%9E%E8%B5%9B%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E4%BC%98%E5%8C%96%E9%98%B2%E6%AD%A2tle/</link><pubDate>Tue, 18 Aug 2020 22:55:23 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/04.%E7%AE%97%E6%B3%95%E7%AB%9E%E8%B5%9B%E5%B8%B8%E7%94%A8%E6%8A%80%E5%B7%A7%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E4%BC%98%E5%8C%96%E9%98%B2%E6%AD%A2tle/</guid><description><![CDATA[<h2 id="cincout优化" class="heading-element"><span>1 cin、cout优化</span>
+  <a href="#cincout%e4%bc%98%e5%8c%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在默认情况下，<code> std::cin/std::cout</code> 是极为迟缓的输入/输出方式，而 <code>scanf/printf</code> 比 <code>std::cin/std::cout</code> 快得多。
+可是为什么会这样呢？如果我更习惯使用C++的输出方式，那么有没有什么办法解决输入输出缓慢的问题呢？</p>
+<hr>
+<p>==这是因为在默认情况下，cin与stdin总是保持同步的，也就是说这两种方法可以混用，而不必担心文件指针混乱，同时cout和stdout也一样，两者混用不会输出顺序错乱==。由于这个特性，所以导致cin和cout有许多额外的开销。</p>
+<p>那么我们如何禁用这个特性呢？</p>
+<h2 id="关闭同步解除绑定" class="heading-element"><span>2 关闭同步/解除绑定</span>
+  <a href="#%e5%85%b3%e9%97%ad%e5%90%8c%e6%ad%a5%e8%a7%a3%e9%99%a4%e7%bb%91%e5%ae%9a" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><code>std::ios::sync_with_stdio(false)</code>
+这个函数是一个“是否兼容 stdio”的开关，C++ 为了兼容 C，保证程序在使用了 printf 和 std::cout 的时候不发生混乱，将输出流绑到了一起。
+这其实是 C++ 为了兼容而采取的保守措施。我们可以在进行 IO 操作之前将 stdio 解除绑定，但是在这样做之后要注意不能同时使用 <code>std::cin/std::cout</code> 和 <code>scanf/printf</code>。更严格的来说：关闭之后C++ IO和C IO 两者不能混用，否则会造成IO混乱。</p>
+<hr>
+<h2 id="tie函数加速" class="heading-element"><span>3 tie函数加速</span>
+  <a href="#tie%e5%87%bd%e6%95%b0%e5%8a%a0%e9%80%9f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>还有一种影响速度的原因是：在默认的情况下<code> std::cin</code> 绑定的是 <code>std::cout</code> ，每次执行 &laquo; 操作符的时候都要调用 <code>flush() </code>，这样会增加 IO 负担。</p>
+<p>==tie 是将两个 stream 绑定的函数，空参数的话返回当前的输出流指针。== 可以通过<code> std::cin.tie(0) 和std:cout.tie(0)（0 表示 NULL）</code>来解除 <code>std::cin </code>与 <code>std::cout </code>的绑定，进一步加快执行效率。</p>
+<p>在这两种情况优化下，<code>std::cin和std::cout</code>的速度就和<code>scanf和printf</code>基本一样了，甚至更快。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">ios</span><span class="o">::</span><span class="n">sync_with_stdio</span><span class="p">(</span><span class="nb">false</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cin</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span> 
+</span></span><span class="line"><span class="cl"><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="p">.</span><span class="n">tie</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl"><span class="c1">//如果编译开启了 C++11 或更高版本，建议使用 std::cin.tie(nullptr);
+</span></span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p><strong>注意：</strong></p>
+<p>scanf 和 printf 依然有优化的空间，这就是本章所介绍的内容——输入和输出优化。
+注意，==接下来介绍的输入和输出优化均针对整型数据（函数实现读写）==，若要支持其他类型的数据（如浮点数），可自行按照本页面介绍的优化原理来编写代码。</p>
+</blockquote>
+<h2 id="更快的输入优化getchar" class="heading-element"><span>4 更快的输入优化getchar()</span>
+  <a href="#%e6%9b%b4%e5%bf%ab%e7%9a%84%e8%be%93%e5%85%a5%e4%bc%98%e5%8c%96getchar" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="原理" class="heading-element"><span>4.1 原理</span>
+  <a href="#%e5%8e%9f%e7%90%86" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>众所周知， getchar 是用来读入 1 byte 的数据并将其转换为 char 类型的函数，且速度很快，故可以用“读入字符——转换为整型”来代替缓慢的读入</p>
+<p>每个整数由两部分组成——符号和数字，整数的 &lsquo;+&rsquo; 通常是省略的，且不会对后面数字所代表的值产生影响，而 &lsquo;-&rsquo; 不可省略，因此要进行判定。
+10 进制整数中是不含空格或除 0~9 和正负号外的其他字符的，因此在读入不应存在于整数中的字符（通常为空格）时，就可以判定已经读入结束</p>
+<p>==C 和 C++ 语言分别在 ctype.h 和 cctype 头文件中，提供了函数 isdigit , 这个函数会检查传入的参数是否为十进制数字字符，是则返回 true ，否则返回 false== 。对应的，在下面的代码中，可以使用 isdigit(ch) 代替 ch &gt;= &lsquo;0&rsquo; &amp;&amp; ch &lt;= &lsquo;9&rsquo; ，而可以使用 !isdigit(ch) 代替 ch &lt;&lsquo;0&rsquo; || ch&gt; &lsquo;9&rsquo;。</p>
+<h3 id="代码实现输入函数read" class="heading-element"><span>4.2 代码实现输入函数read()</span>
+  <a href="#%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e8%be%93%e5%85%a5%e5%87%bd%e6%95%b0read" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">read</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int</span> <span class="n">x</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">char</span> <span class="n">ch</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="c1">//我们判断是否为十进制数字字符可以使用isdight()函数来判断，这里不再展示。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="k">while</span> <span class="p">(</span><span class="n">ch</span> <span class="o">&lt;</span> <span class="sc">&#39;0&#39;</span> <span class="o">||</span> <span class="n">ch</span> <span class="o">&gt;</span> <span class="sc">&#39;9&#39;</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// ch 不是数字时
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">ch</span> <span class="o">==</span> <span class="sc">&#39;-&#39;</span><span class="p">)</span> <span class="n">w</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>        <span class="c1">// 判断是否为负
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ch</span> <span class="o">=</span> <span class="n">getchar</span><span class="p">();</span>               <span class="c1">// 继续读入
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">while</span> <span class="p">(</span><span class="n">ch</span> <span class="o">&gt;=</span> <span class="sc">&#39;0&#39;</span> <span class="o">&amp;&amp;</span> <span class="n">ch</span> <span class="o">&lt;=</span> <span class="sc">&#39;9&#39;</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// ch 是数字时，我们输入结束标志为空格或回车。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">x</span> <span class="o">=</span> <span class="n">x</span> <span class="o">*</span> <span class="mi">10</span> <span class="o">+</span> <span class="p">(</span><span class="n">ch</span> <span class="o">-</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>  <span class="c1">// 将新读入的数字’加’在 x 的后面
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 此处也可以使用 (x&lt;&lt;3)+(x&lt;&lt;1) 的写法来代替 x*10 即：x=(x&lt;&lt;3)+(x&lt;&lt;1)+(ch-&#39;0&#39;);用位运算效率更高，这里相当于x*8+x*2+(ch-&#39;0&#39;);
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">//利用ASCII码转换为对应数字。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">ch</span> <span class="o">=</span> <span class="n">getchar</span><span class="p">();</span>  <span class="c1">// 继续读入
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">return</span> <span class="n">x</span> <span class="o">*</span> <span class="n">w</span><span class="p">;</span>  <span class="c1">// 数字 * 正负号 = 实际数值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><strong>举例</strong> ：我们输入数据时可以这样调用read函数:<code>num=read()</code>。</li>
+</ul>
+<h2 id="更快的输出优化putchar" class="heading-element"><span>5 更快的输出优化putchar()</span>
+  <a href="#%e6%9b%b4%e5%bf%ab%e7%9a%84%e8%be%93%e5%87%ba%e4%bc%98%e5%8c%96putchar" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="原理-1" class="heading-element"><span>5.1 原理</span>
+  <a href="#%e5%8e%9f%e7%90%86-1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>同样是众所周知， <code>putchar</code> 是用来输出单个字符的函数,因此将数字的每一位转化为字符输出以加速,==要注意的是，负号要单独判断输出，并且每次 %（mod）取出的是数字末位，因此要倒序输出。==</p>
+<h3 id="代码实现" class="heading-element"><span>5.2 代码实现</span>
+  <a href="#%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><strong>递归版</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">write</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// 判负 + 输出负号 + 变原数为正数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">x</span> <span class="o">=</span> <span class="o">-</span><span class="n">x</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">putchar</span><span class="p">(</span><span class="sc">&#39;-&#39;</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="p">}</span>
+</span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="p">(</span><span class="n">x</span> <span class="o">&gt;</span> <span class="mi">9</span><span class="p">)</span> <span class="n">write</span><span class="p">(</span><span class="n">x</span> <span class="o">/</span> <span class="mi">10</span><span class="p">);</span>  <span class="c1">// 递归，将除最后一位外的其他部分放到递归中输出
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="n">putchar</span><span class="p">(</span><span class="n">x</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">+</span> <span class="sc">&#39;0&#39;</span><span class="p">);</span>  <span class="c1">// 已经输出（递归）完 x 末位前的所有数字，输出末位
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>由于递归的任务量比较大，我们可以利用栈来实现非递归。</p>
+</blockquote>
+<p><strong>非递归版</strong></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="kr">inline</span> <span class="kt">void</span> <span class="nf">write</span><span class="p">(</span><span class="kt">int</span> <span class="n">x</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">  <span class="k">static</span> <span class="kt">int</span> <span class="n">sta</span><span class="p">[</span><span class="mi">35</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">  <span class="kt">int</span> <span class="n">top</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">  <span class="k">do</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sta</span><span class="p">[</span><span class="n">top</span><span class="o">++</span><span class="p">]</span> <span class="o">=</span> <span class="n">x</span> <span class="o">%</span> <span class="mi">10</span><span class="p">,</span> <span class="n">x</span> <span class="o">/=</span> <span class="mi">10</span><span class="p">;</span><span class="c1">//将取出的元素入栈。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>  <span class="p">}</span> <span class="k">while</span> <span class="p">(</span><span class="n">x</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">  <span class="k">while</span> <span class="p">(</span><span class="n">top</span><span class="p">)</span> <span class="n">putchar</span><span class="p">(</span><span class="n">sta</span><span class="p">[</span><span class="o">--</span><span class="n">top</span><span class="p">]</span> <span class="o">+</span> <span class="mi">48</span><span class="p">);</span>  <span class="c1">//由于我们要输出字符，这里进行转换： 48 是 &#39;0&#39;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>OK，这就是经典的输入输出的优化做法，通常cf榜上的大佬用的都是后面这种方法，这确实很快，比<code>scanf和printf</code>快了约$1/3$了吧。我自己常用的就是第一种优化方法，通常我会利用宏定义来避免这么繁琐，如：<code>#define IOS ios::sync_with_stdio(false);cin.tie(0); cout.tie(0)</code></p>
+<p>那么，在主函数直接使用<code>IOS;</code>语句即可实现优化功能。</p>
+]]></description></item><item><title>Typora常用快捷键</title><link>https://lruihao.cn/posts/02.typora%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE/</link><pubDate>Thu, 09 Jul 2020 22:46:43 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/02.typora%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE/</guid><description><![CDATA[<h2 id="菜单栏" class="heading-element"><span>1 菜单栏</span>
+  <a href="#%e8%8f%9c%e5%8d%95%e6%a0%8f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>文件：alt+F</li>
+<li>编辑：alt+E</li>
+<li>段落：alt+P</li>
+<li>格式：alt+O</li>
+<li>视图：alt+V</li>
+<li>主题：alt+T</li>
+<li>帮助：alt+H</li>
+</ul>
+<h2 id="文件操作" class="heading-element"><span>2 文件操作</span>
+  <a href="#%e6%96%87%e4%bb%b6%e6%93%8d%e4%bd%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>新建：Ctrl+N</li>
+<li>新建窗口：Ctrl+Shift+N</li>
+<li>打开：Ctrl+O</li>
+<li>快速打开：Ctrl+P</li>
+<li>保存：Ctrl+S</li>
+<li>另存为：Ctrl+Shift+S</li>
+<li>偏好：Ctrl+,</li>
+<li>关闭：Ctrl+W</li>
+</ul>
+<h2 id="编辑" class="heading-element"><span>3 编辑</span>
+  <a href="#%e7%bc%96%e8%be%91" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>撤销：Ctrl+Z</li>
+<li>重做：Ctrl+Y</li>
+<li>剪切：Ctrl+X</li>
+<li>复制：Ctrl+C</li>
+<li>粘贴：Ctrl+V</li>
+<li>复制为MarkDown：Ctrl+Shift+C</li>
+<li>粘贴为纯文本：Ctrl+Shift+V</li>
+<li>全选：Ctrl+A</li>
+<li>选中当前行/句：Ctrl+L</li>
+<li>选中当前格式文本：Ctrl+E</li>
+<li>选中当前词：Ctrl+D</li>
+<li>跳转到文首：Ctrl+Home</li>
+<li>跳转到所选内容：Ctrl+J</li>
+<li>跳转到文末：Ctrl+End</li>
+<li>查找：Ctrl+F</li>
+<li>查找下一个：F3</li>
+<li>查找上一个：Shift+F3</li>
+<li>替换：Ctrl+H</li>
+</ul>
+<h2 id="段落" class="heading-element"><span>4 段落</span>
+  <a href="#%e6%ae%b5%e8%90%bd" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>标题：Ctrl+1/2/3/4/5</li>
+<li>段落：Ctrl+0</li>
+<li>增大标题级别：Ctrl+=</li>
+<li>减少标题级别：Ctrl+-</li>
+<li>表格：Ctrl+T</li>
+<li>代码块：Ctrl+Shift+K</li>
+<li>公式块：Ctrl+Shift+M</li>
+<li>引用：Ctrl+Shift+Q</li>
+<li>有序列表：Ctrl+Shift+[</li>
+<li>无序列表：Ctrl+Shift+]</li>
+<li>增加缩进：Ctrl+]</li>
+<li>减少缩进：Ctrl+[</li>
+</ul>
+<h2 id="格式" class="heading-element"><span>5 格式</span>
+  <a href="#%e6%a0%bc%e5%bc%8f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>加粗：Ctrl+B</li>
+<li>斜体：Ctrl+I</li>
+<li>下划线：Ctrl+U</li>
+<li>代码：Ctrl+Shift+`</li>
+<li>删除线：Alt+Shift+5</li>
+<li>超链接：Ctrl+K</li>
+<li>图像：Ctrl+Shift+I</li>
+<li>清除样式：Ctrl+</li>
+</ul>
+<h2 id="视图" class="heading-element"><span>6 视图</span>
+  <a href="#%e8%a7%86%e5%9b%be" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>显示隐藏侧边栏：Ctrl+Shift+L</li>
+<li>大纲视图：Ctrl+Shift+1</li>
+<li>文档列表视图：Ctrl+Shift+2</li>
+<li>文件树视图：Ctrl+Shift+3</li>
+<li>源代码模式：Ctrl+/</li>
+<li>专注模式：F8</li>
+<li>打字机模式：F9</li>
+<li>切换全屏：F11</li>
+<li>实际大小：Ctrl+Shift+0</li>
+<li>放大：Ctrl+Shift+=</li>
+<li>缩小：Ctrl+Shift+-</li>
+<li>应用内窗口切换：Ctrl+Tab</li>
+<li>打开DevTools：Shift+F12</li>
+</ul>
+]]></description></item></channel></rss>

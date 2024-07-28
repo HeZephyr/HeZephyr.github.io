@@ -1,0 +1,510 @@
+<!doctype html><html itemscope itemtype=http://schema.org/WebPage lang=zh-CN><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,maximum-scale=2"><meta name=robots content="noodp"><title>锁定数据结构 | ZephyrHe</title><meta name=author content="HeZephyr">
+<meta name=author-link content="https://github.com/HeZephyr"><meta name=description content="在讨论锁之前，我们首先描述如何在一些常见的数据结构中使用锁。向数据结构添加锁以使其可由线程使用，从而使该结构成为线程安全的。如何加锁决定了数据结构的正确性和性能。因此，我们面临着关键挑战：当给定一个特定的数据结构时，我们应该如何向它添加锁，以使其正常工作？此外，我们如何添加锁以使数据结构产生高性能，"><meta name=keywords content='OS'><meta itemprop=name content="锁定数据结构"><meta itemprop=description content="在讨论锁之前，我们首先描述如何在一些常见的数据结构中使用锁。向数据结构添加锁以使其可由线程使用，从而使该结构成为线程安全的。如何加锁决定了数据结构的正确性和性能。因此，我们面临着关键挑战：当给定一个特定的数据结构时，我们应该如何向它添加锁，以使其正常工作？此外，我们如何添加锁以使数据结构产生高性能，"><meta itemprop=datePublished content="2024-05-11T20:44:53+00:00"><meta itemprop=dateModified content="2024-07-28T09:02:18+00:00"><meta itemprop=wordCount content="5298"><meta itemprop=image content="https://lruihao.cn/images/apple-devices-preview.webp"><meta itemprop=keywords content="OS"><meta property="og:url" content="https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/"><meta property="og:site_name" content="ZephyrHe"><meta property="og:title" content="锁定数据结构"><meta property="og:description" content="在讨论锁之前，我们首先描述如何在一些常见的数据结构中使用锁。向数据结构添加锁以使其可由线程使用，从而使该结构成为线程安全的。如何加锁决定了数据结构的正确性和性能。因此，我们面临着关键挑战：当给定一个特定的数据结构时，我们应该如何向它添加锁，以使其正常工作？此外，我们如何添加锁以使数据结构产生高性能，"><meta property="og:locale" content="zh_CN"><meta property="og:type" content="article"><meta property="article:section" content="posts"><meta property="article:published_time" content="2024-05-11T20:44:53+00:00"><meta property="article:modified_time" content="2024-07-28T09:02:18+00:00"><meta property="article:tag" content="OS"><meta property="og:image" content="https://lruihao.cn/images/apple-devices-preview.webp"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="https://lruihao.cn/images/apple-devices-preview.webp"><meta name=twitter:title content="锁定数据结构"><meta name=twitter:description content="在讨论锁之前，我们首先描述如何在一些常见的数据结构中使用锁。向数据结构添加锁以使其可由线程使用，从而使该结构成为线程安全的。如何加锁决定了数据结构的正确性和性能。因此，我们面临着关键挑战：当给定一个特定的数据结构时，我们应该如何向它添加锁，以使其正常工作？此外，我们如何添加锁以使数据结构产生高性能，"><meta name=application-name content="Zephyr's Blog"><meta name=apple-mobile-web-app-title content="Zephyr's Blog"><meta name=theme-color data-light=#ffffff data-dark=#252627 content="#ffffff"><meta name=msapplication-TileColor content="#da532c"><link rel="shortcut icon" type=image/x-icon href=/favicon.ico><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=mask-icon href=/safari-pinned-tab.svg color=#5bbad5><link rel=manifest href=/site.webmanifest><link rel=canonical href=https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/><link rel=prev href=https://lruihao.cn/posts/21.%E9%94%81/><link rel=next href=https://lruihao.cn/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/><link rel=stylesheet href=/css/style.min.css><link rel=preload href=https://unpkg.com/@fortawesome/fontawesome-free@6.4.2/css/all.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=https://unpkg.com/@fortawesome/fontawesome-free@6.4.2/css/all.min.css></noscript><link rel=preload href=https://unpkg.com/animate.css@4.1.1/animate.min.css as=style onload='this.removeAttribute("onload"),this.rel="stylesheet"'><noscript><link rel=stylesheet href=https://unpkg.com/animate.css@4.1.1/animate.min.css></noscript><script type=application/ld+json>{"@context":"http://schema.org","@type":"BlogPosting","headline":"锁定数据结构","inLanguage":"zh-CN","mainEntityOfPage":{"@type":"WebPage","@id":"https:\/\/lruihao.cn\/posts\/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84\/"},"image":[{"@type":"ImageObject","url":"https:\/\/lruihao.cn\/images\/apple-devices-preview.webp","width":2880,"height":1508}],"genre":"posts","keywords":"OS","wordcount":5298,"url":"https:\/\/lruihao.cn\/posts\/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84\/","datePublished":"2024-05-11T20:44:53+00:00","dateModified":"2024-07-28T09:02:18+00:00","license":"本站内容采用 CC BY-NC-SA 4.0 国际许可协议。","publisher":{"@type":"Organization","name":"Lruihao","logo":"https:\/\/lruihao.cn\/images\/avatar.jpg"},"author":{"@type":"Person","name":"HeZephyr"},"description":""}</script></head><body data-header-desktop=sticky data-header-mobile=auto><script>(window.localStorage?.getItem("theme")?localStorage.getItem("theme")==="dark":"auto"==="auto"?window.matchMedia("(prefers-color-scheme: dark)").matches:"auto"==="dark")&&document.body.setAttribute("data-theme","dark")</script><div class=wrapper data-page-style=normal><header class="desktop animate__faster" id=header-desktop><div class=header-wrapper data-github-corner=right><div class=header-title><a href=/ title=ZephyrHe><img loading=lazy src=/images/logo.png alt=ZephyrHe data-title=ZephyrHe width=26 height=26 class=logo style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span class=header-title-text>HeZephyr</span></a><span class=header-subtitle>贺志飞的博客</span></div><nav><ul class=menu><li class="menu-item has-children"><a class=menu-link href=/archives/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 归档</a><i class="dropdown-icon fa-solid fa-chevron-down" aria-hidden=true></i><ul class=sub-menu><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/collections/><i class="fa-solid fa-layer-group fa-fw fa-sm" aria-hidden=true></i> 合集</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends/ title=友情链接><i class="fa-solid fa-users-viewfinder fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/guestbook/><i class="fa-solid fa-comments fa-fw fa-sm" aria-hidden=true></i> 留言</a></li><li class=menu-item><a class=menu-link href=/about/><i class="fa-solid fa-signature fa-fw fa-sm" aria-hidden=true></i> 关于</a></li><li class="menu-item delimiter"></li><li class="menu-item search" id=search-desktop><input type=text placeholder=搜索文章标题或内容…… id=search-input-desktop>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-desktop title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-desktop title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-desktop><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></li><li class="menu-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></li></ul></nav></div></header><header class="mobile animate__faster" id=header-mobile><div class=header-container><div class=header-wrapper><div class=header-title><a href=/ title=ZephyrHe><img loading=lazy src=/images/logo.png alt=ZephyrHe data-title=ZephyrHe width=26 height=26 class=logo style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span class=header-title-text>HeZephyr</span></a><span class=header-subtitle>贺志飞的博客</span></div><div class=menu-toggle id=menu-toggle-mobile><span></span><span></span><span></span></div></div><nav><ul class=menu id=menu-mobile><li class=search-wrapper><div class="search mobile" id=search-mobile><input type=text placeholder=搜索文章标题或内容…… id=search-input-mobile>
+<a href=javascript:void(0); class="search-button search-toggle" id=search-toggle-mobile title=搜索><i class="fa-solid fa-search fa-fw" aria-hidden=true></i>
+</a><a href=javascript:void(0); class="search-button search-clear" id=search-clear-mobile title=清空><i class="fa-solid fa-times-circle fa-fw" aria-hidden=true></i>
+</a><span class="search-button search-loading" id=search-loading-mobile><i class="fa-solid fa-spinner fa-fw fa-spin" aria-hidden=true></i></span></div><a href=javascript:void(0); class=search-cancel id=search-cancel-mobile>取消</a></li><li class=menu-item><span class=nested-item><a class=menu-link href=/archives/><i class="fa-solid fa-archive fa-fw fa-sm" aria-hidden=true></i> 归档</a>
+<i class="dropdown-icon fa-solid fa-chevron-right" aria-hidden=true></i></span><ul class=sub-menu><li class=menu-item><a class=menu-link href=/categories/><i class="fa-solid fa-folder-tree fa-fw fa-sm" aria-hidden=true></i> 分类</a></li><li class=menu-item><a class=menu-link href=/collections/><i class="fa-solid fa-layer-group fa-fw fa-sm" aria-hidden=true></i> 合集</a></li><li class=menu-item><a class=menu-link href=/tags/><i class="fa-solid fa-tags fa-fw fa-sm" aria-hidden=true></i> 标签</a></li></ul></li><li class=menu-item><a class=menu-link href=/friends/ title=友情链接><i class="fa-solid fa-users-viewfinder fa-fw fa-sm" aria-hidden=true></i> 友链</a></li><li class=menu-item><a class=menu-link href=/guestbook/><i class="fa-solid fa-comments fa-fw fa-sm" aria-hidden=true></i> 留言</a></li><li class=menu-item><a class=menu-link href=/about/><i class="fa-solid fa-signature fa-fw fa-sm" aria-hidden=true></i> 关于</a></li><li class="menu-item text-center"><a class=menu-link href=https://github.com/Lruihao/hugo-blog title=GitHub rel="noopener noreferrer" target=_blank><i class='fa-brands fa-github fa-fw' aria-hidden=true></i></a></li><li class="menu-item menu-system"><span class="menu-system-item theme-switch" title=切换主题><i class="fa-solid fa-adjust fa-fw" aria-hidden=true></i></span></li></ul></nav></div></header><div class="search-dropdown desktop"><div id=search-dropdown-desktop></div></div><div class="search-dropdown mobile"><div id=search-dropdown-mobile></div></div><nav aria-label=breadcrumb class="breadcrumb-container sticky"><ol class=breadcrumb><li class=breadcrumb-item><a href=/posts/ title=Posts>文章</a></li><li class="breadcrumb-item active" aria-current=page>锁定数据结构</li></ol></nav><main class=container><aside class="aside-collection animate__animated animate__fadeIn animate__faster" aria-label=合集><div class="details collection-details open"><div class="details-summary collection-summary"><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i>
+<span class=collection-name data-collections=合集>OSTEP</span>
+<span class=collection-count>39</span><i class="details-icon fa-solid fa-angle-right fa-fw" aria-hidden=true></i></div><div class="details-content collection-content"><nav><ul class=collection-list><li class=collection-item><a href=/posts/01.%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D/ title=进程介绍>进程介绍</a></li><li class=collection-item><a href=/posts/02.%E8%BF%9B%E7%A8%8Bapi/ title=进程API>进程API</a></li><li class=collection-item><a href=/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/ title=有限直接执行>有限直接执行</a></li><li class=collection-item><a href=/posts/04.cpu%E8%B0%83%E5%BA%A6/ title=CPU调度>CPU调度</a></li><li class=collection-item><a href=/posts/05.%E5%A4%9A%E7%BA%A7%E5%8F%8D%E9%A6%88%E9%98%9F%E5%88%97/ title=多级反馈队列>多级反馈队列</a></li><li class=collection-item><a href=/posts/06.%E6%AF%94%E4%BE%8B%E4%BB%BD%E9%A2%9D%E8%B0%83%E5%BA%A6/ title=比例份额调度>比例份额调度</a></li><li class=collection-item><a href=/posts/07.%E5%A4%9Acpu%E8%B0%83%E5%BA%A6/ title=多CPU调度>多CPU调度</a></li><li class=collection-item><a href=/posts/08.%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/ title=地址空间>地址空间</a></li><li class=collection-item><a href=/posts/09.%E5%86%85%E5%AD%98api/ title=内存API>内存API</a></li><li class=collection-item><a href=/posts/10.%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2/ title=地址转换>地址转换</a></li><li class=collection-item><a href=/posts/11.%E6%AE%B5/ title=段>段</a></li><li class=collection-item><a href=/posts/12.%E7%A9%BA%E9%97%B2%E7%A9%BA%E9%97%B4%E7%AE%A1%E7%90%86/ title=空闲空间管理>空闲空间管理</a></li><li class=collection-item><a href=/posts/13.%E9%A1%B5/ title=页>页</a></li><li class=collection-item><a href=/posts/14.%E5%BF%AB%E8%A1%A8/ title=快表>快表</a></li><li class=collection-item><a href=/posts/15.%E9%AB%98%E7%BA%A7%E9%A1%B5%E8%A1%A8/ title=高级页表>高级页表</a></li><li class=collection-item><a href=/posts/16.%E9%A1%B5%E9%9D%A2%E4%BA%A4%E6%8D%A2/ title=页面交换>页面交换</a></li><li class=collection-item><a href=/posts/17.%E4%BA%A4%E6%8D%A2%E7%AD%96%E7%95%A5/ title=交换策略>交换策略</a></li><li class=collection-item><a href=/posts/18.%E5%AE%8C%E6%95%B4vm%E7%B3%BB%E7%BB%9F/ title=完整VM系统>完整VM系统</a></li><li class=collection-item><a href=/posts/19.%E5%B9%B6%E5%8F%91%E5%92%8C%E7%BA%BF%E7%A8%8B/ title=并发和线程>并发和线程</a></li><li class=collection-item><a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ title=线程API>线程API</a></li><li class=collection-item><a href=/posts/21.%E9%94%81/ title=锁>锁</a></li><li class=collection-item><span class=active title=锁定数据结构>锁定数据结构</span></li><li class=collection-item><a href=/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/ title=条件变量>条件变量</a></li><li class=collection-item><a href=/posts/24.%E4%BF%A1%E5%8F%B7%E9%87%8F/ title=信号量>信号量</a></li><li class=collection-item><a href=/posts/25.%E5%B9%B6%E5%8F%91bug/ title=并发bug>并发bug</a></li><li class=collection-item><a href=/posts/26.%E5%9F%BA%E4%BA%8E%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%B9%B6%E5%8F%91/ title=基于事件的并发>基于事件的并发</a></li><li class=collection-item><a href=/posts/27.io%E8%AE%BE%E5%A4%87/ title=IO设备>IO设备</a></li><li class=collection-item><a href=/posts/28.%E7%A1%AC%E7%9B%98%E9%A9%B1%E5%8A%A8%E5%99%A8/ title=硬盘驱动器>硬盘驱动器</a></li><li class=collection-item><a href=/posts/29.%E5%BB%89%E4%BB%B7%E7%A3%81%E7%9B%98%E5%86%97%E4%BD%99%E9%98%B5%E5%88%97/ title=廉价磁盘冗余阵列>廉价磁盘冗余阵列</a></li><li class=collection-item><a href=/posts/30.%E6%96%87%E4%BB%B6%E5%92%8C%E7%9B%AE%E5%BD%95/ title=文件和目录>文件和目录</a></li><li class=collection-item><a href=/posts/31.%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%AE%9E%E7%8E%B0/ title=文件系统实现>文件系统实现</a></li><li class=collection-item><a href=/posts/32.%E5%BF%AB%E9%80%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=快速文件系统>快速文件系统</a></li><li class=collection-item><a href=/posts/33.fsck%E5%92%8C%E6%97%A5%E5%BF%97/ title=FSCK和日志>FSCK和日志</a></li><li class=collection-item><a href=/posts/34.%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=日志结构文件系统>日志结构文件系统</a></li><li class=collection-item><a href=/posts/35.%E5%9F%BA%E4%BA%8E%E9%97%AA%E5%AD%98%E7%9A%84ssd/ title=基于闪存的SSD>基于闪存的SSD</a></li><li class=collection-item><a href=/posts/36.%E6%95%B0%E6%8D%AE%E5%AE%8C%E6%95%B4%E6%80%A7%E5%92%8C%E4%BF%9D%E6%8A%A4/ title=数据完整性和保护>数据完整性和保护</a></li><li class=collection-item><a href=/posts/37.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/ title=分布式系统>分布式系统</a></li><li class=collection-item><a href=/posts/38.%E7%BD%91%E7%BB%9C%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=网络文件系统>网络文件系统</a></li><li class=collection-item><a href=/posts/39.andrew%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ title=Andrew文件系统>Andrew文件系统</a></li></ul><div class=collection-nav-simple><a href=/posts/21.%E9%94%81/ class=collection-nav-item rel=prev title=锁><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i></a><span class=text-secondary>22/39</span><a href=/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/ class=collection-nav-item rel=next title=条件变量><i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></nav></div></div></aside><article class="page single"><div class=header><h1 class="single-title animate__animated animate__flipInX"><span>锁定数据结构</span></h1></div><div class=post-meta><div class=post-meta-line><span class=post-author><a href=https://github.com/HeZephyr title=作者 target=_blank rel="external nofollow noopener noreferrer author" class=author><img loading=lazy src="https://cn.gravatar.com/avatar/65f6ab71abcb9d540eb32a2704884927?s=32&amp;d=mp" alt=HeZephyr data-title=HeZephyr width=20 height=20 class=avatar style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'>&nbsp;HeZephyr</a></span><span class=post-included-in>&nbsp;收录于 <a href=/categories/%E7%B3%BB%E7%BB%9F%E6%9E%B6%E6%9E%84/ class=post-category title="分类 - 系统架构"><i class="fa-regular fa-folder fa-fw" aria-hidden=true></i> 系统架构</a> 和 <a href=/collections/ostep/ class=post-collection title="合集 - OSTEP"><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i> OSTEP</a></span></div><div class=post-meta-line><span title="发布于 2024-05-11 20:44:53"><i class="fa-solid fa-calendar-days fa-fw me-1" aria-hidden=true></i><time datetime=2024-05-11>2024-05-11</time></span>&nbsp;<span title="更新于 2024-07-28 09:02:18"><i class="fa-regular fa-calendar-check fa-fw me-1" aria-hidden=true></i><time datetime=2024-07-28>2024-07-28</time></span>&nbsp;<span title="5298 字"><i class="fa-solid fa-pencil-alt fa-fw me-1" aria-hidden=true></i>约 5300 字</span>&nbsp;<span><i class="fa-regular fa-clock fa-fw me-1" aria-hidden=true></i>预计阅读 11 分钟</span>&nbsp;<span id=busuanzi_container_page_pv class="busuanzi_visitors comment-visitors" data-flag-title=锁定数据结构>
+<i class="fa-regular fa-eye fa-fw me-1" aria-hidden=true></i><span id=busuanzi_value_page_pv>-</span>&nbsp;次阅读
+</span>&nbsp;</div></div><div class="details toc" id=toc-static data-kept=false><div class="details-summary toc-title"><span>目录</span>
+<span><i class="details-icon fa-solid fa-angle-right" aria-hidden=true></i></span></div><div class="details-content toc-content" id=toc-content-static><nav id=TableOfContents><ol><li><a href=#并发计数器>并发计数器</a><ol><li><a href=#简单但不可扩展>简单但不可扩展</a></li><li><a href=#可扩展计数器>可扩展计数器</a></li></ol></li><li><a href=#并发链表>并发链表</a><ol><li><a href=#基本实现>基本实现</a></li><li><a href=#扩展链表>扩展链表</a></li></ol></li><li><a href=#并发队列>并发队列</a></li><li><a href=#并发哈希表>并发哈希表</a></li></ol></nav></div></div><div class=content id=content data-end-flag="「本文完，更多内容汇总在我的 GitHub与CSDN，持续更新，求关注、求 star、求订阅！」"><p>在讨论锁之前，我们首先描述如何在一些常见的数据结构中使用锁。向数据结构添加锁以使其可由线程使用，从而使该结构成为<font color=red>线程安全</font>的。如何加锁决定了数据结构的正确性和性能。因此，我们面临着关键挑战：当给定一个特定的数据结构时，我们应该如何向它添加锁，以使其正常工作？此外，我们如何添加锁以使数据结构产生高性能，使许多线程能够同时（即并发）访问该结构？</p><h2 id=并发计数器 class=heading-element><span>1 并发计数器</span>
+<a href=#%e5%b9%b6%e5%8f%91%e8%ae%a1%e6%95%b0%e5%99%a8 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>计数器是最简单的数据结构之一。它是一种常用的结构，具有简单的接口。下面代码中中定义了一个简单的非并发计数器。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__counter_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>counter_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>init</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>increment</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span><span class=o>++</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>decrement</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span><span class=o>--</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>get</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h3 id=简单但不可扩展 class=heading-element><span>1.1 简单但不可扩展</span>
+<a href=#%e7%ae%80%e5%8d%95%e4%bd%86%e4%b8%8d%e5%8f%af%e6%89%a9%e5%b1%95 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>正如您所看到的，非并发计数器是一个简单的数据结构，需要少量的代码来实现。现在我们面临下一个挑战：如何使这段代码线程安全？下面这段代码显示了我们如何做到这一点。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__counter_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>pthread_mutex_t</span> <span class=n>lock</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>counter_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>init</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>increment</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span><span class=o>++</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>decrement</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span><span class=o>--</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>get</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>rc</span> <span class=o>=</span> <span class=n>c</span><span class=o>-&gt;</span><span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>rc</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>这个并发计数器很简单并且工作正常。事实上，它遵循最简单和最基本的并发数据结构常见的设计模式：它只是添加一个锁，该锁在调用操作数据结构的例程时获取，并在从调用返回时释放。通过这种方式，它类似于使用监视器构建的数据结构，当您调用对象方法并从对象方法返回时，会自动获取和释放锁。</p><p>至此，你已经有了一个可以运行的并发数据结构。你可能会遇到的问题是性能。如果你的数据结构速度太慢，你需要做的就不仅仅是添加一个锁了；因此，如果需要进行此类优化，这将是本章其余部分的主题。需要注意的是，如果数据结构的运行速度不是太慢，那么你就大功告成了！如果简单的数据结构也能正常工作，那么就没必要做什么花哨的事情了。</p><p>为了了解简单方法的性能代价，我们运行了一个基准，其中每个线程更新单个共享计数器的次数是固定的；然后我们改变线程的数量。如下图所示，显示了在一到四个线程活动的情况下所花费的总时间；每个线程更新计数器 100 万次。本实验在配备四颗英特尔 2.7 GHz i5 CPU 的 iMac 上运行；如果激活的 CPU 越多，我们希望单位时间内完成的总工作量就越大。</p><p><a class=lightgallery href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Performance-Of-Traditional-vs-Approximate-Counters.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Performance-Of-Traditional-vs-Approximate-Counters.png?size=small" data-sub-html="<h2>image-20240408143721333</h2>"><img loading=lazy src=https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Performance-Of-Traditional-vs-Approximate-Counters.png alt=image-20240408143721333 srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Performance-Of-Traditional-vs-Approximate-Counters.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Performance-Of-Traditional-vs-Approximate-Counters.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Performance-Of-Traditional-vs-Approximate-Counters.png?size=large 2x" data-title=image-20240408143721333 style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'></a></p><p>从图中最上面一行（标注为 &ldquo;Precise&rdquo;）可以看出，并发计数器的性能扩展性很差。单个线程可以在极短的时间内（大约 0.03 秒）完成百万次计数器更新，而让两个线程同时更新计数器 100 万次则会导致速度大幅下降（超过 5 秒！）。线程越多，情况越糟糕。</p><p>理想情况下，线程在多处理器上完成的速度要和单线程在单处理器上完成的速度一样快。实现这一目标被称为<strong>完美扩展</strong>；即使要完成更多工作，也是并行完成的，因此完成任务所需的时间不会增加。</p><h3 id=可扩展计数器 class=heading-element><span>1.2 可扩展计数器</span>
+<a href=#%e5%8f%af%e6%89%a9%e5%b1%95%e8%ae%a1%e6%95%b0%e5%99%a8 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>令人惊讶的是，研究人员多年来一直在研究如何构建更具可扩展性的计数器。更令人惊叹的是，可扩展计数器的重要性，正如最近在操作系统性能分析方面的工作所显示的那样；如果没有可扩展计数，在 Linux 上运行的一些工作负载在多核机器上就会出现严重的可扩展性问题。</p><p>为了解决这个问题，人们开发了许多技术。我们将介绍一种称为<strong>近似计数器</strong>的方法 [C06]。</p><p>近似计数器的工作原理是通过众多本地物理计数器（每个 CPU 内核一个）和一个全局计数器来表示一个逻辑计数器。具体来说，在一台有四个 CPU 的机器上，有四个本地计数器和一个全局计数器。除了这些计数器外，还有锁：每个本地计数器和全局计数器各有一个锁。</p><p>近似计数器的基本思想如下。当运行在给定内核上的线程希望递增计数器时，它会递增其本地计数器；通过相应的本地锁同步访问该本地计数器。由于每个 CPU 都有自己的本地计数器，因此跨 CPU 的线程可以无竞争地更新本地计数器，因此计数器的更新是可扩展的。</p><p>不过，为了保持全局计数器的最新状态（以防线程希望读取其值），本地计数器的值会定期转移到全局计数器上，方法是获取全局锁，并根据本地计数器的值递增；然后将本地计数器重置为零。</p><p>这种从本地到全局的转移发生频率由阈值 S 确定。S 越小，计数器的行为就越像上述不可扩展的计数器；S 越大，计数器的可扩展性就越强，但全局值可能会偏离实际计数。我们可以简单地获取所有本地锁和全局锁（按指定顺序，以避免死锁）来获得精确值，但这是不可扩展的。</p><p>为了说明这一点，我们来看一个例子，如下图所示。</p><p><a class=lightgallery href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Tracing-The-Approximate-Counters.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Tracing-The-Approximate-Counters.png?size=small" data-sub-html="<h2>image-20240408150033961</h2>"><img loading=lazy src=https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Tracing-The-Approximate-Counters.png alt=image-20240408150033961 srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Tracing-The-Approximate-Counters.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Tracing-The-Approximate-Counters.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Tracing-The-Approximate-Counters.png?size=large 2x" data-title=image-20240408150033961 style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'></a></p><p>在这个例子中，阈值 S 设置为 5，四个 CPU 上都有线程在更新本地计数器 L1 &mldr; L4。全局计数器值 (G) 也显示在跟踪中，随着时间的推移不断向下增加。在每个时间步长，本地计数器都可能递增；如果本地值达到阈值 S，本地值就会转移到全局计数器，然后本地计数器被重置。</p><p>在上图中（标注为 &ldquo;Approximate&rdquo;）的下线显示了阈值 S 为 1024 的近似计数器的性能。该计数器的性能非常出色；在四个处理器上更新计数器 400 万次所需的时间几乎不超过在一个处理器上更新计数器 100 万次所需的时间。</p><p>下图显示了阈值 S 的重要性，四个线程在四个 CPU 上各递增计数器 100 万次。如果 S 值较低，则性能较差（但全局计数总是相当准确）；如果 S 值较高，则性能出色，但全局计数滞后（最多滞后 CPU 数量乘以 S）。近似计数器正是通过这种精度/性能权衡实现的。</p><p><a class=lightgallery href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240408150613853.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240408150613853.png?size=small" data-sub-html="<h2>image-20240408150613853</h2>"><img loading=lazy src=https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240408150613853.png alt=image-20240408150613853 srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240408150613853.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240408150613853.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240408150613853.png?size=large 2x" data-title=image-20240408150613853 style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'></a></p><p>近似计数器的粗略版本如下面这段代码所示。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__counter_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>global</span><span class=p>;</span> <span class=c1>// global count
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>pthread_mutex_t</span> <span class=n>glock</span><span class=p>;</span> <span class=c1>// global lock
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>int</span> <span class=n>local</span><span class=p>[</span><span class=n>NUMCPUS</span><span class=p>];</span> <span class=c1>// local count (per cpu)
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>pthread_mutex_t</span> <span class=n>llock</span><span class=p>[</span><span class=n>NUMCPUS</span><span class=p>];</span> <span class=c1>// ... and locks
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>int</span> <span class=n>threshold</span><span class=p>;</span> <span class=c1>// update frequency
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span> <span class=kt>counter_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// init: record threshold, init locks, init values
+</span></span></span><span class=line><span class=cl><span class=c1>// of all local counts and global count
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>void</span> <span class=nf>init</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>,</span> <span class=kt>int</span> <span class=n>threshold</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>threshold</span> <span class=o>=</span> <span class=n>threshold</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>global</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>glock</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>i</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>NUMCPUS</span><span class=p>;</span> <span class=n>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=n>c</span><span class=o>-&gt;</span><span class=n>local</span><span class=p>[</span><span class=n>i</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>        <span class=nf>pthread_mutex_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>llock</span><span class=p>[</span><span class=n>i</span><span class=p>],</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// update: usually, just grab local lock and update local amount
+</span></span></span><span class=line><span class=cl><span class=c1>// once local count has risen by ’threshold’, grab global
+</span></span></span><span class=line><span class=cl><span class=c1>// lock and transfer local values to it
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>void</span> <span class=nf>update</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>,</span> <span class=kt>int</span> <span class=n>threadID</span><span class=p>,</span> <span class=kt>int</span> <span class=n>amt</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>cpu</span> <span class=o>=</span> <span class=n>threadID</span> <span class=o>%</span> <span class=n>NUMCPUS</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>llock</span><span class=p>[</span><span class=n>cpu</span><span class=p>]);</span>
+</span></span><span class=line><span class=cl>    <span class=n>c</span><span class=o>-&gt;</span><span class=n>local</span><span class=p>[</span><span class=n>cpu</span><span class=p>]</span> <span class=o>+=</span> <span class=n>amt</span><span class=p>;</span> <span class=c1>// assumes amt &gt; 0
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>local</span><span class=p>[</span><span class=n>cpu</span><span class=p>]</span> <span class=o>&gt;=</span> <span class=n>c</span><span class=o>-&gt;</span><span class=n>threshold</span><span class=p>)</span> <span class=p>{</span> <span class=c1>// transfer to global
+</span></span></span><span class=line><span class=cl><span class=c1></span>        <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>glock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>c</span><span class=o>-&gt;</span><span class=n>global</span> <span class=o>+=</span> <span class=n>c</span><span class=o>-&gt;</span><span class=n>local</span><span class=p>[</span><span class=n>cpu</span><span class=p>];</span>
+</span></span><span class=line><span class=cl>        <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>glock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=n>c</span><span class=o>-&gt;</span><span class=n>local</span><span class=p>[</span><span class=n>cpu</span><span class=p>]</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>llock</span><span class=p>[</span><span class=n>cpu</span><span class=p>]);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// get: just return global amount (which may not be perfect)
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>int</span> <span class=nf>get</span><span class=p>(</span><span class=kt>counter_t</span> <span class=o>*</span><span class=n>c</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>glock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>val</span> <span class=o>=</span> <span class=n>c</span><span class=o>-&gt;</span><span class=n>global</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>c</span><span class=o>-&gt;</span><span class=n>glock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=n>val</span><span class=p>;</span> <span class=c1>// only approximate!
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><h2 id=并发链表 class=heading-element><span>2 并发链表</span>
+<a href=#%e5%b9%b6%e5%8f%91%e9%93%be%e8%a1%a8 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><h3 id=基本实现 class=heading-element><span>2.1 基本实现</span>
+<a href=#%e5%9f%ba%e6%9c%ac%e5%ae%9e%e7%8e%b0 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>接下来，我们要研究一种更复杂的结构—链表。让我们再次从基本方法开始。为了简单起见，我们将省略这种列表中的一些显而易见的例程，而只关注并发插入；至于查找、删除等，我们将留给读者自己去思考或者可以在仓库中找到更详细的版本。下面显示了这种初级数据结构的代码。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=c1>// basic node structure
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__node_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>key</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>struct</span> <span class=n>__node_t</span> <span class=o>*</span><span class=n>next</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>node_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// basic list structure (one used per list)
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__list_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>head</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>pthread_mutex_t</span> <span class=n>lock</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>list_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>List_Init</span><span class=p>(</span><span class=kt>list_t</span> <span class=o>*</span><span class=n>L</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=n>L</span><span class=o>-&gt;</span><span class=n>head</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>L</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>List_Insert</span><span class=p>(</span><span class=kt>list_t</span> <span class=o>*</span><span class=n>L</span><span class=p>,</span> <span class=kt>int</span> <span class=n>key</span><span class=p>,</span> <span class=kt>int</span> <span class=n>thread_id</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>L</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=nf>printf</span><span class=p>(</span><span class=s>&#34;Thread %d: Inserting %d</span><span class=se>\n</span><span class=s>&#34;</span><span class=p>,</span> <span class=n>thread_id</span><span class=p>,</span> <span class=n>key</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>new</span> <span class=o>=</span> <span class=nf>malloc</span><span class=p>(</span><span class=k>sizeof</span><span class=p>(</span><span class=kt>node_t</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=k>if</span> <span class=p>(</span><span class=n>new</span> <span class=o>==</span> <span class=nb>NULL</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nf>perror</span><span class=p>(</span><span class=s>&#34;malloc&#34;</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>L</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span> <span class=c1>// fail
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=n>new</span><span class=o>-&gt;</span><span class=n>key</span> <span class=o>=</span> <span class=n>key</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>new</span><span class=o>-&gt;</span><span class=n>next</span> <span class=o>=</span> <span class=n>L</span><span class=o>-&gt;</span><span class=n>head</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>L</span><span class=o>-&gt;</span><span class=n>head</span> <span class=o>=</span> <span class=n>new</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>L</span><span class=o>-&gt;</span><span class=n>lock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span> <span class=c1>// success
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>从代码中可以看出，代码只是在进入插入例程时获取一个锁，并在退出时释放它。如果 <code>malloc()</code> 恰好失败（这种情况很少见），就会出现一个棘手的小问题；在这种情况下，代码还必须在插入失败前释放锁。</p><p>事实证明，这种特殊的控制流非常容易出错；最近对 Linux 内核补丁的一项研究发现，很大一部分错误（近 40%）都是在这种很少使用的代码路径上发现的。因此，我们面临着一个挑战：我们能否重写插入和查找例程，使其在并发插入时保持正确，但避免失败路径也需要我们添加<code>unlock</code>调用的情况？</p><p>在这种情况下，答案是肯定的。具体来说，我们可以重构一下<code>List_Insert</code>代码，使锁定和释放只围绕插入代码中的实际临界区，并在删除代码中使用共同的退出路径。前者之所以有效，是因为部分查找代码实际上无需锁定；假设 <code>malloc()</code> 和<code>printf</code>本身是线程安全的，那么每个线程都可以调用它，而不必担心出现竞争条件或其他并发错误。只有在更新共享列表时才需要加锁。有关这些修改的详细信息，请见下面这段代码。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-fallback data-lang=fallback><span class=line><span class=cl>// basic node structure
+</span></span><span class=line><span class=cl>typedef struct __node_t {
+</span></span><span class=line><span class=cl>    int key;
+</span></span><span class=line><span class=cl>    struct __node_t *next;
+</span></span><span class=line><span class=cl>} node_t;
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>// basic list structure (one used per list)
+</span></span><span class=line><span class=cl>typedef struct __list_t {
+</span></span><span class=line><span class=cl>    node_t *head;
+</span></span><span class=line><span class=cl>    pthread_mutex_t lock;
+</span></span><span class=line><span class=cl>} list_t;
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>void List_Init(list_t *L) {
+</span></span><span class=line><span class=cl>    L-&gt;head = NULL;
+</span></span><span class=line><span class=cl>    pthread_mutex_init(&amp;L-&gt;lock, NULL);
+</span></span><span class=line><span class=cl>}
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>int List_Insert(list_t *L, int key, int thread_id) {
+</span></span><span class=line><span class=cl>    printf(&#34;Thread %d: Inserting %d\n&#34;, thread_id, key);
+</span></span><span class=line><span class=cl>    node_t *new = malloc(sizeof(node_t));
+</span></span><span class=line><span class=cl>    if (new == NULL) {
+</span></span><span class=line><span class=cl>        perror(&#34;malloc&#34;);
+</span></span><span class=line><span class=cl>        pthread_mutex_unlock(&amp;L-&gt;lock);
+</span></span><span class=line><span class=cl>        return -1; // fail
+</span></span><span class=line><span class=cl>    }
+</span></span><span class=line><span class=cl>    new-&gt;key = key;
+</span></span><span class=line><span class=cl>    pthread_mutex_lock(&amp;L-&gt;lock);
+</span></span><span class=line><span class=cl>    new-&gt;next = L-&gt;head;
+</span></span><span class=line><span class=cl>    L-&gt;head = new;
+</span></span><span class=line><span class=cl>    pthread_mutex_unlock(&amp;L-&gt;lock);
+</span></span><span class=line><span class=cl>    return 0; // success
+</span></span><span class=line><span class=cl>}</span></span></code></pre></td></tr></table></div></div><h3 id=扩展链表 class=heading-element><span>2.2 扩展链表</span>
+<a href=#%e6%89%a9%e5%b1%95%e9%93%be%e8%a1%a8 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h3><p>虽然我们又有了一个基本的并发链表，但我们又一次遇到了它不能很好扩展的情况。为了在链表中实现更多并发性，研究人员探索了一种技术，即所谓的 &ldquo;手拉手锁定&rdquo;（又称 &ldquo;锁耦合&rdquo;）。</p><p>这个想法非常简单。你可以为链表的每个节点添加一个锁，而不是为整个链表添加一个锁。当遍历列表时，代码会先抓取下一个节点的锁，然后释放当前节点的锁（这就是 <code>hand-over-hand</code> 名称的由来）。</p><p>从概念上讲，&ldquo;交手 &ldquo;链表是有一定道理的；它可以实现高度并发的操作。然而，在实践中，这种结构很难比简单的单锁方法更快，因为为遍历链表的每个节点获取和释放锁的开销太大。即使是非常大的链表和大量的线程，允许多个正在进行的遍历所带来的并发性也不可能比简单地获取单锁、执行操作和释放锁更快。也许某种混合方式（每隔几个节点就抓取一个新锁）值得研究。</p><blockquote><center>TIP：并发越多不一定越快</center><p>如果您设计的方案增加了很多开销（例如，频繁获取和释放锁，而不是一次性），那么它更具并发性可能就不重要了。简单的方案往往效果良好，特别是如果它们很少使用昂贵的例程。增加更多锁和复杂性可能会导致失败。尽管如此，有一种真正需要了解的方法：构建两种替代方案（<font color=red>简单但并发性较低、复杂但并发性较高</font>）并测量它们的表现。最终，您无法在性能上作弊；您的想法要么更快，要么不是。</p><center>警惕锁和控制流</center><p>一个通用的设计提示，在并发代码以及其他地方都很有用，就是要警惕导致函数返回、退出或其他类似错误条件从而停止函数执行的控制流变化。因为许多函数会首先获取锁、分配一些内存或进行其他类似的有状态操作，<font color=red>当出现错误时，代码必须在返回之前撤销所有状态，这样容易出错。</font>因此，最好结构化代码以最小化这种模式。</p></blockquote><h2 id=并发队列 class=heading-element><span>3 并发队列</span>
+<a href=#%e5%b9%b6%e5%8f%91%e9%98%9f%e5%88%97 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>正如您现在所知，制作并发数据结构总是有一个标准方法：添加一个大锁。对于队列，我们将跳过该方法，假设您可以弄清楚。</p><p>相反，我们将看一下由 Michael 和 Scott 设计的并发程度稍高的队列。代码如下所示。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span><span class=lnt>49
+</span><span class=lnt>50
+</span><span class=lnt>51
+</span><span class=lnt>52
+</span><span class=lnt>53
+</span><span class=lnt>54
+</span><span class=lnt>55
+</span><span class=lnt>56
+</span><span class=lnt>57
+</span><span class=lnt>58
+</span><span class=lnt>59
+</span><span class=lnt>60
+</span><span class=lnt>61
+</span><span class=lnt>62
+</span><span class=lnt>63
+</span><span class=lnt>64
+</span><span class=lnt>65
+</span><span class=lnt>66
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__node_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>struct</span> <span class=n>__node_t</span> <span class=o>*</span><span class=n>next</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>node_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__queue_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>head</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>tail</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=kt>pthread_mutex_t</span> <span class=n>headLock</span><span class=p>;</span> <span class=c1>// Mutex for head pointer
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>pthread_mutex_t</span> <span class=n>tailLock</span><span class=p>;</span> <span class=c1>// Mutex for tail pointer
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=p>}</span> <span class=kt>queue_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Initialize the queue
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>void</span> <span class=nf>Queue_Init</span><span class=p>(</span><span class=kt>queue_t</span> <span class=o>*</span><span class=n>q</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Allocate memory for a dummy node to represent the head of the queue
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>tmp</span> <span class=o>=</span> <span class=nf>malloc</span><span class=p>(</span><span class=k>sizeof</span><span class=p>(</span><span class=kt>node_t</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=n>tmp</span><span class=o>-&gt;</span><span class=n>next</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Initialize the head and tail pointers to the dummy node
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>q</span><span class=o>-&gt;</span><span class=n>head</span> <span class=o>=</span> <span class=n>q</span><span class=o>-&gt;</span><span class=n>tail</span> <span class=o>=</span> <span class=n>tmp</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Initialize mutexes for head and tail pointers
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>pthread_mutex_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>q</span><span class=o>-&gt;</span><span class=n>headLock</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=nf>pthread_mutex_init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>q</span><span class=o>-&gt;</span><span class=n>tailLock</span><span class=p>,</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Enqueue an element into the queue
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>void</span> <span class=nf>Queue_Enqueue</span><span class=p>(</span><span class=kt>queue_t</span> <span class=o>*</span><span class=n>q</span><span class=p>,</span> <span class=kt>int</span> <span class=n>value</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Allocate memory for the new node
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>tmp</span> <span class=o>=</span> <span class=nf>malloc</span><span class=p>(</span><span class=k>sizeof</span><span class=p>(</span><span class=kt>node_t</span><span class=p>));</span>
+</span></span><span class=line><span class=cl>    <span class=nf>assert</span><span class=p>(</span><span class=n>tmp</span> <span class=o>!=</span> <span class=nb>NULL</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=n>tmp</span><span class=o>-&gt;</span><span class=n>value</span> <span class=o>=</span> <span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=n>tmp</span><span class=o>-&gt;</span><span class=n>next</span> <span class=o>=</span> <span class=nb>NULL</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>    <span class=c1>// Acquire the tailLock mutex
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>q</span><span class=o>-&gt;</span><span class=n>tailLock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Insert the new node after the current tail node
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>q</span><span class=o>-&gt;</span><span class=n>tail</span><span class=o>-&gt;</span><span class=n>next</span> <span class=o>=</span> <span class=n>tmp</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Update the tail pointer to point to the new node
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>q</span><span class=o>-&gt;</span><span class=n>tail</span> <span class=o>=</span> <span class=n>tmp</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Release the tailLock mutex
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>q</span><span class=o>-&gt;</span><span class=n>tailLock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=c1>// Dequeue an element from the queue
+</span></span></span><span class=line><span class=cl><span class=c1></span><span class=kt>int</span> <span class=nf>Queue_Dequeue</span><span class=p>(</span><span class=kt>queue_t</span> <span class=o>*</span><span class=n>q</span><span class=p>,</span> <span class=kt>int</span> <span class=o>*</span><span class=n>value</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Acquire the headLock mutex
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>pthread_mutex_lock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>q</span><span class=o>-&gt;</span><span class=n>headLock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Get the current head node
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>tmp</span> <span class=o>=</span> <span class=n>q</span><span class=o>-&gt;</span><span class=n>head</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Get the next node after the head
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=kt>node_t</span> <span class=o>*</span><span class=n>newHead</span> <span class=o>=</span> <span class=n>tmp</span><span class=o>-&gt;</span><span class=n>next</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// If the queue is empty (newHead is NULL), release the headLock mutex and return -1
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>if</span> <span class=p>(</span><span class=n>newHead</span> <span class=o>==</span> <span class=nb>NULL</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>q</span><span class=o>-&gt;</span><span class=n>headLock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>        <span class=k>return</span> <span class=o>-</span><span class=mi>1</span><span class=p>;</span> <span class=c1>// queue was empty
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=p>}</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Extract the value from the node to be dequeued
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=o>*</span><span class=n>value</span> <span class=o>=</span> <span class=n>newHead</span><span class=o>-&gt;</span><span class=n>value</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Update the head pointer to point to the next node
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=n>q</span><span class=o>-&gt;</span><span class=n>head</span> <span class=o>=</span> <span class=n>newHead</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Release the headLock mutex
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>pthread_mutex_unlock</span><span class=p>(</span><span class=o>&amp;</span><span class=n>q</span><span class=o>-&gt;</span><span class=n>headLock</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Free the memory of the dequeued node
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=nf>free</span><span class=p>(</span><span class=n>tmp</span><span class=p>);</span>
+</span></span><span class=line><span class=cl>    <span class=c1>// Return 0 indicating successful dequeue operation
+</span></span></span><span class=line><span class=cl><span class=c1></span>    <span class=k>return</span> <span class=mi>0</span><span class=p>;</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>如果你仔细研究这段代码，你会发现有两个锁，一个用于队列的头部，一个用于队列的尾部。这两个锁的目标是实现入队和出队操作的并发。在常见情况下，入队例程将仅访问尾部锁，而出队只会访问头部锁。</p><p>Michael 和 Scott 使用的一个技巧是添加一个虚拟节点（在队列初始化代码中分配）；这个虚拟节点可以实现头尾操作的分离。</p><p>队列通常用在多线程应用程序中。然而，这里使用的队列类型（仅带有锁）通常不能完全满足此类程序的需求。一个更充分开发的有界队列，使线程能够在队列为空或过满时等待，这是条件变量可以做到的事情。</p><h2 id=并发哈希表 class=heading-element><span>4 并发哈希表</span>
+<a href=#%e5%b9%b6%e5%8f%91%e5%93%88%e5%b8%8c%e8%a1%a8 class=heading-mark><svg class="octicon octicon-link" viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5.0 114.95 4.95l-2.5 2.5a3.5 3.5.0 01-4.95.0.751.751.0 01.018-1.042.751.751.0 011.042-.018 1.998 1.998.0 002.83.0l2.5-2.5a2.002 2.002.0 00-2.83-2.83l-1.25 1.25a.751.751.0 01-1.042-.018.751.751.0 01-.018-1.042zm-4.69 9.64a1.998 1.998.0 002.83.0l1.25-1.25a.751.751.0 011.042.018.751.751.0 01.018 1.042l-1.25 1.25a3.5 3.5.0 11-4.95-4.95l2.5-2.5a3.5 3.5.0 014.95.0.751.751.0 01-.018 1.042.751.751.0 01-1.042.018 1.998 1.998.0 00-2.83.0l-2.5 2.5a1.998 1.998.0 000 2.83z"/></svg></a></h2><p>最后，我们将讨论一种简单而又广泛适用的并发数据结构—哈希表。我们将重点讨论一个不调整大小的简单哈希表，代码如下所示；处理调整大小需要做更多的工作，我们将其作为一个练习留给读者（抱歉！）。</p><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-c data-lang=c><span class=line><span class=cl><span class=cp>#define BUCKETS (101)
+</span></span></span><span class=line><span class=cl><span class=cp></span>
+</span></span><span class=line><span class=cl><span class=k>typedef</span> <span class=k>struct</span> <span class=n>__hash_t</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>list_t</span> <span class=n>lists</span><span class=p>[</span><span class=n>BUCKETS</span><span class=p>];</span>
+</span></span><span class=line><span class=cl><span class=p>}</span> <span class=kt>hash_t</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>void</span> <span class=nf>Hash_Init</span><span class=p>(</span><span class=kt>hash_t</span> <span class=o>*</span><span class=n>H</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>i</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>for</span> <span class=p>(</span><span class=n>i</span> <span class=o>=</span> <span class=mi>0</span><span class=p>;</span> <span class=n>i</span> <span class=o>&lt;</span> <span class=n>BUCKETS</span><span class=p>;</span> <span class=n>i</span><span class=o>++</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>        <span class=nf>List_Init</span><span class=p>(</span><span class=o>&amp;</span><span class=n>H</span><span class=o>-&gt;</span><span class=n>lists</span><span class=p>[</span><span class=n>i</span><span class=p>]);</span>
+</span></span><span class=line><span class=cl>    <span class=p>}</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>Hash_Insert</span><span class=p>(</span><span class=kt>hash_t</span> <span class=o>*</span><span class=n>H</span><span class=p>,</span> <span class=kt>int</span> <span class=n>key</span><span class=p>,</span> <span class=kt>int</span> <span class=n>thread_id</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>bucket</span> <span class=o>=</span> <span class=n>key</span> <span class=o>%</span> <span class=n>BUCKETS</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nf>List_Insert</span><span class=p>(</span><span class=o>&amp;</span><span class=n>H</span><span class=o>-&gt;</span><span class=n>lists</span><span class=p>[</span><span class=n>bucket</span><span class=p>],</span> <span class=n>key</span><span class=p>,</span> <span class=n>thread_id</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span>
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=kt>int</span> <span class=nf>Hash_Remove</span><span class=p>(</span><span class=kt>hash_t</span> <span class=o>*</span><span class=n>H</span><span class=p>,</span> <span class=kt>int</span> <span class=n>key</span><span class=p>,</span> <span class=kt>int</span> <span class=n>thread_id</span><span class=p>)</span> <span class=p>{</span>
+</span></span><span class=line><span class=cl>    <span class=kt>int</span> <span class=n>bucket</span> <span class=o>=</span> <span class=n>key</span> <span class=o>%</span> <span class=n>BUCKETS</span><span class=p>;</span>
+</span></span><span class=line><span class=cl>    <span class=k>return</span> <span class=nf>List_Remove</span><span class=p>(</span><span class=o>&amp;</span><span class=n>H</span><span class=o>-&gt;</span><span class=n>lists</span><span class=p>[</span><span class=n>bucket</span><span class=p>],</span> <span class=n>key</span><span class=p>,</span> <span class=n>thread_id</span><span class=p>);</span>
+</span></span><span class=line><span class=cl><span class=p>}</span></span></span></code></pre></td></tr></table></div></div><p>这个并发哈希表非常简单，使用我们之前开发的并发链表构建，而且运行得非常好。它之所以性能出色，是因为它没有为整个结构设置一个锁，而是为每个哈希桶（每个哈希桶由一个链表表示）设置了一个锁。这样就可以进行许多并发操作。</p><p>下图 显示了哈希表在并发更新下的性能（在同一台配备四个 CPU 的 iMac 电脑上，四个线程的并发更新次数从 10,000 次到 50,000 次不等）。为便于比较，图中还显示了链表的性能（使用单锁）。从图中可以看出，这个简单的并发哈希表的扩展能力很强，而链表则不然。</p><p><a class=lightgallery href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaling-Hash-Tables.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaling-Hash-Tables.png?size=small" data-sub-html="<h2>image-20240408230513598</h2>"><img loading=lazy src=https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaling-Hash-Tables.png alt=image-20240408230513598 srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaling-Hash-Tables.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaling-Hash-Tables.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaling-Hash-Tables.png?size=large 2x" data-title=image-20240408230513598 style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'></a></p><blockquote><center>避免过早优化（KNUTH定律）</center><p>在构建并发数据结构时，应从最基本的方法开始，即添加一个大锁以提供同步访问。这样做，你就有可能构建一个正确的锁；如果你发现它存在性能问题，你可以对它进行改进，从而在必要时使它变得更快。正如 Knuth 的名言：&ldquo;过早优化是万恶之源&rdquo;。</p><p>在向多处理器过渡之初，许多操作系统都使用单锁，包括 Sun OS 和 Linux。在后者中，这种锁甚至有一个名字，即<font color=red>大内核锁（BKL</font>）。多年来，这种简单的方法一直很好，但当多 CPU 系统成为常态时，内核中每次只允许一个活动线程就成了性能瓶颈。因此，终于到了为这些系统添加改进并发性优化的时候了。在 Linux 系统中，采用了更直接的方法：用多个锁代替一个锁。而在 Sun 内部，则做出了一个更激进的决定：建立一个全新的操作系统，即 Solaris，从一开始就从根本上融入并发性。</p></blockquote></div><hr class=awesome-hr><h2 id=see-also>相关内容</h2><ul><li><a href=/posts/21.%E9%94%81/ title=锁>锁</a></li><li><a href=/posts/20.%E7%BA%BF%E7%A8%8Bapi/ title=线程API>线程API</a></li><li><a href=/posts/19.%E5%B9%B6%E5%8F%91%E5%92%8C%E7%BA%BF%E7%A8%8B/ title=并发和线程>并发和线程</a></li><li><a href=/posts/18.%E5%AE%8C%E6%95%B4vm%E7%B3%BB%E7%BB%9F/ title=完整VM系统>完整VM系统</a></li><li><a href=/posts/17.%E4%BA%A4%E6%8D%A2%E7%AD%96%E7%95%A5/ title=交换策略>交换策略</a></li></ul><div class=post-reward><div class=comment>Buy me a coffee~</div><input type=checkbox class=reward-input name=reward id=fi-reward hidden>
+<label class=reward-button for=fi-reward><i class="fa-solid fa-qrcode fa-fw" aria-hidden=true></i>赞赏</label><div class=reward-ways data-mode=fixed><div><img loading=lazy src=/images/alipay.png alt="HeZephyr 支付宝" data-title="HeZephyr 支付宝" style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span data-animation>支付宝</span></div><div><img loading=lazy src=/images/wechatpay.jpg alt="HeZephyr 微信" data-title="HeZephyr 微信" style="background:url(/images/loading.min.svg)no-repeat 50%" onload='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e);this.dataset.lazyloaded=""' onerror='this.title=this.dataset.title;for(const e of["style","data-title","onerror","onload"])this.removeAttribute(e)'><span data-animation>微信</span></div></div></div><div class=collection-card><div class="collection-title text-secondary">收录于 <a href=/collections/ostep/><i class="fa-solid fa-layer-group fa-fw" aria-hidden=true></i> <span>合集・OSTEP</span></span></a> 39</div><div class=collection-nav><a href=/posts/21.%E9%94%81/ class=collection-nav-item rel=prev title=锁><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i><span>锁</span>
+</a><a href=/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/ class=collection-nav-item rel=next title=条件变量><span>条件变量</span><i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div class=post-footer id=post-footer><div class=post-info><div class=post-info-line><div class=post-info-mod><span title="更新于 2024-07-28 09:02:18">更新于 2024-07-28&nbsp;</span></div><div class=post-info-license><span><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-sa/4.0/ target=_blank>CC BY-NC-SA 4.0</a></span></div></div><div class=post-info-line><div class=post-info-md><span><a href=/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/index.md title=阅读原始文档 class=link-to-markdown>阅读原始文档</a></span><span><a href="https://github.com/Lruihao/hugo-blog/blob/docs/content/posts/_develop/_system/ostep/22.%e9%94%81%e5%ae%9a%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84.md?plain=1" title=查看源码 target=_blank rel="external nofollow noopener noreferrer" class=link-to-source>查看源码</a></span><span><a href=https://github.com/Lruihao/hugo-blog/edit/docs/content/posts/_develop/_system/ostep/22.%e9%94%81%e5%ae%9a%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84.md title=编辑此页 target=_blank rel="external nofollow noopener noreferrer" class=link-to-edit>编辑此页</a></span><span><a href="https://github.com/Lruihao/hugo-blog/issues/new?title=[BUG]%20%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84&amp;body=%7cField%7cValue%7c%0A%7c-%7c-%7c%0A%7cTitle%7c%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%7c%0A%7cURL%7chttps://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%7c%0A%7cFilename%7chttps://github.com/Lruihao/hugo-blog/blob/docs/content/posts/_develop/_system/ostep/22.%e9%94%81%e5%ae%9a%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84.md?plain=1%7c" title=报告问题 target=_blank rel="external nofollow noopener noreferrer" class=link-to-report>报告问题</a></span></div><div class=post-info-share><span><a href=javascript:void(0); title="分享到 X" data-sharer=twitter data-url=https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ data-title=锁定数据结构 data-hashtags=OS><i class="fa-brands fa-x-twitter fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Facebook" data-sharer=facebook data-url=https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ data-hashtag=OS><i class="fa-brands fa-facebook-square fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 Linkedin" data-sharer=linkedin data-url=https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/><i class="fa-brands fa-linkedin fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 微博" data-sharer=weibo data-url=https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ data-title=锁定数据结构><i class="fa-brands fa-weibo fa-fw" aria-hidden=true></i></a>
+<a href=javascript:void(0); title="分享到 百度" data-sharer=baidu data-url=https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/ data-title=锁定数据结构><i data-svg-src=https://unpkg.com/simple-icons@9.19.0/icons/baidu.svg aria-hidden=true></i></a></span></div></div></div><div class=post-info-more><section class=post-tags><i class="fa-solid fa-tags fa-fw me-1" aria-hidden=true></i><a href=/tags/os/ class=post-tag title="标签 - OS">OS</a></section><section><span><a href=javascript:void(0); onclick=window.history.back()>返回</a></span>&nbsp;|&nbsp;<span><a href=/>主页</a></span></section></div><div class=post-nav><a href=/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/ class=post-nav-item rel=prev title=条件变量><i class="fa-solid fa-angle-left fa-fw" aria-hidden=true></i>条件变量</a>
+<a href=/posts/21.%E9%94%81/ class=post-nav-item rel=next title=锁>锁<i class="fa-solid fa-angle-right fa-fw" aria-hidden=true></i></a></div></div><div id=comments><div id=giscus class=comment><script src=https://giscus.app/client.js data-repo=Lruihao/hugo-blog data-repo-id="MDEwOlJlcG9zaXRvcnk0MDQzNDY3MDk=" data-category=General data-category-id=DIC_kwDOGBnXVc4CApHL data-mapping=title data-strict=0 data-theme=preferred_color_scheme data-reactions-enabled=1 data-emit-metadata=0 data-input-position=bottom data-lang=zh-CN data-loading=lazy crossorigin=anonymous async defer></script></div><noscript>Please enable JavaScript to view the comments powered by <a href=https://giscus.app/ rel="external nofollow noopener noreferrer">giscus</a>.</noscript></div></article><aside class=toc id=toc-auto aria-label=目录><h2 class=toc-title>目录&nbsp;<i class="toc-icon fa-solid fa-angle-down fa-fw" aria-hidden=true></i></h2><div class=toc-content id=toc-content-auto></div></aside></main><footer class=footer><div class=footer-container><div class="footer-line powered order-1">由 <a href=https://gohugo.io/ target=_blank rel="external nofollow noopener noreferrer" title="Hugo 0.129.0"><img class=hugo-icon src=/images/hugo.min.svg alt="Hugo logo"> Hugo</a> 强力驱动 | 主题 - <a href=https://github.com/hugo-fixit/FixIt target=_blank rel=external title="FixIt v0.3.9-RC"><img class=fixit-icon src=/images/fixit.min.svg alt="FixIt logo"> FixIt</a></div><div class="footer-line copyright order-2" itemscope itemtype=http://schema.org/CreativeWork><i class="fa-regular fa-copyright fa-fw" aria-hidden=true></i>
+<span itemprop=copyrightYear>2020 - 2024</span><span class=author itemprop=copyrightHolder>
+<a href=https://github.com/HeZephyr target=_blank rel="external nofollow noopener noreferrer">HeZephyr</a></span><span class="license footer-divider"><a rel="license external nofollow noopener noreferrer" href=https://creativecommons.org/licenses/by-nc-sa/4.0/ target=_blank>CC BY-NC-SA 4.0</a></span></div><div class="footer-line statistics"><span class=site-time title=网站运行中……><i class="fa-solid fa-heartbeat fa-fw animate-icon" aria-hidden=true></i><span class="ms-1 d-none">博客已运行</span><span class="run-times ms-1">网站运行中……</span></span></div><div class="footer-line visitor order-first"><span id=busuanzi_container_site_uv title=总访客数><i class="fa-regular fa-user fa-fw" aria-hidden=true></i>&nbsp;<span id=busuanzi_value_site_uv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span><span id=busuanzi_container_site_pv class=footer-divider title=总访问量><i class="fa-regular fa-eye fa-fw" aria-hidden=true></i>&nbsp;<span id=busuanzi_value_site_pv><i class="fa-solid fa-spinner fa-spin fa-fw" aria-hidden=true></i></span></span></div></div></footer></div><div class=widgets><div class="fixed-buttons animate__faster d-none"><div class="fixed-button back-to-top" role=button aria-label=回到顶部><i class="fa-solid fa-arrow-up fa-fw" aria-hidden=true></i><span class=variant-numeric>0%</span></div><div class="fixed-button view-comments d-none" role=button aria-label=查看评论><i class="fa-solid fa-comment fa-fw" aria-hidden=true></i></div></div><a href=https://github.com/HeZephyr title="View on GitHub" target=_blank rel="external nofollow" class="github-corner right d-none-mobile"><svg viewBox="0 0 250 250" aria-hidden="true" width="56" height="56"><path d="M0 0 115 115h15l12 27L250 250V0z"/><path d="M128.3 109C113.8 99.7 119 89.6 119 89.6 122 82.7 120.5 78.6 120.5 78.6 119.2 72 123.4 76.3 123.4 76.3 127.3 80.9 125.5 87.3 125.5 87.3 122.9 97.6 130.6 101.9 134.4 103.2" fill="currentcolor" style="transform-origin:130px 106px" class="octo-arm"/><path d="M115 115C114.9 115.1 118.7 116.5 119.8 115.4l13.9-13.8C136.9 99.2 139.9 98.4 142.2 98.6 133.8 88 127.5 74.4 143.8 58 148.5 53.4 154 51.2 159.7 51 160.3 49.4 163.2 43.6 171.4 40.1 171.4 40.1 176.1 42.5 178.8 56.2 183.1 58.6 187.2 61.8 190.9 65.4 194.5 69 197.7 73.2 200.1 77.6 213.8 80.2 216.3 84.9 216.3 84.9 212.7 93.1 206.9 96 205.4 96.6 205.1 102.4 203 107.8 198.3 112.5 181.9 128.9 168.3 122.5 157.7 114.1 157.9 116.9 156.7 120.9 152.7 124.9L141 136.5C139.8 137.7 141.6 141.9 141.8 141.8z" fill="currentcolor" class="octo-body"/></svg></a><div id=mask></div><div class=reading-progress-bar style=left:0;top:0;--bg-progress:#8581dd;--bg-progress-dark:#fff></div><noscript><div class=noscript-warning>该网站在启用 JavaScript 的情况下效果最佳。</div></noscript></div><link rel=stylesheet href=https://unpkg.com/lightgallery@2.7.2/css/lightgallery-bundle.min.css><link rel=stylesheet href=https://unpkg.com/cookieconsent@3.1.1/build/cookieconsent.min.css><link rel=stylesheet href=https://unpkg.com/pace-js@1.2.4/themes/blue/pace-theme-minimal.css><script src=https://unpkg.com/autocomplete.js@0.38.1/dist/autocomplete.min.js defer></script><script src=https://unpkg.com/algoliasearch@4.20.0/dist/algoliasearch-lite.umd.js defer></script><script src=https://unpkg.com/instant.page@5.2.0/instantpage.js async defer type=module></script><script src=https://unpkg.com/lightgallery@2.7.2/lightgallery.min.js defer></script><script src=https://unpkg.com/lightgallery@2.7.2/plugins/thumbnail/lg-thumbnail.min.js defer></script><script src=https://unpkg.com/lightgallery@2.7.2/plugins/zoom/lg-zoom.min.js defer></script><script src=https://unpkg.com/sharer.js@0.5.1/sharer.min.js async defer></script><script src=https://unpkg.com/cookieconsent@3.1.1/build/cookieconsent.min.js defer></script><script src=https://unpkg.com/pangu@4.0.7/dist/browser/pangu.min.js defer></script><script src=https://unpkg.com/cell-watermark@1.0.3/src/watermark.min.js defer></script><script src=//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js async defer></script><script src=https://unpkg.com/pace-js@1.2.4/pace.min.js async defer></script><script src=/js/flyfish.js defer></script><script>window.config={autoBookmark:!0,code:{copyTitle:"复制到剪贴板",editLockTitle:"锁定可编辑代码块",editUnLockTitle:"解锁可编辑代码块",editable:!0,maxShownLines:50},comment:{enable:!0,expired:!1,giscus:{darkTheme:"dark_dimmed",lightTheme:"light",origin:"https://giscus.app"}},cookieconsent:{content:{dismiss:"同意",link:"了解更多",message:"本网站使用 Cookies 来改善您的浏览体验。"},enable:!0,palette:{button:{background:"#f0f0f0"},popup:{background:"#1aa3ff"}},theme:"edgeless"},enablePWA:!0,lightgallery:!0,pangu:{enable:!0,selector:"article"},search:{algoliaAppID:"MTJNHU0JVB",algoliaIndex:"index",algoliaSearchKey:"5486225134d99f43826da401ee9bad57",highlightTag:"em",maxResultLength:10,noResultsFound:"没有找到结果",snippetLength:50,type:"algolia"},siteTime:"2020-06-10T15:42:01+08:00",version:"v0.3.9-RC",watermark:{colspacing:30,content:'<img style="height: 0.85rem;" src="/logo.png" alt="logo" /> 贺志飞',enable:!0,fontfamily:"LiuJianMaoCao-Regular, 钟齐流江毛草",fontsize:1.1,height:20,opacity:.0125,rotate:15,rowspacing:60,width:150}}</script><script src=/js/theme.min.js defer></script><script src=/js/custom.min.js defer></script></body></html>

@@ -1,0 +1,490 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>最小生成树 - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91/</link><description>最小生成树 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 11 Aug 2020 16:15:34 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E6%9C%80%E5%B0%8F%E7%94%9F%E6%88%90%E6%A0%91/" rel="self" type="application/rss+xml"/><item><title>Kruskal算法详解</title><link>https://lruihao.cn/posts/03.kruskal%E7%AE%97%E6%B3%95%E6%95%99%E7%A8%8B/</link><pubDate>Tue, 11 Aug 2020 16:15:34 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/03.kruskal%E7%AE%97%E6%B3%95%E6%95%99%E7%A8%8B/</guid><description><![CDATA[<h2 id="简介" class="heading-element"><span>1 简介</span>
+  <a href="#%e7%ae%80%e4%bb%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Kruskal算法是一种用来查找最小生成树（$MST$）的算法，由Joseph Kruskal在1956年发表。求最小生成树的算法常用有两种：Kruskal算法和Prim算法。这里指路一篇Prim算法的详解blog：<a href="https://blog.csdn.net/hzf0701/article/details/107927858"target="_blank" rel="external nofollow noopener noreferrer">https://blog.csdn.net/hzf0701/article/details/107927858<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>。与Prim算法不同的是，该算法的核心思想是归并边，而Prim算法的核心思想是归并点。这里我们会在后面的实现过程中看到。</p>
+<h2 id="构造过程" class="heading-element"><span>2 构造过程</span>
+  <a href="#%e6%9e%84%e9%80%a0%e8%bf%87%e7%a8%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>假设连通网$N=(V,E)$，将$N$中的边按权值从小到大的顺序排列。
+①初始状态为只有$n$个顶点而无边的非连通图$T=(V,{})$，图中每个顶点自成一个连通分量。
+②在$E$中选择权值最小的边，若该边依附的顶点落在$T$中不同的连通分量上（即不形成回路），则将此边将入到$T$中，否则舍去此边而选择下一条权值最小的边。
+③重复②，直到$T$中所有的顶点都在同一连通分量上为止。</p>
+<p>这个算法的构造过程十分简洁明了，那么为什么这样的构造过程能否形成最小生成树呢？我们来看第二个步骤，因为我们选取的边的顶点是不同的连通分量，且边权值是最小的，所以我们保证加入的边都不使得$T$有回路，且权值也最小。这样最后当所有的连通分量都相同时，即所有的顶点都在生成树中被连接成功了，我们构造成的树也就是最小生成树了。</p>
+<h2 id="示例" class="heading-element"><span>3 示例</span>
+  <a href="#%e7%a4%ba%e4%be%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322333.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h2 id="算法实现" class="heading-element"><span>4 算法实现</span>
+  <a href="#%e7%ae%97%e6%b3%95%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>步骤：
+①将存储边的数组temp按权值从小到大排序，注意进行运算符重载。
+②初始化连通分量数组$verx$。
+③依次查看数组temp的边，循环执行以下操作。</p>
+<ul>
+<li>依次从排好序的数组temp中选出一条边$(u,v)$；</li>
+<li>在$verx$中分别查找$u$和$v$所在的连通分量$v_1和v_2$，进行判断。
+<ul>
+<li>如果$v_1$和$v_2$不等，说明所选的两个顶点分别属于不同的连通分量，则将此边存入最小生成树$tree$，并合并$v_1$和$v_2$这个两个连通分量。</li>
+<li>如果$v_1$和$v_2$相等，则说明所选的两个顶点属于同一个连通分量，舍去此边而选择下一条权值最小的边。</li>
+</ul>
+</li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include&lt;bits/stdc++.h&gt; </span><span class="c1">//POJ不支持
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define rep(i,a,n) for (int i=a;i&lt;=n;i++)</span><span class="c1">//i为循环变量，a为初始值，n为界限值，递增
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define per(i,a,n) for (int i=a;i&gt;=n;i--)</span><span class="c1">//i为循环变量， a为初始值，n为界限值，递减。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define pb push_back
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define IOS ios::sync_with_stdio(false);cin.tie(0); cout.tie(0)
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define fi first
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define se second
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define mp make_pair
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">inf</span> <span class="o">=</span> <span class="mh">0x3f3f3f3f</span><span class="p">;</span><span class="c1">//无穷大
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mf">1e5</span><span class="p">;</span><span class="c1">//最大值。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">double</span> <span class="n">ld</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span> <span class="n">ll</span><span class="o">&gt;</span>  <span class="n">pll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">pii</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="c1">//*******************************分割线，以上为自定义代码模板***************************************//
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="k">struct</span> <span class="nc">edge</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">s</span><span class="p">;</span><span class="c1">//边的起始顶点。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">e</span><span class="p">;</span><span class="c1">//边的终端顶点。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">w</span><span class="p">;</span><span class="c1">//边权值。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">bool</span> <span class="k">operator</span> <span class="o">&lt;</span> <span class="p">(</span><span class="k">const</span> <span class="n">edge</span> <span class="o">&amp;</span><span class="n">a</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="n">w</span><span class="o">&lt;</span><span class="n">a</span><span class="p">.</span><span class="n">w</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">};</span>
+</span></span><span class="line"><span class="cl"><span class="n">edge</span> <span class="n">temp</span><span class="p">[</span><span class="n">maxn</span><span class="p">];</span><span class="c1">//临时数组存储边。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">verx</span><span class="p">[</span><span class="n">maxn</span><span class="p">];</span><span class="c1">//辅助数组，判断是否连通。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="n">edge</span> <span class="n">tree</span><span class="p">[</span><span class="n">maxn</span><span class="p">];</span><span class="c1">//最小生成树。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">;</span><span class="c1">//n*n的图，m条边。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">cnt</span><span class="p">;</span><span class="c1">//统计生成结点个数，若不满足n个，则生成失败。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">sum</span><span class="p">;</span><span class="c1">//最小生成树权值总和。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">print</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//打印最小生成树函数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="s">&#34;最小生成树的权值总和为：&#34;</span><span class="o">&lt;&lt;</span><span class="n">sum</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">cnt</span><span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">tree</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">s</span><span class="o">&lt;&lt;</span><span class="s">&#34; &#34;</span><span class="o">&lt;&lt;</span><span class="n">tree</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">e</span><span class="o">&lt;&lt;</span><span class="s">&#34;边权值为&#34;</span><span class="o">&lt;&lt;</span><span class="n">tree</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">w</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">Kruskal</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">verx</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">i</span><span class="p">;</span><span class="c1">//这里表示各顶点自成一个连通分量。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">cnt</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="n">sum</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">sort</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span><span class="n">temp</span><span class="o">+</span><span class="n">m</span><span class="p">);</span><span class="c1">//将边按权值排列。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">v1</span><span class="p">,</span><span class="n">v2</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v1</span><span class="o">=</span><span class="n">verx</span><span class="p">[</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">s</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">v2</span><span class="o">=</span><span class="n">verx</span><span class="p">[</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">e</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">v1</span><span class="o">!=</span><span class="n">v2</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">tree</span><span class="p">[</span><span class="n">cnt</span><span class="p">].</span><span class="n">s</span><span class="o">=</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">s</span><span class="p">;</span><span class="n">tree</span><span class="p">[</span><span class="n">cnt</span><span class="p">].</span><span class="n">e</span><span class="o">=</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">e</span><span class="p">;</span><span class="n">tree</span><span class="p">[</span><span class="n">cnt</span><span class="p">].</span><span class="n">w</span><span class="o">=</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">w</span><span class="p">;</span><span class="c1">//并入最小生成树。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">rep</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="c1">//合并v1和v2的两个分量，即两个集合统一编号。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>                <span class="k">if</span><span class="p">(</span><span class="n">verx</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">==</span><span class="n">v2</span><span class="p">)</span><span class="n">verx</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">v1</span><span class="p">;</span> <span class="c1">//默认集合编号为v2的改为v1.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="n">sum</span><span class="o">+=</span><span class="n">tree</span><span class="p">[</span><span class="n">cnt</span><span class="p">].</span><span class="n">w</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cnt</span><span class="o">++</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//结束双层for循环之后得到tree即是最小生成树。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">print</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//freopen(&#34;in.txt&#34;, &#34;r&#34;, stdin);//提交的时候要注释掉
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">IOS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">n</span><span class="o">&gt;&gt;</span><span class="n">m</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="kt">int</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">m</span><span class="o">-</span><span class="mi">1</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">u</span><span class="o">&gt;&gt;</span><span class="n">v</span><span class="o">&gt;&gt;</span><span class="n">w</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">s</span><span class="o">=</span><span class="n">u</span><span class="p">;</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">e</span><span class="o">=</span><span class="n">v</span><span class="p">;</span><span class="n">temp</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">w</span><span class="o">=</span><span class="n">w</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="n">Kruskal</span><span class="p">();</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="算法分析" class="heading-element"><span>5 算法分析</span>
+  <a href="#%e7%ae%97%e6%b3%95%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>对于有$m$条边和$n$个顶点的图。在$for$循环中最耗时的操作就是合并两个不同的连通分量，第一个循环语句的频度为$m$，第二个循环由于存在$if$语句，所以平均频度是$log_2n$，所以该算法的平均时间复杂度为$O(mlog_2n)$，故和Prim算法相比
+此算法适合用于稀疏图。</p>
+<h2 id="测试" class="heading-element"><span>6 测试</span>
+  <a href="#%e6%b5%8b%e8%af%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>以示例数据为测试样例：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="mi">7</span> <span class="mi">11</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="mi">2</span> <span class="mi">7</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="mi">4</span> <span class="mi">5</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="mi">4</span> <span class="mi">9</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="mi">3</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="mi">5</span> <span class="mi">7</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span> <span class="mi">5</span> <span class="mi">15</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span> <span class="mi">6</span> <span class="mi">6</span>
+</span></span><span class="line"><span class="cl"><span class="mi">6</span> <span class="mi">7</span> <span class="mi">11</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span> <span class="mi">6</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span> <span class="mi">7</span> <span class="mi">9</span>
+</span></span><span class="line"><span class="cl"><span class="mi">3</span> <span class="mi">5</span> <span class="mi">5</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>测试结果如图：
+<a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214322630.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+]]></description></item><item><title>Prim算法详解</title><link>https://lruihao.cn/posts/04.prim%E7%AE%97%E6%B3%95%E6%95%99%E7%A8%8B/</link><pubDate>Wed, 29 Jul 2020 11:34:35 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/04.prim%E7%AE%97%E6%B3%95%E6%95%99%E7%A8%8B/</guid><description><![CDATA[<h2 id="最小生成树mst" class="heading-element"><span>1 最小生成树（MST）</span>
+  <a href="#%e6%9c%80%e5%b0%8f%e7%94%9f%e6%88%90%e6%a0%91mst" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在一给定的无向图$G = (V, E)$ 中，$(u, v)$代表连接顶点$u$ 与顶点 $v$ 的边，而 $w(u, v)$ 代表此边的权重，<strong>若存在 $T$ 为 $E$ 的子集且为无循环图，使得 $w(T)$ 最小，则此 $T$ 为 $G$ 的最小生成树</strong>，因为$T$是由图$G$产生的。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2020081109252713.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>最小生成树其实是最小权重生成树的简称。我们称求取该生成树的问题成为最小生成树问题。==一个连通图可能有多个生成树。当图中的边具有权值时，总会有一个生成树的边的权值之和小于或者等于其它生成树的边的权值之和==。广义上而言，对于非连通无向图来说，它的每一连通分量同样有最小生成树，它们的并被称为<strong>最小生成森林</strong>。以有线电视电缆的架设为例，若只能沿着街道布线，则以街道为边，而路口为顶点，其中必然有一最小生成树能使布线成本最低。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/format%2Cpng-20231125214418948.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>如图，这个是一个平面图，图中黑色线描述的就是最小生成树，它的权值之和小于其他的生成树。</p>
+<p>那么，我们如何来求最小生成树呢，由最小生成树的定义我们可以知道构建最小生成树是可以利用贪心算法去实现的，我们接下来介绍的两种算法也都是利用贪心算法去求得$MST$的。<strong>因为贪心算法的策略就是在每一步尽可能多的选择中选择最优的，在当前看是最好的选择</strong>，这种策略虽然一般不能在全局中寻找到最优解，但是对于最小生成树问题来说，它的确可以找到一颗权重最小的树。</p>
+<h2 id="prim算法" class="heading-element"><span>2 Prim算法</span>
+  <a href="#prim%e7%ae%97%e6%b3%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="简介" class="heading-element"><span>2.1 简介</span>
+  <a href="#%e7%ae%80%e4%bb%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>普里姆算法（Prim&rsquo;s algorithm），图论中的一种算法，可在加权连通图里搜索最小生成树。意即由此算法搜索到的边子集所构成的树中，不但包括了连通图里的所有顶点，且其所有边的权值之和亦为最小。该算法于1930年由捷克数学家沃伊捷赫·亚尔尼克发现；并在1957年由美国计算机科学家罗伯特·普里姆独立发现；1959年，艾兹格·迪科斯彻再次发现了该算法。因此，在某些场合，普里姆算法又被称为DJP算法、亚尔尼克算法或普里姆－亚尔尼克算法。（来源于维基百科）</p>
+<h3 id="具体步骤" class="heading-element"><span>2.2 具体步骤</span>
+  <a href="#%e5%85%b7%e4%bd%93%e6%ad%a5%e9%aa%a4" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Prim算法是利用贪心算法实现的，我们确定根节点，从这个结点出发。普里姆算法按照以下步骤==逐步扩大树中所含顶点的数目，直到遍及连通图的所有顶点==。下面描述我们==假设$N=(V,E)$是连通网，$TE$是$N$上最小生成树中边的集合==。</p>
+<p>①  $U={u_0}(u_0∈V) ,TE= {}$。</p>
+<p>​    ②  在所有$u∈U,v∈(V-U)$的边$(u,v)∈E$找到一条权值最小的边$(u_0,v_0)$并入集合$TE$，同时$v_0$并入集合$U$。</p>
+<p>③  重复②步骤，知道$U=V$为止。</p>
+<p>此时$TE$中必有$n-1$条边，则$T=(V,TE)$即为我们求得的$N$的最小生成树。</p>
+<h3 id="算法示例图" class="heading-element"><span>2.3 算法示例图</span>
+  <a href="#%e7%ae%97%e6%b3%95%e7%a4%ba%e4%be%8b%e5%9b%be" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214359908.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h3 id="算法实现" class="heading-element"><span>2.4 算法实现</span>
+  <a href="#%e7%ae%97%e6%b3%95%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>我们如果对Dijkstra算法很熟悉的话，Prim算法也很好实现了，它们都是利用了一样的思路，但却不相同。==我们用利用$lowcost$数组来表示到集合中最近的距离，用$closest$数组来表示最小生成树的边。怎么来表示呢？我们用顶点来形容边，也就是说我们要求的就是$closet$数组。其中$closest[i]$表示的值就是与$i$顶点相邻边的顶点序号==。具体看代码（附带打印最小生成树代码）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="cp">#include&lt;bits/stdc++.h&gt; </span><span class="c1">//POJ不支持
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="cp">#define rep(i,a,n) for (int i=a;i&lt;=n;i++)</span><span class="c1">//i为循环变量，a为初始值，n为界限值，递增
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define per(i,a,n) for (int i=a;i&gt;=n;i--)</span><span class="c1">//i为循环变量， a为初始值，n为界限值，递减。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="cp">#define pb push_back
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define IOS ios::sync_with_stdio(false);cin.tie(0); cout.tie(0)
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define fi first
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define se second
+</span></span></span><span class="line"><span class="cl"><span class="cp">#define mp make_pair
+</span></span></span><span class="line"><span class="cl"><span class="cp"></span>
+</span></span><span class="line"><span class="cl"><span class="k">using</span> <span class="k">namespace</span> <span class="n">std</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">const</span> <span class="kt">int</span> <span class="n">inf</span> <span class="o">=</span> <span class="mh">0x3f3f3f3f</span><span class="p">;</span><span class="c1">//无穷大
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">const</span> <span class="kt">int</span> <span class="n">maxn</span> <span class="o">=</span> <span class="mf">1e3</span><span class="p">;</span><span class="c1">//最大值。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">long</span> <span class="n">ll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="kt">long</span> <span class="kt">double</span> <span class="n">ld</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="n">pair</span><span class="o">&lt;</span><span class="n">ll</span><span class="p">,</span> <span class="n">ll</span><span class="o">&gt;</span>  <span class="n">pll</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="k">typedef</span> <span class="n">pair</span><span class="o">&lt;</span><span class="kt">int</span><span class="p">,</span> <span class="kt">int</span><span class="o">&gt;</span> <span class="n">pii</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="c1">//*******************************分割线，以上为自定义代码模板***************************************//
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="n">n</span><span class="p">,</span><span class="n">m</span><span class="p">;</span><span class="c1">//图的大小和边数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">graph</span><span class="p">[</span><span class="n">maxn</span><span class="p">][</span><span class="n">maxn</span><span class="p">];</span><span class="c1">//图
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">lowcost</span><span class="p">[</span><span class="n">maxn</span><span class="p">],</span><span class="n">closest</span><span class="p">[</span><span class="n">maxn</span><span class="p">];</span><span class="c1">//lowcost[i]表示i到距离集合最近的距离，closest[i]表示i与之相连边的顶点序号。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">int</span> <span class="n">sum</span><span class="p">;</span><span class="c1">//计算最小生成树的权值总和。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kt">void</span> <span class="nf">Prim</span><span class="p">(</span><span class="kt">int</span> <span class="n">s</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//初始化操作，获取基本信息。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">==</span><span class="n">s</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">lowcost</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">else</span>
+</span></span><span class="line"><span class="cl">            <span class="n">lowcost</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">graph</span><span class="p">[</span><span class="n">s</span><span class="p">][</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">        <span class="n">closest</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">=</span><span class="n">s</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="kt">int</span> <span class="n">minn</span><span class="p">,</span><span class="n">pos</span><span class="p">;</span><span class="c1">//距离集合最近的边，pos代表该点的终边下标。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">sum</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">minn</span><span class="o">=</span><span class="n">inf</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="n">rep</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//找出距离点集合最近的边。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">if</span><span class="p">(</span><span class="n">lowcost</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">!=</span><span class="mi">0</span><span class="o">&amp;&amp;</span><span class="n">lowcost</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">&lt;</span><span class="n">minn</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="n">minn</span><span class="o">=</span><span class="n">lowcost</span><span class="p">[</span><span class="n">j</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="n">pos</span><span class="o">=</span><span class="n">j</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span><span class="p">(</span><span class="n">minn</span><span class="o">==</span><span class="n">inf</span><span class="p">)</span><span class="k">break</span><span class="p">;</span><span class="c1">//说明没有找到。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">sum</span><span class="o">+=</span><span class="n">minn</span><span class="p">;</span><span class="c1">//计算最小生成树的权值之和。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">lowcost</span><span class="p">[</span><span class="n">pos</span><span class="p">]</span><span class="o">=</span><span class="mi">0</span><span class="p">;</span><span class="c1">//加入点集合。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">rep</span><span class="p">(</span><span class="n">j</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//由于点集合中加入了新的点，我们要去更新。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">if</span><span class="p">(</span><span class="n">lowcost</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">!=</span><span class="mi">0</span><span class="o">&amp;&amp;</span><span class="n">graph</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="n">j</span><span class="p">]</span><span class="o">&lt;</span><span class="n">lowcost</span><span class="p">[</span><span class="n">j</span><span class="p">]){</span>
+</span></span><span class="line"><span class="cl">                <span class="n">lowcost</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">graph</span><span class="p">[</span><span class="n">pos</span><span class="p">][</span><span class="n">j</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">                <span class="n">closest</span><span class="p">[</span><span class="n">j</span><span class="p">]</span><span class="o">=</span><span class="n">pos</span><span class="p">;</span><span class="c1">//改变与顶点j相连的顶点序号。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">sum</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span><span class="c1">//closest数组就是我们要的最小生成树。它代表的就是边。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">void</span> <span class="nf">print</span><span class="p">(</span><span class="kt">int</span> <span class="n">s</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//打印最小生成树。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kt">int</span> <span class="n">temp</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">n</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//等于s自然不算，故除去这个为n-1条边。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span><span class="p">(</span><span class="n">i</span><span class="o">!=</span><span class="n">s</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">temp</span><span class="o">=</span><span class="n">closest</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cout</span><span class="o">&lt;&lt;</span><span class="n">temp</span><span class="o">&lt;&lt;</span><span class="s">&#34;-&gt;&#34;</span><span class="o">&lt;&lt;</span><span class="n">i</span><span class="o">&lt;&lt;</span><span class="s">&#34;边权值为：&#34;</span><span class="o">&lt;&lt;</span><span class="n">graph</span><span class="p">[</span><span class="n">temp</span><span class="p">][</span><span class="n">i</span><span class="p">]</span><span class="o">&lt;&lt;</span><span class="n">endl</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kt">int</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">//freopen(&#34;in.txt&#34;, &#34;r&#34;, stdin);//提交的时候要注释掉
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="n">IOS</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">    <span class="k">while</span><span class="p">(</span><span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">n</span><span class="o">&gt;&gt;</span><span class="n">m</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">        <span class="n">memset</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span><span class="n">inf</span><span class="p">,</span><span class="k">sizeof</span><span class="p">(</span><span class="n">graph</span><span class="p">));</span><span class="c1">//初始化。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="kt">int</span> <span class="n">u</span><span class="p">,</span><span class="n">v</span><span class="p">,</span><span class="n">w</span><span class="p">;</span><span class="c1">//临时变量。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">rep</span><span class="p">(</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">m</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cin</span><span class="o">&gt;&gt;</span><span class="n">u</span><span class="o">&gt;&gt;</span><span class="n">v</span><span class="o">&gt;&gt;</span><span class="n">w</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">//视情况而论，我这里以无向图为例。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="n">graph</span><span class="p">[</span><span class="n">u</span><span class="p">][</span><span class="n">v</span><span class="p">]</span><span class="o">=</span><span class="n">graph</span><span class="p">[</span><span class="n">v</span><span class="p">][</span><span class="n">u</span><span class="p">]</span><span class="o">=</span><span class="n">w</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">//任取根结点，我这里默认取1.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="n">Prim</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
+</span></span><span class="line"><span class="cl">        <span class="n">print</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span><span class="c1">//打印最小生成树。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="算法分析" class="heading-element"><span>2.5 算法分析</span>
+  <a href="#%e7%ae%97%e6%b3%95%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>对于此算法，我们图中有$n$个顶点，则第一个进行初始化的循环语句的频度为$n$,第二个循环语句的频度为$n$，==但其中第二个循环中有两个内循环：第一个是在$lowcost$中求最小值，其频度为$n$，第二个是重新选择具有最小权值的边，频度为$n$==，由此我们可知Prim算法的时间复杂度为$O(n^2)$，与图中的边数无关，故十分适合于稠密图。</p>
+<h3 id="测试" class="heading-element"><span>2.6 测试</span>
+  <a href="#%e6%b5%8b%e8%af%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>我们用示例来测试：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-cpp" data-lang="cpp"><span class="line"><span class="cl"><span class="mi">7</span> <span class="mi">11</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="mi">2</span> <span class="mi">7</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="mi">4</span> <span class="mi">5</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="mi">4</span> <span class="mi">9</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="mi">3</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="mi">5</span> <span class="mi">7</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span> <span class="mi">5</span> <span class="mi">15</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span> <span class="mi">6</span> <span class="mi">6</span>
+</span></span><span class="line"><span class="cl"><span class="mi">6</span> <span class="mi">7</span> <span class="mi">11</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span> <span class="mi">6</span> <span class="mi">8</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span> <span class="mi">7</span> <span class="mi">9</span>
+</span></span><span class="line"><span class="cl"><span class="mi">3</span> <span class="mi">5</span> <span class="mi">5</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>测试结果如图：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/watermark%2Ctype_ZmFuZ3poZW5naGVpdGk%2Cshadow_10%2Ctext_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2h6ZjA3MDE%3D%2Csize_16%2Ccolor_FFFFFF%2Ct_70-20231125214400441.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+]]></description></item></channel></rss>

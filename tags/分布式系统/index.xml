@@ -1,0 +1,1091 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>分布式系统 - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</link><description>分布式系统 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 28 May 2024 16:24:28 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824)学习笔记】GFS</title><link>https://lruihao.cn/posts/04.gfs/</link><pubDate>Tue, 28 May 2024 16:24:28 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/04.gfs/</guid><description><![CDATA[<h2 id="分布式存储系统难点" class="heading-element"><span>1 分布式存储系统难点</span>
+  <a href="#%e5%88%86%e5%b8%83%e5%bc%8f%e5%ad%98%e5%82%a8%e7%b3%bb%e7%bb%9f%e9%9a%be%e7%82%b9" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在设计大型分布式系统或存储系统时，初衷通常是为了获得显著的性能提升，通过数百台计算机的资源来并行完成大量工作。因此，性能问题成为最初的关注点。一个自然的想法是将数据分片（Sharding），分布到大量服务器上，从而并行读取数据。</p>
+<p>当你在成百上千台服务器上进行分片时，服务器故障将成为常态。如果你有数千台服务器，每天甚至每小时都可能有服务器宕机。因此，需要自动化的方法来修复错误，而不是依赖人工介入。为此，自动容错系统至关重要，这引出了容错（fault tolerance）的概念。</p>
+<p>实现容错最有效的方法之一是使用数据复制，只需维护2-3个数据副本，当其中一个故障时，可以使用另一个。因此，要实现容错，必须进行数据复制（replication）。</p>
+<p>然而，数据复制带来了不一致性（inconsistency）问题。拥有多个数据副本，如果管理不当，副本之间可能不一致。理想情况下，可以任意使用任一副本进行容错，但如果副本不一致，应用程序将面临麻烦。因此，数据复制不可避免地会引发不一致性问题。</p>
+<p>通过精巧的设计，可以减少甚至避免不一致性，使数据表现得符合预期。但要实现这一点，服务器之间需要进行额外的网络交互，这会降低性能。因此，如果追求一致性（consistency），必须付出性能的代价，这与最初的高性能目标相悖。</p>
+<p>尽管可以构建高性能系统，但不可避免地会陷入性能与一致性的权衡之中。在实际应用中，为了获得良好的一致性，必须付出相应的代价。如果不愿付出代价，就需要忍受一定程度的不确定性。很多系统中都存在这种权衡，人们往往不愿为高一致性牺牲性能。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DS_Why_Hard.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DS_Why_Hard.png?size=small" data-sub-html="<h2>image-20240528101751499</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DS_Why_Hard.png" alt="image-20240528101751499" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DS_Why_Hard.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DS_Why_Hard.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DS_Why_Hard.png?size=large 2x" data-title="image-20240528101751499" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h2 id="错误的设计" class="heading-element"><span>2 错误的设计</span>
+  <a href="#%e9%94%99%e8%af%af%e7%9a%84%e8%ae%be%e8%ae%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>对于强一致性系统，应用程序或客户端感受到的就像在与一台服务器通信。尽管系统由数百台计算机组成，但理想的强一致模型让它看起来像只有一台服务器，一份数据，并且一次只处理一个请求。这种设计确保了每个请求能看到之前所有请求按顺序执行的结果。</p>
+<p>对于存储服务器来说，它通常包含一块磁盘。执行写请求可能意味着向磁盘写入数据或对数据进行自增操作。如果是一次修改操作，并且我们有一个以 key-value 为索引的数据表单，那么我们会更新这个表单。如果是读取操作，只需从表单中取出之前写入的数据即可。为了保证这个简单服务的行为可预期，需要遵循一个规则：每次只执行一个请求。这样，每个请求都能看到之前所有请求按顺序执行后的结果。如果服务器按某种顺序依次处理写请求，当你读取数据时，你就能看到预期的数据。</p>
+<p>举例来说，客户端 C1 发起写请求将 X 设置为 1，同时客户端 C2 发起写请求将 X 设置为 2。待 C1 和 C2 的写请求都执行完毕后，客户端 C3 发送读取 X 的请求，得到一个结果；客户端 C4 也发送读取 X 的请求，得到另一个结果。此时，问题是这两个客户端看到的结果会是什么。</p>
+<p>即使在一个非常简单的系统中，仍会出现一些模糊场景，使你无法确定系统的执行过程及其输出结果。你只能根据结果判断系统是否保持了一致性。</p>
+<p>如果 C3 读取 X 得到 2，那么 C4 也应该读取到 2，因为这表明写 X 为 2 的请求是第二个执行的写请求。当 C4 读取 X 时，写 X 为 2 应该仍然是第二个写请求。</p>
+<p>然而，单服务器设计存在容错能力差的问题。如果服务器故障或磁盘损坏，系统将无法使用。因此，现实中我们会构建多副本的分布式系统，这引发了一系列新的问题。</p>
+<p>假设我们有两台服务器，每台服务器都有数据的一份完整拷贝，并在磁盘上存储一个 key-value 表单。我们希望这两个表单完全一致，这样当一台服务器故障时，可以切换到另一台服务器继续读写操作。</p>
+<p>两个表单完全一致意味着，<font color="red">每一个写请求都必须在两台服务器上执行，而读请求只需要在一台服务器上执行</font>，否则就没有容错性了。因为如果读请求也需要从两台服务器读数据，那么一台服务器故障我们就没法提供服务了。现在问题来了，假设客户端C1和C2都想执行写请求，其中一个要写X为1，另一个写X为2。C1会将写X为1的请求发送个两个服务器，因为我们想要更新两台服务器上的数据。C2也会将写X为2的请求发送给两个服务器。</p>
+<p>这里会出现什么错误呢？是的，我们没有做任何事情来保障两台服务器以相同的顺序处理这2个请求。如果服务器1（S1）先处理C1的请求，那么在它的表单里面，X先是1，之后S1看到了来自C2的请求，会将自己表单中的X覆盖成2。但是，如果S2恰好以不同的顺序收到客户端请求，那么S2会先执行C2的请求，将X设置为2，之后收到C1的请求，将X设置为1。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/inconsistent_example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/inconsistent_example.png?size=small" data-sub-html="<h2>image-20240528104959963</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/inconsistent_example.png" alt="image-20240528104959963" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/inconsistent_example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/inconsistent_example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/inconsistent_example.png?size=large 2x" data-title="image-20240528104959963" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>之后，如果另外一些客户端，假设C3从S1读数据，C4从S2读数据，我们就会面临一个可怕的场景：这两个客户端读取的数据不一样。但是从前一个例子中的简单模型可以看出，相连的读请求应该读出相同的数据。</p>
+<p>这里的问题可以以另一种方式暴露出来。假设我们尝试修复上面的问题，我们让客户端在S1还在线的时候，只从S1读取数据，S1不在线了再从S2读取数据。这样最开始所有的客户端读X都能得到2。但是突然，如果S1故障了，尽管没有写请求将X改成1，客户端读X得到的数据将会从2变成1。因为S1故障之后，所有的客户端都会切换到S2去读数据。这种数据的神奇变化与任何写操作都没有关联，并且也不可能在前一个例子的简单模型中发生。</p>
+<p>当然，这里的问题是可以修复的，修复需要服务器之间更多的通信，并且复杂度也会提升。由于获取强一致会带来不可避免的复杂性的提升，有大量的方法可以在好的一致性和一些小瑕疵行为之间追求一个平衡。</p>
+<h2 id="gfs设计目标" class="heading-element"><span>3 GFS设计目标</span>
+  <a href="#gfs%e8%ae%be%e8%ae%a1%e7%9b%ae%e6%a0%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Google的目标是构建一个大型且快速的文件系统（GFS），以便各种应用程序都能全局访问数据。传统的方法是为每个应用程序构建特定的存储系统，但这会导致重复建设。GFS 作为一个全局通用的存储系统，允许不同应用程序共享和访问数据。例如，存储了大量互联网抓取数据后，其他用户可以通过申请权限查看这些数据，因为大家使用的是同一个存储系统。这样，Google 内部的人员可以根据名字读取 GFS 中可共享的内容。</p>
+<p>为了实现大容量和高速性能，GFS 将数据文件自动分割并存储在多台服务器上，这样可以并行读取同一个文件，从而获得更高的聚合吞吐量。文件分割存储还允许存储比单个磁盘更大的文件。由于存储系统分布在数百台服务器上，GFS 具备自动故障修复功能，不需要人工干预来修复服务器或迁移数据。</p>
+<p>GFS 的一些特征并非设计目标。例如，GFS 只在一个数据中心内运行，多个副本并未分布在全球各地。理论上，数据副本应该地理分散，但实现起来很难，所以 GFS 局限于单个数据中心内。</p>
+<p>此外，GFS 面向 Google 内部使用，供工程师开发应用程序，并不直接面向普通用户。虽然 Google 可能会出售基于 GFS 的服务，但 GFS 本身并不对外提供。</p>
+<p>最后，GFS 专注于对大型顺序文件的读写优化。例如，银行账户系统需要能够读写小数据块的数据库，而 GFS 针对 TB 级别的文件进行优化，只支持顺序处理而非随机访问。某种程度上，它更像批处理系统，注重巨大的吞吐量而非低延迟，每次操作都涉及 MB 级别的数据。</p>
+<h2 id="master节点" class="heading-element"><span>4 Master节点</span>
+  <a href="#master%e8%8a%82%e7%82%b9" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>假设我们有上百个客户端和一个Master节点。虽然实际中可以有多台机器作为Master节点，但GFS中Master采用Active-Standby模式（系统包含两个或多个实例，其中一个实例（Active）正在运行并处理所有的请求，而其他实例（Standby）则处于待命状态，准备在Active实例发生故障时立即接管工作。），所以只有一个Master节点在工作。Master节点保存了文件名和存储位置的对应关系。除此之外，还有大量的Chunk服务器，每个Chunk服务器上都有1-2块磁盘。</p>
+<p>Master节点管理文件和Chunk的信息，而Chunk服务器存储实际数据。这种设计将管理和存储分开处理，提高了系统效率。在GFS中，Master节点知道每个文件对应的所有Chunk handle，这些Chunk每个是64MB大小，共同构成一个文件。例如，一个1GB的文件会分成多个Chunk，Master节点知道每个Chunk存储在哪。读取文件时，需要先向Master节点查询Chunk位置，然后从对应的Chunk服务器读取数据。</p>
+<p>我们需要了解Master节点内保存的数据内容，这里我们关心的主要是两个表单：</p>
+<ol>
+<li><strong>文件名到Chunk handle的对应关系</strong>：Master节点有一个表单记录了文件名到Chunk handle数组的对应关系。</li>
+<li><strong>Chunk handle到Chunk数据的对应关系</strong>：另一个表单记录了Chunk handle和它们的数据的对应关系，包括每个Chunk的服务器列表、当前版本号、主Chunk（Primary Chunk）和租约过期时间。</li>
+</ol>
+<p>这些数据都存储在内存中，但为了防止数据丢失，Master节点也将部分数据存储在磁盘上。Master节点的写操作会记录到磁盘的日志（log）中，并定期生成检查点（CheckPoint）。</p>
+<p>有些数据需要存在磁盘上，而有些不用。它们分别是：</p>
+<ul>
+<li><strong>Chunk Handle数组</strong>（非易失性，NV）：保存到磁盘上。</li>
+<li><strong>Chunk服务器列表</strong>（易失性，V）：不用写入磁盘，重启后可重新获取。</li>
+<li><strong>版本号</strong>（非易失性，NV）：写入磁盘，确保数据一致性。</li>
+<li><strong>主Chunk的handle</strong>（易失性，V）：不写入磁盘，重启后可重新分配。</li>
+<li><strong>租约过期时间</strong>（易失性，V）：不写入磁盘。</li>
+</ul>
+<p>当文件扩展到新的64MB或主Chunk变更时，Master节点会向磁盘日志中追加记录。这种日志追加方式比数据库高效，因为它只需顺序写入，不涉及磁盘的随机访问。</p>
+<p>Master节点故障重启时，会从最近的检查点开始恢复状态，然后通过执行日志中的记录恢复到最新状态。这种方式避免了从日志最开始重建状态的低效问题。</p>
+<h2 id="读文件" class="heading-element"><span>5 读文件</span>
+  <a href="#%e8%af%bb%e6%96%87%e4%bb%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>对于读请求来说，应用程序或GFS客户端会提供一个文件名和读取的偏移量（offset）。首先，客户端将这些信息发送给Master节点。Master节点从自己的文件表单中查找文件名，获取对应的Chunk handle数组。每个Chunk大小为64MB，因此可以通过偏移量除以64MB来确定对应的Chunk handle。接着，Master节点从Chunk表单中找到包含该Chunk的服务器列表，并将这个列表返回给客户端。</p>
+<p>具体步骤如下：</p>
+<ol>
+<li>客户端（或应用程序）将文件名和偏移量发送给Master节点。</li>
+<li>Master节点将Chunk Handle（即Chunk ID）和服务器列表发送给客户端。</li>
+</ol>
+<p>客户端接下来可以从服务器列表中选择一个服务器来读取数据。根据GFS论文的描述，客户端会选择一个在网络上最近的服务器（在Google的数据中心中，通过IP地址的差异可以判断网络位置的远近），然后将读请求发送到这个服务器。由于客户端每次可能只读取1MB或64KB的数据，它可能会多次读取同一个Chunk的不同部分。为此，客户端会缓存Chunk和服务器的对应关系，这样在后续读取相同Chunk数据时，不需要每次都向Master请求相同的信息。</p>
+<p>接下来，客户端会与选定的Chunk服务器通信，将Chunk Handle和偏移量发送给该服务器。Chunk服务器在本地硬盘上将每个Chunk存储为独立的Linux文件，并通过普通的Linux文件系统进行管理。可以推测，Chunk文件会按照Handle（即ID）命名。因此，Chunk服务器需要做的就是根据文件名找到对应的Chunk文件，从文件中读取相应的数据段，并将数据返回给客户端。</p>
+<h2 id="写文件" class="heading-element"><span>6 写文件</span>
+  <a href="#%e5%86%99%e6%96%87%e4%bb%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>对于应用程序来说，写文件的过程与读文件的接口非常类似，都是通过调用GFS的库函数进行操作。在写文件时，应用程序会告诉库函数，要将缓冲区中的数据追加到指定文件中。为了简化讨论，我们只考虑GFS论文中的记录追加（Record Append）的情况。</p>
+<p>所以再次描述一下，对于写文件，客户端会向Master节点发送请求说：我想向这个文件名对应的文件追加数据，请告诉我文件中最后一个Chunk的位置。</p>
+<p>当有多个客户端同时写同一个文件时，一个客户端并不能知道文件究竟有多长。因为如果只有一个客户端在写文件，客户端自己可以记录文件长度，而多个客户端时，一个客户端没法知道其他客户端写了多少。例如，不同客户端写同一份日志文件，没有一个客户端会知道文件究竟有多长，因此也就不知道该往什么样的偏移量，或者说向哪个Chunk去追加数据。这个时候，客户端可以向Master节点查询哪个Chunk服务器保存了文件的最后一个Chunk。</p>
+<p>对于读操作，可以从任何最新的Chunk副本读取数据，但写操作必须通过Chunk的主副本（Primary Chunk）进行。Master节点需要确保Chunk的主副本存在。如果不存在，Master节点会查找所有存有该Chunk最新副本的Chunk服务器。Master节点确定哪些副本是最新的（副本中保存的版本号与Master中记录的Chunk的版本号一致），并从中选择一个作为Primary，其余作为Secondary。</p>
+<p>之后，Master节点增加Chunk的版本号，并将新的版本号写入磁盘。Master节点通知Primary和Secondary服务器新的Chunk版本号，并指定它们的角色。Primary和Secondary服务器将新版本号存储在本地磁盘中，以便在重启时报告给Master。</p>
+<p>所以客户端将要追加的数据发送给Primary和Secondary服务器，这些服务器将数据写入临时位置。所以最开始，这些数据不会追加到文件中。当所有服务器确认数据已写入临时位置后，客户端向Primary发送消息，要求将数据追加到文件中。Primary按照顺序处理来自多个客户端的并发请求，确保每次只执行一个请求。Primary将数据写入Chunk的末尾，并通知所有Secondary服务器也将数据写入它们的Chunk末尾。</p>
+<p>Secondary服务器将数据写入本地磁盘后，向Primary发送确认消息。如果所有Secondary服务器成功写入数据并回复“yes”，Primary向客户端返回写入成功。如果任何Secondary服务器写入失败，Primary向客户端返回写入失败。</p>
+<p>如果客户端接到写入失败的消息，应重新发起整个追加过程。首先，客户端再次与Master节点交互，找到文件末尾的Chunk，然后重新向Primary和Secondary发起追加操作。</p>
+<h2 id="gfs的一致性" class="heading-element"><span>7 GFS的一致性</span>
+  <a href="#gfs%e7%9a%84%e4%b8%80%e8%87%b4%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在GFS中，追加数据的过程相对复杂。我们通过一个例子来解释这一过程。</p>
+<ol>
+<li>
+<p>**数据追加请求：**客户端发送一个追加数据的请求，例如数据A，要将数据A追加到文件末尾。Chunk的三个副本（一个Primary和两个Secondary）都成功将数据A追加到了Chunk中，因此Chunk中的第一个记录是A。</p>
+</li>
+<li>
+<p>**网络问题导致的部分写入：**第二个客户端加入，想要追加数据B。但由于网络问题，消息只被Primary和一个Secondary收到并处理。因此，两个副本追加了数据B，而另一个副本没有。</p>
+</li>
+<li>
+<p>**后续写入：**第三个客户端想要追加数据C，并且Primary选择了偏移量并通知Secondary。三个副本都成功追加了数据C。</p>
+</li>
+<li>
+<p>**处理写入失败：**由于网络问题，第二个客户端会收到写入失败的回复，并重新发起追加数据B的请求。假设这次数据B没有丢包，三个副本都成功追加了数据B。现在，三个副本都在线，并且都有最新的版本号。</p>
+</li>
+<li>
+<p>**读取数据的影响：**客户端读取文件时，读取的内容取决于读取的是哪个副本。例如：</p>
+<ul>
+<li>读取第一个副本时，可能会看到数据A、B、C，然后是重复的B。</li>
+<li>读取第三个副本时，可能会看到数据A、一个空白数据、然后是C、B。</li>
+</ul>
+<p>所以不同的读请求可能得到不同的结果，具体取决于读取的是哪个副本。</p>
+</li>
+<li>
+<p>**处理写入失败的复杂情况：**在最坏情况下，某个Secondary未能成功执行数据追加操作，客户端从Primary收到写入失败的回复。在客户端重新发送写文件请求之前，客户端可能故障，导致数据D只存在于某些副本中，而其他副本完全没有。</p>
+</li>
+</ol>
+<p>在GFS的这种工作方式下，如果Primary返回写入成功，一切正常。如果Primary返回写入失败，不同副本的数据可能不同。GFS的设计简单，但可能会暴露一些奇怪的数据顺序问题。应用程序需要容忍数据乱序，或通过在文件中写入序列号来识别顺序。如果应用程序对数据顺序敏感，可以避免并发写入，例如，电影文件的写入应使用一个客户端顺序追加数据。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/GFS_Write_Example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/GFS_Write_Example.png?size=small" data-sub-html="<h2>4f013eecba1d5a096fdac0325605e35f</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/GFS_Write_Example.png" alt="4f013eecba1d5a096fdac0325605e35f" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/GFS_Write_Example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/GFS_Write_Example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/GFS_Write_Example.png?size=large 2x" data-title="4f013eecba1d5a096fdac0325605e35f" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>如果要将GFS升级为强一致系统，需要考虑以下几点：</p>
+<ol>
+<li>**检测重复请求：**Primary需要能够检测重复的请求，确保数据不会重复写入。</li>
+<li>**Secondary的强制执行：**Secondary必须执行Primary的请求，而不能简单地返回错误。对于永久性故障的Secondary，需要有机制将其移除。</li>
+<li>**两阶段提交：**写请求需要两个阶段：首先Primary向Secondary发出请求并等待确认；如果所有Secondary都确认，Primary再指示实际执行操作。</li>
+<li>**处理Primary崩溃：**当Primary崩溃时，新Primary需要与Secondary同步，确保操作历史一致。</li>
+<li>**Secondary的租约系统：**Secondary需要一个类似Primary的租约系统，确保在合法时间内响应客户端请求。</li>
+</ol>
+<p>总体而言，GFS取得了巨大的成功，许多Google的应用都依赖于它。例如，BigTable和MapReduce等关键基础架构都是构建在GFS之上的，因此GFS在Google内部得到了广泛应用。然而，GFS也有其局限性，最严重的问题在于它只有一个Master节点，这带来了以下几个问题：</p>
+<ol>
+<li>
+<p>**内存限制：**Master节点必须为每个文件和每个Chunk维护表单。随着使用量的增加，文件数量不断上升，最终Master节点会耗尽内存来存储这些表单。虽然可以增加内存，但单台计算机的内存总有上限，这成为了早期遇到的一个显著问题。</p>
+</li>
+<li>
+<p>**处理能力：**单个Master节点需要处理数千个客户端的请求，而其CPU每秒只能处理数百个请求。尤其当Master节点还需要将部分数据写入磁盘时，这个问题变得更加严重，导致客户端数量很快超过了单个Master的处理能力。</p>
+</li>
+<li>
+<p>**复杂的语义：**应用程序发现很难处理GFS复杂的语义，特别是副本数据同步问题（或不同步问题），这在一定程度上增加了开发难度。</p>
+</li>
+<li>
+<p>**故障切换：**从GFS论文中可以了解到，Master节点的故障切换不是自动的。当Master节点永久故障时，需要人工干预来更换新的服务器，这可能需要几十分钟甚至更长时间来处理。对于某些应用程序来说，这样的停机时间是不可接受的。</p>
+</li>
+</ol>
+<h2 id="faq" class="heading-element"><span>8 FAQ</span>
+  <a href="#faq" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><blockquote>
+<ol>
+<li>应用程序如何知道Chunk的哪些部分由填充和重复记录组成？</li>
+</ol>
+<p>为了检测填充，应用程序可以在有效记录的开头放置一个可预测的幻数，或者包含一个校验和，该校验和可能仅在记录有效时才有效。应用程序可以通过在记录中包含唯一 ID 来检测重复项。然后，如果它读取的记录与之前的记录具有相同的 ID，它就知道它们是彼此的重复项。 GFS 为处理这些情况的应用程序提供了一个库。 GFS 设计的这一方面有效地将复杂性从 GFS 转移到了应用程序，但这可能并不理想。</p>
+<ol start="2">
+<li>怎样知道一个文件存储在哪台机器上？</li>
+</ol>
+<p>根据master中文件到chunk再到chunk位置的映射来定位具体的chunkserver。</p>
+<ol start="3">
+<li>论文提到了引用计数——它们是什么？</li>
+</ol>
+<p>它们是快照写时复制实现的一部分。当GFS创建快照时，它不会复制块，而是增加每个块的引用计数器。这使得创建快照的成本很低。如果客户端写入一个chunk并且主服务器注意到引用计数大于 1，则主服务器首先创建一个副本，以便客户端可以更新该副本（而不是属于快照一部分的块）。您可以将此视为延迟复制，直到绝对必要为止。希望并非所有块都会被修改，并且可以避免制作一些副本。</p>
+<ol start="4">
+<li>什么是租约？</li>
+</ol>
+<p>对于 GFS，租约是master授予 chunkserver 充当特定 chunk 的主chunkserver的能力的一段时间。master保证在租约期间不会分配不同的主chunkserver，并且主服务器同意在租约到期之前停止充当主chunkserver（除非主chunkserver要求master延长租约）。租约是避免主chunkserver必须反复询问master是否仍然是主chunkserver的一种方法—它知道它可以在下一分钟（或无论租约间隔是多少）充当主chunkserver，而无需再次与master通信。</p>
+<ol start="5">
+<li>什么是内部碎片？为什么惰性分配有帮助？</li>
+</ol>
+<p>内部碎片是当系统使用大于所请求分配所需的分配单元时浪费的空间。如果 GFS 以 64MB 为单位分配磁盘空间，那么一个 1 字节的文件将浪费近 64MB 的磁盘空间。 GFS 通过延迟分配磁盘空间来避免这个问题。每个块都是一个Linux文件，Linux文件系统使用的块大小为几十KB；<font color="red">因此，当应用程序创建一字节 GFS 文件时，该文件的块仅消耗 1 个 Linux 磁盘块，而不是 64 MB</font>。</p>
+<ol start="6">
+<li>Google 还在使用 GFS 吗？</li>
+</ol>
+<p>有传言称 GFS 已被 Colossus 所取代，总体目标相同，但在主性能和容错性方面有所改进。此外，Google内部的许多应用程序已经转向更多类似数据库的存储系统，例如BigTable和Spanner。然而，GFS 的大部分设计仍然存在于 HDFS（Hadoop 开源 MapReduce 的存储系统）中。</p>
+</blockquote>
+]]></description></item><item><title>【MIT 6.5840(6.824)学习笔记】 测试分布式系统的线性一致性</title><link>https://lruihao.cn/posts/03.%E6%B5%8B%E8%AF%95%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BA%BF%E6%80%A7%E4%B8%80%E8%87%B4%E6%80%A7/</link><pubDate>Wed, 22 May 2024 09:33:17 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/03.%E6%B5%8B%E8%AF%95%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BA%BF%E6%80%A7%E4%B8%80%E8%87%B4%E6%80%A7/</guid><description><![CDATA[<p><a href="https://anishathalye.com/testing-distributed-systems-for-linearizability/"target="_blank" rel="external nofollow noopener noreferrer">Testing Distributed Systems for Linearizability 原文<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h2 id="引言" class="heading-element"><span>1 引言</span>
+  <a href="#%e5%bc%95%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>正确实现一个分布式系统是非常有挑战的一件事情，因为需要很好的处理并发和失败这些问题。网络包可能被延迟，重复，乱序或者丢弃，机器可能在任何时候宕机。即使一些计被论文证明是正确的，也仍然很难再实现中避免 bug。</p>
+<p>除非我们使用形式方法，不然，即使我们假设实现是正确的，我们也需要去测试系统。测试分布式系统也是一件非常有挑战的事情。并发和不确定性使得我们在测试的时候非常难抓住 bug，尤其是在一些极端情况下面才会出现的 bug，譬如同时机器宕机或者极端网络延迟。</p>
+<h2 id="正确性" class="heading-element"><span>2 正确性</span>
+  <a href="#%e6%ad%a3%e7%a1%ae%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在讨论测试分布式系统的正确性之前，我们首先定义下什么是 “正确性”。即使对于一些简单的系统，要完全的确定系统符合预期也是一件相当复杂的事情。</p>
+<p>考虑一个简单的 key-value store，譬如 etcd，支持两个操作：<code>Put(key, value)</code> 和 <code>Get(key)</code>，首先，我们需要考虑它在顺序情况下面的行为。</p>
+<h3 id="顺序规范" class="heading-element"><span>2.1 顺序规范</span>
+  <a href="#%e9%a1%ba%e5%ba%8f%e8%a7%84%e8%8c%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>通常对于一个 key-value store，我们对于它在顺序操作下面的行为都能有一个直观的认识：<code>Get</code> 操作如果在 <code>Put</code> 的后面，那么一定能得到 <code>Put</code> 的结果。譬如，如果 <code>Put(&quot;x&quot;, &quot;y&quot;)</code> ，那么后面的 <code>Get(&quot;x&quot;)</code> 就能得到 &ldquo;y&rdquo;，如果得到了 &ldquo;z&rdquo;，那么这就是不对的。</p>
+<p>我们使用 Python 定义一个简单的 key-value store：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522085001276.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>上面的代码比较简单，但包含了足够的信息，包括初始状态是怎样的，内部状态是如何被操作的结果改变的，从 key-value存储里面操作返回的结果是怎样的。这里需要留意下 <code>Get()</code> 对于不存在的 key 的处理，通常会返回一个空字符串。</p>
+<h2 id="线性一致性" class="heading-element"><span>3 线性一致性</span>
+  <a href="#%e7%ba%bf%e6%80%a7%e4%b8%80%e8%87%b4%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>接下来，我们来考虑我们的 key-value store在并发下面会有怎样的行为。需要注意顺序规范并没有指明在并发操作下面会发生什么。譬如，顺序规范并没有说 key-value store 在下面这个场景下可以允许的操作。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>我们并不能立刻知道 <code>Get(&quot;x&quot;)</code> 这个操作会允许返回怎样的结果。直觉上，我们可以说<code>Get(&quot;x&quot;)</code> 是跟 <code>Put(&quot;x&quot;, &quot;y&quot;)</code> 和 <code>Put(&quot;x&quot;, &quot;z&quot;)</code> 一起执行的，所以它能可能返回一个值，甚至也可能返回 <code>&quot;&quot;</code>。 如果有另一个 <code>Get(&quot;x&quot;)</code> 的操作在更后面执行，我们可以说这个一定能返回 <code>&quot;z&quot;</code>，因为它是最后一次写入的值，而且那个时候并没有其他的并发写入。</p>
+<p>对于一个基于顺序规范的并发操作来说，我们会用一个一致性模型，也就是线性一致性来说明它的正确性。在一个线性一致性的系统里面，任何操作都可能在调用或者返回之间原子和瞬间执行。除了线性一致性，还有一些其他一致性的模型，但多数分布式系统都提供了线性一致性的操作：线性一致性是一个强的一致性模型，并且基于线性一致性系统，很容易去构建其他的系统。考虑到如下对 key-value store 操作的历史例子：</p>
+<p><a class="lightgallery" href="https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png&amp;size=large" data-thumbnail="https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png&amp;size=small" data-sub-html="<h2>https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png</h2>"><img loading="lazy" src="https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png" alt="https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png" srcset="https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png&amp;size=small, https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png&amp;size=medium 1.5x, https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png&amp;size=large 2x" data-title="https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>这个历史是一个线性的。在下面图片的蓝色地方，我们现实的标明了线性一致的点。这个顺序历史 <code>Put(&quot;x&quot;, &quot;0&quot;)</code>, <code>Get(&quot;x&quot;) -&gt; &quot;0&quot;</code>, <code>Put(&quot;x&quot;, &quot;1&quot;)</code>, <code>Get(&quot;x&quot;) -&gt; &quot;1&quot;</code>，对于顺序规范来说就是一个正确的历史。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921831.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>对应的，下面的历史就不是线性一致的。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084921964.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>对于顺序规范来说，这个历史并不是线性一致的：我们并不能在这个历史的操作里面指定出线性一致的点。我们可以画出 client 1，2 和 3 的，但我们并不能画出 client 4 的，因为这明显是一个过期的值。类似的，我们可以画出 client 1，2 和 4 的，那么 client 2 的操作一定会在 4 的操作开始的后面，但这样我们就不能处理 client 3，它只可能合法的返回 <code>&quot;&quot;</code>或者 <code>&quot;0&quot;</code>。</p>
+<h2 id="测试" class="heading-element"><span>4 测试</span>
+  <a href="#%e6%b5%8b%e8%af%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>有了一个正确性的定义，我们就可以考虑如何去测试分布式系统了。通常的做法就是对于正确的操作，不停的进行随机的错误注入，类似机器宕机，网络隔离等。我们甚至能模拟整个网络，这样我们就能做长时间的网络延迟等。因为测试时随机的，我们需要跑很多次从而确定一个系统的实现是正确的。</p>
+<h3 id="临时测试" class="heading-element"><span>4.1 临时测试</span>
+  <a href="#%e4%b8%b4%e6%97%b6%e6%b5%8b%e8%af%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>我们实际如何做正确操作的测试呢？在最简单的软件里面，我们可以使用输入输出测试，譬如 <code>assert(expected_output == f(input))</code>，我们也可以在分布式系统上面使用一个类似的方法，譬如，对于 key-value store，当多个 client 开始执行操作的时候，我们可以有如下的测试：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922095.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>如果测试挂掉了，那么这个系统一定不是线性一致性的，当然，这个测试并不是很完备，因为有可能不是线性一致的系统也可能通过这个测试。</p>
+<h3 id="线性一致性-1" class="heading-element"><span>4.2 线性一致性</span>
+  <a href="#%e7%ba%bf%e6%80%a7%e4%b8%80%e8%87%b4%e6%80%a7-1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>一个更好的办法就是并发的客户端完全跑随机的操作。譬如，循环的去调用 <code>kvstore.put(rand(), rand())</code> 和 <code>kvstore.get(rand())</code>，有可能会只用很少的 key 去增大冲突的概率。但在这种情况下，我们如何定义什么是正确的操作呢？在上面的简单的测试里面，因为每个 client 都操作的是一个独立的 key，所以我们可以非常明确的知道输出结果。</p>
+<p>但是 clients 并发的操作同一堆 keys，事情就变得复杂了。我们并不能预知每个操作的返回值因为这并没样一个唯一的答案。但我们可以用另一个办法：我们可以记录整个操作的历史，然后去验证这个操作历史是线性一致的。</p>
+<h4 id="线性一致性验证" class="heading-element"><span>4.2.1 线性一致性验证</span>
+  <a href="#%e7%ba%bf%e6%80%a7%e4%b8%80%e8%87%b4%e6%80%a7%e9%aa%8c%e8%af%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><font color="red">一个线性一致性验证器会使用一个顺序规范和一个并发操作的历史，然后执行一个判定程序去检查这个历史在规范下面是否线性一致。</font></p>
+<h4 id="np-完备" class="heading-element"><span>4.2.2 NP 完备</span>
+  <a href="#np-%e5%ae%8c%e5%a4%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>但不幸的是，线性一致性验证是 NP 完备的。这个证明非常简单：我们能说明线性一致性验证是 NP 问题，并且也能展示一个 NP 困难问题能被简化成线性一致性验证。明显的，线性一致性验证是 NP 问题，譬如，所有操作的线性一致性点，根据相关的顺序规范，我们可以在多项式时间里验证。</p>
+<p>为了说明线性一致性验证是 NP 困难的，我们可以将子集合问题简化成线性一致性验证。对于子集合问题，我们给出非负数的集合 $S={s_1,s_2,…,s_n}$ 和目标结果 $t$，然后我们必须确定是否存在一个子集 $S$ 的和等于 $t$。我们可以将这个问题简化成如下的线性一致性验证。考虑顺序规范：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922224.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>以及历史：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640-20240522084922368.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>当且仅当子集和问题的答案为“是”时，该历史才可线性化。如果历史是可线性化的，那么我们可以采用在 <code>Get()</code> 操作之前具有线性化点的所有操作 <code>Add(s_i)</code> ，并且这些操作对应于中的元素 $s_i$总和为 $t$ 的子集。如果该集合确实有一个总和为$t$的子集，那么我们可以通过与子集中的元素$s_i$对应的操作 <code>Add(s_i)</code> 来构造线性化放置在 <code>Get()</code> 操作之前，并使其余操作发生在 <code>Get()</code> 操作之后。</p>
+<h4 id="实现" class="heading-element"><span>4.2.3 实现</span>
+  <a href="#%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>即使线性一致性验证是 NP 完全的，在实际中，它仍然能在一些小的历史上面很好的工作。线性一致性验证器的实现会用一个可执行的规范，加上一个历史，执行一个搜索过程去构造一个线性化，并使用一些技巧来限制减少搜索的空间。</p>
+<p>现有的线性化检查器如 Knossos，用于 Jepsen 测试系统。但不幸的是，在测试一些分布式 key-value store 的时候，Knossos 并不能很好的工作，它可能只能适用于一些少的并发 clients，以及只有几百的事件的历史。但在一些测试里面，有很多的 clients，以及会生成更多的历史事件。</p>
+<p>为了解决 Knossos 的问题，作者开发了 Procupine，一个用 Go 写的更快的线性一致性验证工具。Porcupine 使用一个用 Go 开发的执行规范去验证历史是否是线性的。根据实际测试的情况，Porcupine 比 Knossos 快很多倍。</p>
+<p><a href="https://github.com/anishathalye/porcupine"target="_blank" rel="external nofollow noopener noreferrer">Procupine Github<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h4 id="效果" class="heading-element"><span>4.2.4 效果</span>
+  <a href="#%e6%95%88%e6%9e%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>使用故障注入和线性化检查来测试可线性化分布式系统是一种有效的方法。</p>
+<p>作为对比，在使用专门的测试用 Porcupine 测试 key-value store 的时候，作者使用了这两种方式。作者在实现它自己的 key-value store 的时候引入不同的设计错误，譬如在修改之后会出现过期读，来看这些测试是否会挂掉。专门测试会捕捉到很多 bugs，但并没有能力去捕捉到更多的狡猾的 bugs。相对而言，作者现在还没找到一个正确性的 bug 是线性一致性测试不能抓住的。</p>
+<ol>
+<li>形式方法能够保证一个分布式系统的正确性。例如，UM PLSE 研究小组最近使用 Coq proof assistnt 来验证了 Raft 一致性协议。但不幸的的是，验证需要特定的知识，另外验证实际的系统需要做大量的工作。没准有一天，验证能被用在实际系统上面，但现在，主要还是测试，而不是验证。</li>
+<li>理论上，所有的生产系统都会有一个形式规范，而且一些系统也已经有了，譬如 Raft 就有一个用 TLA+ 写的形式规范。但不幸的是，大部分的系统是没有的。</li>
+</ol>
+]]></description></item><item><title>【MIT 6.5840(6.824)学习笔记】使用Go进行线程和RPC编程</title><link>https://lruihao.cn/posts/02.%E4%BD%BF%E7%94%A8go%E8%BF%9B%E8%A1%8C%E7%BA%BF%E7%A8%8B%E5%92%8Crpc%E7%BC%96%E7%A8%8B/</link><pubDate>Wed, 15 May 2024 09:55:12 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/02.%E4%BD%BF%E7%94%A8go%E8%BF%9B%E8%A1%8C%E7%BA%BF%E7%A8%8B%E5%92%8Crpc%E7%BC%96%E7%A8%8B/</guid><description><![CDATA[<h2 id="为什么选择go" class="heading-element"><span>1 为什么选择Go</span>
+  <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e9%80%89%e6%8b%a9go" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在实现分布式系统时，选择合适的编程语言非常重要。Go有以下特点：</p>
+<ul>
+<li>优秀的线程支持；</li>
+<li>便捷的RPC机制、类型；</li>
+<li>内存安全以及垃圾回收机制。</li>
+</ul>
+<p>这使Go成为了一个理想的选择。Go不仅相对简单，而且其垃圾回收机制使线程管理更加容易，避免了使用后释放问题。由于这些优势，Go在分布式系统中被广泛应用。</p>
+<p><a href="https://golang.org/doc/effective_go.html"target="_blank" rel="external nofollow noopener noreferrer">Go Tutorial<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h2 id="线程与go中的goroutine" class="heading-element"><span>2 线程与Go中的Goroutine</span>
+  <a href="#%e7%ba%bf%e7%a8%8b%e4%b8%8ego%e4%b8%ad%e7%9a%84goroutine" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>线程是一种有用的结构工具，允许一个程序同时执行多项任务，每个线程串行执行，就像非线程程序一样。Go中称线程为Goroutine，每个Goroutine在执行时包含自己的程序计数器、寄存器和栈，但共享内存。使用线程可以提高I/O并发性和多核性能，同时也方便后台任务的处理。</p>
+<h3 id="为什么使用线程" class="heading-element"><span>2.1 为什么使用线程？</span>
+  <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8%e7%ba%bf%e7%a8%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ol>
+<li><strong>I/O并发性</strong>：客户端可以并行向多个服务器发送请求并等待回复，服务器可以同时处理多个客户端请求。</li>
+<li><strong>多核性能</strong>：在多核处理器上并行执行代码，提高计算效率。</li>
+<li><strong>便捷性</strong>：后台线程可以定期检查各个<code>worker</code>线程是否仍然活跃。</li>
+</ol>
+<h3 id="线程的替代方案" class="heading-element"><span>2.2 线程的替代方案</span>
+  <a href="#%e7%ba%bf%e7%a8%8b%e7%9a%84%e6%9b%bf%e4%bb%a3%e6%96%b9%e6%a1%88" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>事件驱动编程（Event-driven programming）是一种替代传统多线程编程的方式，通过在单线程中显式交错处理活动来实现I/O并发性。这种编程模型常用于处理大量I/O操作的场景，例如网络服务器和图形用户界面（GUI）应用。</p>
+<p>在事件驱动编程中，系统维护一个事件循环（event loop），不断检查并处理事件队列中的事件。每个事件通常对应某种外部输入或状态变化，如网络请求到达、用户点击按钮或定时器到期。事件处理程序（event handler）被注册到特定事件上，当相应事件发生时，处理程序被调用来执行预定义的操作。</p>
+<h3 id="线程编程挑战" class="heading-element"><span>2.3 线程编程挑战</span>
+  <a href="#%e7%ba%bf%e7%a8%8b%e7%bc%96%e7%a8%8b%e6%8c%91%e6%88%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ol>
+<li><strong>安全共享数据</strong>：多个线程同时访问共享数据时可能导致竞争条件，常用的解决方案是使用锁（如Go的<code>sync.Mutex</code>）或者避免共享可变数据。</li>
+<li><strong>线程间协调</strong>：一个线程生产数据，另一个线程消费数据，需要使用Go的通道（<code>channel</code>）或条件变量（<code>sync.Cond</code>）或等待组（<code>sync.WaitGroup</code>）进行协调。</li>
+<li><strong>死锁</strong>：线程之间通过锁或<code>channel</code>或RPC相互等待资源时可能导致死锁，需要小心避免。</li>
+</ol>
+<h2 id="以网络爬虫为例的线程应用" class="heading-element"><span>3 以网络爬虫为例的线程应用</span>
+  <a href="#%e4%bb%a5%e7%bd%91%e7%bb%9c%e7%88%ac%e8%99%ab%e4%b8%ba%e4%be%8b%e7%9a%84%e7%ba%bf%e7%a8%8b%e5%ba%94%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>网络爬虫的目标是抓取所有网页内容，常见的实现方式有串行和并发两种。并发爬虫利用线程提高抓取效率，但也需要解决避免重复抓取和循环依赖的问题。</p>
+<p>在本例中，我们使用一个填充的<code>Fetcher</code>来模拟抓取。<code>fetcher</code>结构如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">fakeResult</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">body</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">urls</span> <span class="p">[]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">f</span> <span class="nx">fakeFetcher</span><span class="p">)</span> <span class="nf">Fetch</span><span class="p">(</span><span class="nx">url</span> <span class="kt">string</span><span class="p">)</span> <span class="p">([]</span><span class="kt">string</span><span class="p">,</span> <span class="kt">error</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">res</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">f</span><span class="p">[</span><span class="nx">url</span><span class="p">];</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;found:   %s\n&#34;</span><span class="p">,</span> <span class="nx">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nx">res</span><span class="p">.</span><span class="nx">urls</span><span class="p">,</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fmt</span><span class="p">.</span><span class="nf">Printf</span><span class="p">(</span><span class="s">&#34;missing: %s\n&#34;</span><span class="p">,</span> <span class="nx">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">nil</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Errorf</span><span class="p">(</span><span class="s">&#34;not found: %s&#34;</span><span class="p">,</span> <span class="nx">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// fetcher is a populated fakeFetcher.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">var</span> <span class="nx">fetcher</span> <span class="p">=</span> <span class="nx">fakeFetcher</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;http://golang.org/&#34;</span><span class="p">:</span> <span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;The Go Programming Language&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/pkg/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/cmd/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;http://golang.org/pkg/&#34;</span><span class="p">:</span> <span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;Packages&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/cmd/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/pkg/fmt/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/pkg/os/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;http://golang.org/pkg/fmt/&#34;</span><span class="p">:</span> <span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;Package fmt&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/pkg/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="s">&#34;http://golang.org/pkg/os/&#34;</span><span class="p">:</span> <span class="o">&amp;</span><span class="nx">fakeResult</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="s">&#34;Package os&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">[]</span><span class="kt">string</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="s">&#34;http://golang.org/pkg/&#34;</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">},</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="串行爬虫" class="heading-element"><span>3.1 串行爬虫</span>
+  <a href="#%e4%b8%b2%e8%a1%8c%e7%88%ac%e8%99%ab" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>串行爬虫通过递归调用实现深度优先搜索，使用一个共享的map记录已抓取的URL，防止重复抓取。然而，这种方式只能一次抓取一个页面，速度较慢。代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Serial</span><span class="p">(</span><span class="nx">url</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">fetcher</span> <span class="nx">Fetcher</span><span class="p">,</span> <span class="nx">fetched</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">bool</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// Use a map to keep track of fetched URLs
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">fetched</span><span class="p">[</span><span class="nx">url</span><span class="p">]</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fetched</span><span class="p">[</span><span class="nx">url</span><span class="p">]</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">urls</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">fetcher</span><span class="p">.</span><span class="nf">Fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// Recursively fetch URLs
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">u</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">urls</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">Serial</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">fetcher</span><span class="p">,</span> <span class="nx">fetched</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><blockquote>
+<p>我们是否可以在<code>Serial()</code>调用前面放一个<code>go</code>呢</p>
+</blockquote>
+<p>在 <code>Serial()</code> 调用前添加 <code>go</code> 关键字会导致并发执行多个爬虫任务，从而可能导致重复抓取相同的页面。这是因为每个爬虫任务都会尝试从未抓取过的页面开始递归抓取，而并发执行可能导致多个爬虫同时选择相同的页面作为起始点，进而重复抓取。</p>
+<h3 id="并发爬虫" class="heading-element"><span>3.2 并发爬虫</span>
+  <a href="#%e5%b9%b6%e5%8f%91%e7%88%ac%e8%99%ab" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h3 id="使用锁" class="heading-element"><span>3.3 使用锁</span>
+  <a href="#%e4%bd%bf%e7%94%a8%e9%94%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>每个页面的抓取在独立的线程中进行，为了确保抓取过程的正确性，我们使用了互斥锁来保护共享的 <code>fetchState</code> 结构体，避免了重复抓取和并发冲突的问题。在抓取过程中，我们使用了递归调用 <code>ConcurrentMutex</code> 函数来处理当前页面的所有子链接。每当发现一个新的子链接时，我们启动一个新的 Goroutine 来并发地抓取该链接，从而实现了多个页面的并行抓取。使用 <code>sync.WaitGroup</code> 来等待所有的子链接抓取任务完成，确保主线程在所有任务完成后才返回，以避免提前结束抓取过程。代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">fetchState</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>      <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span>      <span class="c1">// protect concurrent crawls
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">fetched</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">bool</span> <span class="c1">// Used to store crawled URLs. The key is URL and the value is whether it has been crawled.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">fs</span> <span class="o">*</span><span class="nx">fetchState</span><span class="p">)</span> <span class="nf">testAndSet</span><span class="p">(</span><span class="nx">url</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fs</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">r</span> <span class="o">:=</span> <span class="nx">fs</span><span class="p">.</span><span class="nx">fetched</span><span class="p">[</span><span class="nx">url</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">fs</span><span class="p">.</span><span class="nx">fetched</span><span class="p">[</span><span class="nx">url</span><span class="p">]</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">r</span> <span class="c1">// Return to previous crawling status
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">ConcurrentMutex</span><span class="p">(</span><span class="nx">url</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">fetcher</span> <span class="nx">Fetcher</span><span class="p">,</span> <span class="nx">fs</span> <span class="o">*</span><span class="nx">fetchState</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">fs</span><span class="p">.</span><span class="nf">testAndSet</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">urls</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">fetcher</span><span class="p">.</span><span class="nf">Fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">var</span> <span class="nx">done</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span> <span class="c1">// Create a wait group that waits for all subtasks to complete
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">u</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">urls</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">done</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>         <span class="c1">// Increase the counter of the waiting group
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">u</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span> <span class="c1">// Start a Go coroutine to concurrently crawl sub-links
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">defer</span> <span class="nx">done</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">ConcurrentMutex</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">fetcher</span><span class="p">,</span> <span class="nx">fs</span><span class="p">)</span> <span class="c1">// Recursive call ConcurrentMutex, fetching sub-links.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="p">}(</span><span class="nx">u</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">done</span><span class="p">.</span><span class="nf">Wait</span><span class="p">()</span> <span class="c1">// Wait for all subtasks to complete
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">return</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="使用通道" class="heading-element"><span>3.4 使用通道</span>
+  <a href="#%e4%bd%bf%e7%94%a8%e9%80%9a%e9%81%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>每个<code>worker</code>线程将抓取到的URL发送到一个通道，<code>coordinator</code>从通道中读取URL并启动新的<code>worker</code>线程。这种方式避免了锁的使用，但需要小心避免通道阻塞导致的死锁。代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">worker</span><span class="p">(</span><span class="nx">url</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">ch</span> <span class="kd">chan</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">fetcher</span> <span class="nx">Fetcher</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">urls</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">fetcher</span><span class="p">.</span><span class="nf">Fetch</span><span class="p">(</span><span class="nx">url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">urls</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">coordinator</span><span class="p">(</span><span class="nx">ch</span> <span class="kd">chan</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">fetcher</span> <span class="nx">Fetcher</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">n</span> <span class="o">:=</span> <span class="mi">1</span>                           <span class="c1">// 记录正在处理的任务数量，初始值为 1，因为最开始只有一个初始 URL
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">fetched</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">bool</span><span class="p">)</span> <span class="c1">// 记录已经抓取的 URL
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">urls</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">ch</span> <span class="p">{</span>           <span class="c1">// 不断从通道中接收抓取到的链接列表，直到通道被关闭
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">u</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">urls</span> <span class="p">{</span> <span class="c1">// 遍历接收到的链接列表
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="nx">fetched</span><span class="p">[</span><span class="nx">u</span><span class="p">]</span> <span class="o">==</span> <span class="kc">false</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">fetched</span><span class="p">[</span><span class="nx">u</span><span class="p">]</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">n</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">				<span class="k">go</span> <span class="nf">worker</span><span class="p">(</span><span class="nx">u</span><span class="p">,</span> <span class="nx">ch</span><span class="p">,</span> <span class="nx">fetcher</span><span class="p">)</span> <span class="c1">// 启动一个新的 worker 协程抓取该链接的子链接
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">n</span> <span class="o">-=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">n</span> <span class="o">==</span> <span class="mi">0</span> <span class="p">{</span> <span class="c1">// 如果当前没有正在处理的任务，则退出循环，结束并发抓取过程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">break</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// ConcurrentChannel 函数是并发抓取的入口函数，利用通道协调并发抓取的过程。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">ConcurrentChannel</span><span class="p">(</span><span class="nx">url</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">fetcher</span> <span class="nx">Fetcher</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ch</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="c1">// 创建一个字符串切片类型的通道
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>               <span class="c1">// 启动一个匿名函数的 Go 协程，用于向通道发送 URL
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="p">[]</span><span class="kt">string</span><span class="p">{</span><span class="nx">url</span><span class="p">}</span> <span class="c1">// 向通道发送包含初始 URL 的字符串切片
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">coordinator</span><span class="p">(</span><span class="nx">ch</span><span class="p">,</span> <span class="nx">fetcher</span><span class="p">)</span> <span class="c1">// 调用 coordinator 函数，开始并发抓取的协调过程
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在 <code>worker</code> 函数中，每个<code>worker</code>线程会尝试抓取指定的URL，并将抓取到的子链接发送到通道中。如果抓取失败，则发送一个空的字符串切片到通道，以便通知<code>coordinator</code>任务失败。</p>
+<p>在 <code>coordinator</code> 函数中，<code>coordinator</code>不断从通道中读取抓取到的链接列表，然后遍历这些链接，如果发现之前未抓取过的新链接，则将其标记为已抓取并启动一个新的<code>worker</code>线程进行抓取。同时，<code>coordinator</code>会维护一个计数器 <code>n</code> 来记录当前正在处理的任务数量，当所有任务都处理完成后，<code>coordinator</code>结束并发抓取的过程。</p>
+<p>在 <code>ConcurrentChannel</code> 函数中，我们首先创建了一个字符串切片类型的通道，并启动了一个匿名的 Goroutine 来向通道发送初始的 URL。然后，调用 <code>coordinator</code> 函数开始并发抓取的协调过程。</p>
+<blockquote>
+<ol>
+<li><code>coordinator</code>如何知道它已经完成？</li>
+</ol>
+<p><code>coordinator</code>知道它已完成的条件是 <code>n</code> 计数器的值归零。<code>coordinator</code>通过维护 <code>n</code> 计数器来跟踪当前正在处理的任务数量，每个<code>worker</code>线程处理完成后会将 <code>n</code> 减一。当 <code>n</code> 计数器的值为零时，表示所有的任务都已经完成，<code>coordinator</code>就知道自己的工作已经完成。</p>
+<ol start="2">
+<li>通道在这里有两个作用：</li>
+</ol>
+<p>- 通信值：<code>worker</code>线程将抓取到的链接列表发送到通道中，以便<code>coordinator</code>可以读取并处理。
+- 事件通知：通道的关闭可作为事件通知，当通道关闭时，<code>coordinator</code>会知道所有的<code>worker</code>线程都已完成，并且没有新的任务需要处理。</p>
+</blockquote>
+<h2 id="远程过程调用rpc" class="heading-element"><span>4 远程过程调用（RPC）</span>
+  <a href="#%e8%bf%9c%e7%a8%8b%e8%bf%87%e7%a8%8b%e8%b0%83%e7%94%a8rpc" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="介绍" class="heading-element"><span>4.1 介绍</span>
+  <a href="#%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h3 id="远程过程调用rpc-1" class="heading-element"><span>4.2 远程过程调用（RPC）</span>
+  <a href="#%e8%bf%9c%e7%a8%8b%e8%bf%87%e7%a8%8b%e8%b0%83%e7%94%a8rpc-1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>远程过程调用（RPC）是分布式系统中的关键技术之一，它使得客户端和服务器之间的通信变得简单而直观。在分布式系统中，不同的节点可能分布在不同的物理机器上，RPC允许这些节点之间进行远程通信，就像调用本地函数一样，无需了解底层的网络协议细节。</p>
+<p>RPC的目标是实现易于编程的客户端/服务器通信，它隐藏了底层网络通信的复杂性，为开发人员提供了简单的接口。通过RPC，开发人员可以专注于业务逻辑的实现，而无需担心网络通信的细节。</p>
+<p>在RPC中，数据在客户端和服务器之间通过网络传输，因此需要将数据转换为“有线格式”（wire format）。RPC库负责处理数据的序列化和反序列化，以确保数据可以在网络上传输并在另一端正确解析。</p>
+<p>RPC消息的基本结构是请求-响应模式。<font color="red">客户端发送请求给服务器，服务器处理请求并发送响应给客户端。</font>这种简单的请求-响应模式使得RPC成为了一种非常有效的通信方式。</p>
+<p>在RPC的软件结构中，通常会有以下几个组件：</p>
+<ul>
+<li>客户端应用程序：负责发起RPC请求的应用程序。</li>
+<li>存根函数（Stub functions）：客户端应用程序调用的接口函数，实际上是一个本地代理，负责将RPC调用转发给远程服务器。</li>
+<li>服务器处理函数（Handler functions）：服务器端实际执行业务逻辑的函数。</li>
+<li>调度器（Dispatcher）：负责将RPC请求分发给正确的处理函数。</li>
+<li>RPC库：提供了RPC通信所需的基本功能，例如序列化、网络通信等。</li>
+</ul>
+<p>通过RPC，不同语言编写的客户端和服务器可以进行通信，实现了跨语言的可移植性和互操作性。</p>
+<h3 id="go的rpc实现" class="heading-element"><span>4.3 Go的RPC实现</span>
+  <a href="#go%e7%9a%84rpc%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在Go中，实现RPC需要定义请求和回复的结构体，并使用Go的RPC库来处理通信。下面是一个示例，展示了如何在Go中实现一个简单的键值存储服务器（key/value storage server），并使用RPC进行通信。</p>
+<ul>
+<li>
+<p>请求回复结构体</p>
+<p>在键值存储服务器的示例中，我们定义了用于Put和Get操作的请求和回复结构体：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">PutArgs</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Key</span>   <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Value</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">PutReply</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">GetArgs</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Key</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">GetReply</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Value</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>服务器端（Server）</p>
+<p>在服务器端，首先需要定义一个对象，并在该对象上注册处理函数作为RPC处理程序。这些处理函数将处理客户端发送的RPC请求。服务器接受TCP连接并将其传递给RPC库。RPC库负责读取每个请求，并为每个请求创建一个新的Goroutine进行处理。处理函数会读取请求参数，并根据请求调用相应的方法。处理完请求后，服务器将回复信息进行序列化，并通过TCP连接发送回客户端。<font color="red">服务器端的处理函数必须使用锁进行同步，因为RPC库为每个请求创建了一个新的Goroutine。</font>处理函数需要读取请求参数并修改回复信息，因此需要确保并发访问的安全性。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">KV</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>   <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span> <span class="c1">// 互斥锁，保护数据并发访问
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">data</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">server</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">KV</span><span class="p">{</span><span class="nx">data</span><span class="p">:</span> <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span><span class="p">{}}</span> <span class="c1">// 创建键值存储服务器实例
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">rpcs</span> <span class="o">:=</span> <span class="nx">rpc</span><span class="p">.</span><span class="nf">NewServer</span><span class="p">()</span>              <span class="c1">// 创建一个 RPC 服务器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">rpcs</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">kv</span><span class="p">)</span>                    <span class="c1">// 注册 kv 为 RPC 服务器的服务对象
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">l</span><span class="p">,</span> <span class="nx">e</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nf">Listen</span><span class="p">(</span><span class="s">&#34;tcp&#34;</span><span class="p">,</span> <span class="s">&#34;:1234&#34;</span><span class="p">)</span>   <span class="c1">// 监听 TCP 端口 1234
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">e</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;listen error:&#34;</span><span class="p">,</span> <span class="nx">e</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span> <span class="c1">// 启动一个协程来处理客户端连接
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">conn</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">l</span><span class="p">.</span><span class="nf">Accept</span><span class="p">()</span> <span class="c1">// 接受客户端连接
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">go</span> <span class="nx">rpcs</span><span class="p">.</span><span class="nf">ServeConn</span><span class="p">(</span><span class="nx">conn</span><span class="p">)</span> <span class="c1">// 启动一个协程来为客户端提供服务
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">break</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">l</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span> <span class="c1">// 关闭监听器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Get 方法用于处理客户端发送的 Get 请求，获取指定键的值。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KV</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">GetArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">GetReply</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Put 方法用于处理客户端发送的 Put 请求，存储键值对。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KV</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">PutArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">PutReply</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p>客户端（Client）</p>
+<p>在客户端，首先需要使用Dial函数建立与服务器的TCP连接。然后，客户端需要定义RPC请求的参数结构体和回复结构体，并实现对应的处理函数。客户端通过调用Call函数发起RPC调用，指定连接、函数名称、参数以及存放回复的位置。RPC库负责对参数进行序列化，并将请求发送给服务器。然后，客户端等待并接收服务器的回复，并将回复反序列化为指定的回复结构体。Call函数的返回值指示是否成功接收到了回复，通常还包括服务级别的错误信息。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// connect 函数用于与键值存储服务器建立连接，并返回一个 RPC 客户端对象。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">connect</span><span class="p">()</span> <span class="o">*</span><span class="nx">rpc</span><span class="p">.</span><span class="nx">Client</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">client</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">rpc</span><span class="p">.</span><span class="nf">Dial</span><span class="p">(</span><span class="s">&#34;tcp&#34;</span><span class="p">,</span> <span class="s">&#34;:1234&#34;</span><span class="p">)</span> <span class="c1">// 使用 TCP 协议连接服务器
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;dialing:&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span> <span class="c1">// 如果连接失败，则记录错误并终止程序
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">client</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">client</span> <span class="o">:=</span> <span class="nf">connect</span><span class="p">()</span>                         <span class="c1">// 建立连接
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">args</span> <span class="o">:=</span> <span class="nx">GetArgs</span><span class="p">{</span><span class="nx">key</span><span class="p">}</span>                        <span class="c1">// 构造 Get 请求的参数
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">reply</span> <span class="o">:=</span> <span class="nx">GetReply</span><span class="p">{}</span>                         <span class="c1">// 准备接收服务器的响应
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KV.Get&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">reply</span><span class="p">)</span> <span class="c1">// 调用远程方法 Get，并传递参数 args，将响应写入 reply
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;error:&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">client</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>     <span class="c1">// 关闭连接
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="c1">// 返回服务器返回的值
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// put 函数用于向键值存储服务器发送 Put 请求，存储键值对。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">put</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">val</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">client</span> <span class="o">:=</span> <span class="nf">connect</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">args</span> <span class="o">:=</span> <span class="nx">PutArgs</span><span class="p">{</span><span class="nx">key</span><span class="p">,</span> <span class="nx">val</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="nx">PutReply</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">err</span> <span class="o">:=</span> <span class="nx">client</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KV.Put&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">reply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;error:&#34;</span><span class="p">,</span> <span class="nx">err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">client</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<p>其他细节：</p>
+<ul>
+<li>
+<p>绑定（Binding）：客户端如何知道要与哪台服务器通信？</p>
+<p>在Go的RPC中，服务器的名称和端口是Dial函数的参数。在大型系统中，通常会有一种名称或配置服务器来管理这些信息。</p>
+</li>
+<li>
+<p>序列化（Marshalling）：数据格式化为数据包。Go的RPC库可以传递字符串、数组、对象、映射等类型的数据。Go通过复制指向的数据来传递指针，但不能传递通道或函数。RPC库只序列化导出字段（即大写字母开头的字段）。</p>
+</li>
+</ul>
+<h3 id="处理rpc中的失败" class="heading-element"><span>4.4 处理RPC中的失败</span>
+  <a href="#%e5%a4%84%e7%90%86rpc%e4%b8%ad%e7%9a%84%e5%a4%b1%e8%b4%a5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在分布式系统中，网络故障和服务器故障是不可避免的。简单的解决方案是“尽力而为”的RPC，即在超时后重试请求，但这可能导致重复操作。</p>
+<p>这种方法的缺点是，重试请求可能导致操作被重复执行。例如：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="nx">client</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="s">&#34;k&#34;</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="nx">client</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="s">&#34;k&#34;</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>如果第二个<code>Put</code>请求因网络故障重试多次，可能会导致不一致的结果：</p>
+<p>更好的解决方案是“至多一次”的RPC，“至多一次”的RPC通过以下机制实现更可靠的行为：</p>
+<ul>
+<li>客户端在未收到响应时重新发送请求。</li>
+<li>服务器检测重复请求，并返回之前的响应，而不是重新执行处理函数。</li>
+</ul>
+<p>为了检测重复请求，客户端在每个请求中包含一个唯一的ID（XID）。每个请求使用相同的 XID 重新发送服务器：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">if seen[xid] {
+</span></span><span class="line"><span class="cl">  reply = old[xid]
+</span></span><span class="line"><span class="cl">} else {
+</span></span><span class="line"><span class="cl">  reply = handler()
+</span></span><span class="line"><span class="cl">  old[xid] = reply
+</span></span><span class="line"><span class="cl">  seen[xid] = true
+</span></span><span class="line"><span class="cl">}</span></span></code></pre></td></tr></table>
+</div>
+</div><p><strong>一些“至多一次”复杂性问题：</strong></p>
+<ul>
+<li>
+<p>如果两个客户端使用相同的XID？</p>
+<ul>
+<li>解决方案：使用大随机数生成唯一ID。</li>
+</ul>
+</li>
+<li>
+<p>如何避免seen[xid]表过大？</p>
+<ul>
+<li>每个客户端有一个唯一ID，使用序列号。</li>
+<li>客户端在每次RPC中包含“已见到的最大回复”信息，类似于TCP序列号和确认号。</li>
+</ul>
+</li>
+<li>
+<p><strong>服务器崩溃和重启：</strong></p>
+<ul>
+<li>
+<p>如果“至多一次”信息保存在内存中，服务器重启后将忘记这些信息，可能会接受重复请求。</p>
+<p>解决方案：将重复检测信息写入磁盘，或使用复制服务器同步这些信息。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>Go的RPC库是“至多一次”策略的简单实现：</p>
+<ul>
+<li>打开TCP连接。</li>
+<li>将请求写入TCP连接。</li>
+<li>Go RPC从不重发请求，因此服务器不会看到重复请求。</li>
+<li>如果未收到回复，Go RPC代码返回错误（可能是由于TCP超时）。</li>
+</ul>
+<blockquote>
+<p>关于“恰好一次”的RPC</p>
+<p>“恰好一次”的RPC包括无限重试、重复检测和容错服务，这种方法更复杂，在实际系统中需要实现容错机制。</p>
+<p>例如，lab 4中将探讨“恰好一次”RPC的实现。</p>
+</blockquote>
+<h2 id="faq" class="heading-element"><span>5 FAQ</span>
+  <a href="#faq" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><blockquote>
+<ol>
+<li>Go通道是如何工作的？Go如何确保它们在多个goroutines之间同步？</li>
+</ol>
+<p>可以在<a href="https://go.dev/src/runtime/chan.go"target="_blank" rel="external nofollow noopener noreferrer">这里<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>查看源码，尽管不易理解。高层次上，<font color="red">通道是一个包含缓冲区和锁的结构体</font>。发送到通道涉及获取锁，等待（可能释放CPU）直到某个线程接收，并交付消息。接收涉及获取锁并等待发送者。可以使用Go的sync.Mutex和sync.Cond自己实现通道。</p>
+<ol start="2">
+<li>我使用通道唤醒另一个goroutine，通过在通道上发送一个虚拟的bool值。但如果另一个goroutine已经在运行（因此没有在通道上接收），发送goroutine会阻塞。我应该怎么做？</li>
+</ol>
+<p>尝试使用条件变量（Go的sync.Cond）而不是通道。条件变量非常适合通知可能（或可能不）等待某事的goroutines。由于通道是同步的，如果不确定通道另一端是否有goroutine在等待，使用通道会显得很尴尬。</p>
+<ol start="3">
+<li>如何让一个goroutine等待来自多个不同通道的输入？如果没有任何内容可读取，则尝试在任何一个通道上接收都会阻塞，从而阻止 goroutine 检查其他通道。</li>
+</ol>
+<p>尝试为每个通道创建一个单独的goroutine，每个goroutine阻塞在其通道上。这不是总能实现，但在可行时通常是最简单的方法。否则，尝试使用Go的select。</p>
+<ol start="4">
+<li>什么时候应该使用sync.WaitGroup而不是通道？反之亦然？</li>
+</ol>
+<p>WaitGroup用途较为特殊；它仅在等待一堆活动完成时有用。通道用途更广泛；例如，可以通过通道传递值。尽管比WaitGroup需要多写几行代码，但也可以使用通道等待多个goroutines。</p>
+<ol start="5">
+<li>如何创建一个通过互联网连接的Go通道？如何指定用于发送消息的协议？</li>
+</ol>
+<p>Go通道仅在单个程序内工作；通道不能用于与其他程序或计算机通信。可以查看Go的RPC包，它允许你通过互联网与其他Go程序通信：
+<a href="https://golang.org/pkg/net/rpc/"target="_blank" rel="external nofollow noopener noreferrer">https://golang.org/pkg/net/rpc/<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<ol start="6">
+<li>一些重要/有用的Go特定并发模式有哪些？</li>
+</ol>
+<p>这是一个关于该主题的幻灯片，由Go专家编写：
+<a href="https://talks.golang.org/2012/concurrency.slide"target="_blank" rel="external nofollow noopener noreferrer">https://talks.golang.org/2012/concurrency.slide<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<ol start="7">
+<li>切片是如何实现的？</li>
+</ol>
+<p>切片是一个对象，包含指向数组的指针以及该数组的开始和结束索引。这种安排允许多个切片共享一个底层数组，每个切片可能暴露数组元素的不同范围。这里有一个更详细的讨论：
+<a href="https://blog.golang.org/go-slices-usage-and-internals"target="_blank" rel="external nofollow noopener noreferrer">https://blog.golang.org/go-slices-usage-and-internals<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>
+Go切片比Go数组更灵活，因为数组的大小是其类型的一部分，而以切片作为参数的函数可以接受任何长度的切片。</p>
+<ol start="8">
+<li>什么时候使用同步RPC调用，什么时候使用异步RPC调用？</li>
+</ol>
+<p>大多数代码需要在继续执行前获得RPC回复；在这种情况下，使用同步RPC是合理的。但有时客户端希望启动许多并发RPC；在这种情况下，异步可能更好。或者客户端希望在等待RPC完成时做其他工作，可能是因为服务器很远（所以光速时间很高）或因为服务器可能不可达，从而RPC经历长时间的超时。我(Robert)从未在Go中使用异步RPC。当我想发送RPC但不必等待结果时，我创建一个goroutine，并让这个goroutine进行同步Call()。</p>
+<ol start="9">
+<li>开发人员在开始使用Go时常见的问题有哪些？</li>
+</ol>
+<p>以下是一些常见问题：</p>
+<p>- 未在并发访问时使用锁保护映射。使用Go的竞态检测器！
+- 使用通道时的死锁。
+- 在创建goroutine时未捕获变量。
+- 泄漏的goroutines。</p>
+<ol start="10">
+<li>Go是否支持继承？（像Java/C++那样的“扩展”方式？）</li>
+</ol>
+<p>Go不支持C++风格的继承，但有接口和嵌入结构体，可以完成在C++中使用继承的许多事情。这是Go设计中备受争议的部分；可以搜索“golang generics”。</p>
+<ol start="11">
+<li>我对选择值接收器或指针接收器仍有些困惑。能否提供一些具体的实际例子说明我们应该选择哪一个？</li>
+</ol>
+<p>当你想修改接收器的状态时，必须使用指针接收器。如果结构体非常大，你可能想使用指针接收器，因为值接收器操作的是一个副本。如果两者都不适用，可以使用值接收器。然而，要小心使用值接收器；例如，如果结构体中有一个互斥锁，你不能将其作为值接收器，因为互斥锁会被复制，从而失去其作用。</p>
+</blockquote>
+]]></description></item><item><title>【MIT 6.5840(6.824)学习笔记】 分布式系统介绍</title><link>https://lruihao.cn/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/</link><pubDate>Tue, 14 May 2024 14:12:32 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/</guid><description><![CDATA[<h2 id="概念" class="heading-element"><span>1 概念</span>
+  <a href="#%e6%a6%82%e5%bf%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>当我们谈论分布式系统时，我们指的是一组通过网络连接的计算机，它们协同工作以完成某种共同的任务或目标。</p>
+<p>在分布式系统中，通信是通过消息传递进行的。<font color="red">这意味着各个计算节点之间通过发送和接收消息来进行通信，而不是通过共享内存。</font>这种消息传递模型使得分布式系统的设计和实现更为灵活，因为每个节点可以独立地运行，并通过消息传递来进行协作。</p>
+<p>尽管消息传递模型具有很多优点，但也需要注意到它引入了一些复杂性。例如，需要考虑消息的传递延迟、顺序和可靠性等问题。因此，在设计分布式系统时，需要仔细考虑如何有效地管理消息传递，以确保系统的正确性和性能。</p>
+<blockquote>
+<p>TIP：在设计系统或解决问题时，应该始终优先考虑在单台计算机上解决。只有在问题规模超出单台计算机的处理能力，或者需要满足高可用性、容错性等需求时，才需要考虑采用分布式系统。因此，深入了解问题的性质和需求，以及权衡利弊，是设计分布式系统的关键。</p>
+</blockquote>
+<h2 id="驱动力和挑战" class="heading-element"><span>2 驱动力和挑战</span>
+  <a href="#%e9%a9%b1%e5%8a%a8%e5%8a%9b%e5%92%8c%e6%8c%91%e6%88%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>当人们构建分布式系统时，驱动力主要包括以下几个方面：</p>
+<ol>
+<li><strong>追求更高的计算性能</strong>：分布式系统能够利用大量的计算资源，实现并行运算，充分利用多个CPU、大容量内存和磁盘资源。</li>
+<li><strong>实现容错性</strong>：即使在其中一台计算机发生故障时，系统仍然能够保持正常运行。</li>
+<li><strong>解决空间分布性问题</strong>：某些问题天然具有空间分布性，需要跨越不同地理位置的计算资源和数据进行协同处理。例如，银行跨地域的资金转移需要协调不同地点的数据和操作，这就需要分布式系统来实现数据的同步和协调，以确保交易的准确性和可靠性。</li>
+<li><strong>提高安全性</strong>：分布式系统可以通过将系统分散在多个计算机上来提高安全性。不信任的代码或系统可能存在潜在的安全风险，通过在分布式环境中运行代码并采用加密通信等安全措施，可以有效降低风险，并限制错误和攻击的影响范围。</li>
+</ol>
+<p>分布式系统的挑战源自其驱动力：</p>
+<ol>
+<li><strong>并发执行和复杂交互</strong>：分布式系统中存在大量并发执行的部分，以及复杂的交互关系。这导致了在并发编程中遇到各种问题，例如同步、异步操作的管理以及处理时间依赖性。</li>
+<li><strong>意外故障</strong>：分布式系统由多个组成部分和计算机网络组成，因此容易受到意外故障的影响。与单个计算机不同，这些组件可能在工作或停止状态之间切换，同时还受到网络中断或不稳定性的影响。</li>
+<li><strong>性能预期</strong>：分布式系统的设计旨在实现更高的性能，例如利用大量计算资源实现并行处理。但实际评估多台计算机或磁盘臂的性能存在一定挑战，需要仔细的设计和调整以实现预期的性能水平。</li>
+</ol>
+<h2 id="抽象和实现工具" class="heading-element"><span>3 抽象和实现工具</span>
+  <a href="#%e6%8a%bd%e8%b1%a1%e5%92%8c%e5%ae%9e%e7%8e%b0%e5%b7%a5%e5%85%b7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>分布式系统基础架构主要包括<font color="red">存储、通信（网络）和计算</font>这三种类型。我们的目标是设计简单的接口，使第三方应用程序能够轻松使用这些分布式存储和计算功能，这样才能简单的在这些基础架构之上，构建第三方应用程序。</p>
+<p>通过这种抽象接口，我们可以将分布式系统的复杂性隐藏在系统内部，使用户专注于应用程序的开发。举例来说，在存储方面，用户可以将整个系统视为非分布式系统，类似于一个文件系统或者常规的编程模型，而不必担心分布式系统的细节。我们的目标是构建一个接口，使其看起来像一个非分布式存储和计算系统，但实际上却具备了分布式系统的高性能和容错性。</p>
+<p>但实际上，很难能找到一个抽象来描述分布式的存储或者计算，使得它们能够像非分布式系统一样有简单易懂的接口。</p>
+<p>抽象的实际实现是我们首先要考虑的问题。在构建分布式系统时，人们使用了许多工具：</p>
+<ul>
+<li><strong>RPC（Remote Procedure Call）</strong>：RPC旨在掩盖在不可靠网络上通信的复杂性，使得远程调用过程更为简单直接。</li>
+<li><strong>线程</strong>：线程是一种重要的编程技术，可用于充分利用多核心计算机。它不仅仅是为了提高计算机的利用率，更重要的是提供了结构化的并发操作方式，简化了程序员对并发操作的处理。</li>
+<li><strong>分布式文件系统</strong>：分布式文件系统是分布式系统中常用的存储工具之一，它提供了分布式的数据存储和访问接口。通过分布式文件系统，可以实现数据的分布式存储和管理，从而支持大规模数据处理和分布式计算任务的执行。</li>
+</ul>
+<h2 id="分布式系统特性" class="heading-element"><span>4 分布式系统特性</span>
+  <a href="#%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9f%e7%89%b9%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="可扩展性" class="heading-element"><span>4.1 可扩展性</span>
+  <a href="#%e5%8f%af%e6%89%a9%e5%b1%95%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>分布式系统的主要特性是可扩展性（Scalability）。可扩展性指的是，增加计算资源后系统能够以相应的方式提高性能或吞吐量。举例来说，如果一台计算机能够解决一定量的问题，那么增加第二台计算机后，系统能够以更快的速度解决相同数量的问题，或者在相同时间内处理更多的问题。如果由两台计算机组成的系统能够实现两倍的性能或吞吐量，那就达到了可扩展性的标准。</p>
+<p>这是一个极为强大的特性，因为只需花钱就可以购买计算机。如果构建的系统能够通过增加计算机数量来提高性能或吞吐量，那将是一个巨大的成就。相比之下，通过雇佣程序员来优化系统或应用更优的算法通常是一种昂贵的方法。我们希望通过增加计算机数量，从十台提升到一千台，来应对一百倍的流量。</p>
+<p>例如在构建一个常规网站时，通常会有一个HTTP服务器、一些用户和浏览器以及基于Python或PHP的Web服务器，它们与数据库进行交互。</p>
+<p>在初始阶段，一台计算机可以运行Web服务器和数据库，或者将Web服务器和数据库分别部署在两台计算机上。但是，当网站突然迎来数以亿计的用户登录请求时，单一服务器显然无法满足需求。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=small" data-sub-html="<h2>image-20240513103410005</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web" alt="image-20240513103410005" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=large 2x" data-title="image-20240513103410005" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>为了应对高流量，第一步是购买更多的Web服务器，并将用户分配到不同的服务器上。这样，不同的用户可以访问不同的Web服务器，但它们需要访问相同的数据，因此所有的Web服务器都需要与后端数据库通信。在这个阶段，通过添加更多的Web服务器来提高代码效率是一个有效的方法，前提是单个服务器不会给数据库带来过大的压力。</p>
+<p>然而，可扩展性并非无限的。随着Web服务器数量的增加，数据库很可能成为性能的瓶颈。即使增加更多的Web服务器也无法解决问题。在某个临界点，系统中添加更多计算机将不再有效，而瓶颈将转移到其他地方，比如从Web服务器转移到数据库。</p>
+<p>在这种情况下，必须进行一些重构工作。然而，重构一个单一的数据库是困难的，尽管可以将数据库拆分为多个来提高性能，但这需要大量的工作。</p>
+<h3 id="可用性" class="heading-element"><span>4.2 可用性</span>
+  <a href="#%e5%8f%af%e7%94%a8%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在构建系统时，使用单台计算机往往具有较高的可靠性。单台计算机通常可以长时间稳定运行，这是因为计算机和操作系统都很可靠，而且电源也很稳定。然而，如果系统由数千台计算机构成，即使每台计算机都能稳定运行一年，每天也会有多台计算机发生故障。</p>
+<p>因此，大型分布式系统面临的一个主要问题是放大一些罕见问题的影响。在这样的系统中，总会有一些机器故障、运行错误、执行缓慢或执行错误任务的情况发生。网络问题也是一个常见的挑战，比如网线踩断或交换机故障。这些小问题在大规模系统中会变成持续不断的问题。</p>
+<p>因此，在设计系统时必须考虑系统的容错性，即使发生错误也要能够继续运行。同时，为了简化应用开发人员的工作，需要构建一个基础架构，能够尽可能屏蔽和掩盖错误。</p>
+<p>容错有多种概念和表述方式，其中一个重要思想是可用性（Availability）。通过精心设计，系统可以在特定类型的错误发生时继续提供服务，就像没有错误一样。某些系统通过多副本的方式实现可用性。比如，构建一个有两个拷贝的多副本系统，其中一个故障了，另一个仍然可以正常运行。可用性意味着在特定的故障范围内，系统仍能提供服务。</p>
+<p>另一种容错特性是自我可恢复性（Recoverability），即在出现问题后系统停止工作，不再响应请求，等待修复，然后恢复正常运行。</p>
+<p>可恢复性是一个重要的需求，尽管它比可用性更弱。在故障发生到修复期间，系统将完全停止工作。但修复后，系统应能正确运行，因此可恢复性至关重要。对于可恢复的系统，通常需要采取一些措施，如将最新数据存储在磁盘中，以便在供电恢复后检索。甚至对于具备可用性的系统，在实际应用中，也需要具备可恢复性。</p>
+<p>为了实现这些特性，有两个关键工具。</p>
+<ul>
+<li>一个是非易失存储（Non-volatile storage），如硬盘或闪存，用于存储系统状态的checkpoint或日志。这样，即使出现电源故障，系统也能从存储中读取最新状态，并继续运行。</li>
+<li>另一个重要工具是复制（Replication），即通过多副本系统实现容错。管理复制的多副本系统可能会面临同步偏移等问题，这在容错系统中是一个挑战。</li>
+</ul>
+<h3 id="一致性" class="heading-element"><span>4.3 一致性</span>
+  <a href="#%e4%b8%80%e8%87%b4%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>最后一个很重要的特性是一致性（Consistency）。一致性定义了操作的行为，特别是在分布式系统中。在分布式存储系统中，例如键值（KV）服务，put操作将一个值存储到一个键中，而get操作从键中获取值。在分布式系统中，多个副本可能存在不同版本的数据，因此一致性变得至关重要。</p>
+<p>强一致性（Strong Consistency）要求get请求总是返回最近一次完成的put请求写入的值，这确保了数据的完全一致。然而，实现强一致性需要大量的通信和延迟。弱一致性（Weak Consistency）不保证get请求获取到最新的数据，但通常可以提供更高的性能。</p>
+<p>因此，为了尽可能减少通信，特别是当副本相距很远时，人们会构建弱一致性系统，只需要更新最近的数据副本，并且只需要从最近的副本获取数据，并允许读取旧数据。当然，为了使弱一致性更具实际意义，人们会定义更多的规则。</p>
+<h2 id="mapreduce论文阅读笔记" class="heading-element"><span>5 MapReduce论文阅读笔记</span>
+  <a href="#mapreduce%e8%ae%ba%e6%96%87%e9%98%85%e8%af%bb%e7%ac%94%e8%ae%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><a href="https://blog.csdn.net/hzf0701/article/details/138770454?spm=1001.2014.3001.5501"target="_blank" rel="external nofollow noopener noreferrer">MapReduce论文阅读笔记<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+]]></description></item></channel></rss>
