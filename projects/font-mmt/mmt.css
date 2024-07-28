@@ -9,13 +9,13 @@
 }
 
 @font-face {
-  font-family: LJMC;
-  src: url('/fonts/LiuJianMaoCao-Regular.ttf');
+  font-family: ljmc;
+  src: url('/fonts/ljmc.ttf');
   font-display: swap;
 }
 
 .preview-lyric {
-  font-family: LJMC, '钟齐流江毛草';
+  font-family: ljmc, '钟齐流江毛草';
   font-size: 1.5rem;
 }
 
