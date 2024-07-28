@@ -1,9 +1,9 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>位运算 - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/</link><description>位运算 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 28 May 2021 13:12:04 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/" rel="self" type="application/rss+xml"/><item><title>位运算全面总结</title><link>https://lruihao.cn/posts/01.%E4%BD%8D%E8%BF%90%E7%AE%97%E5%85%A8%E9%9D%A2%E6%80%BB%E7%BB%93/</link><pubDate>Fri, 28 May 2021 13:12:04 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/01.%E4%BD%8D%E8%BF%90%E7%AE%97%E5%85%A8%E9%9D%A2%E6%80%BB%E7%BB%93/</guid><description><![CDATA[<h2 id="位运算概述" class="heading-element"><span>1 位运算概述</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>位运算 - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/</link><description>位运算 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 28 May 2021 13:12:04 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/%E4%BD%8D%E8%BF%90%E7%AE%97/" rel="self" type="application/rss+xml"/><item><title>位运算全面总结</title><link>https://hezephyr.github.io/posts/01.%E4%BD%8D%E8%BF%90%E7%AE%97%E5%85%A8%E9%9D%A2%E6%80%BB%E7%BB%93/</link><pubDate>Fri, 28 May 2021 13:12:04 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.%E4%BD%8D%E8%BF%90%E7%AE%97%E5%85%A8%E9%9D%A2%E6%80%BB%E7%BB%93/</guid><description><![CDATA[<h2 id="位运算概述" class="heading-element"><span>1 位运算概述</span>
   <a href="#%e4%bd%8d%e8%bf%90%e7%ae%97%e6%a6%82%e8%bf%b0" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><p>我们知道，==计算机中的数在内存中都是以二进制形式进行存储的== ，而位运算就是直接对整数在内存中的二进制位进行操作，因此其执行效率非常高，在程序中尽量使用位运算进行操作，这会大大提高程序的性能。
-<a class="lightgallery" href="https://i-blog.csdnimg.cn/direct/35c5fd04622d42e28a82695a72876c0f.png?size=large" data-thumbnail="https://i-blog.csdnimg.cn/direct/35c5fd04622d42e28a82695a72876c0f.png?size=small" data-sub-html="<h2>在这里插入图片描述</h2>"><img loading="lazy" src="https://i-blog.csdnimg.cn/direct/35c5fd04622d42e28a82695a72876c0f.png" alt="在这里插入图片描述" srcset="https://i-blog.csdnimg.cn/direct/35c5fd04622d42e28a82695a72876c0f.png?size=small, https://i-blog.csdnimg.cn/direct/35c5fd04622d42e28a82695a72876c0f.png?size=medium 1.5x, https://i-blog.csdnimg.cn/direct/35c5fd04622d42e28a82695a72876c0f.png?size=large 2x" data-title="在这里插入图片描述" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</h2><p>我们知道，<font color="red">计算机中的数在内存中都是以二进制形式进行存储的</font> ，而位运算就是直接对整数在内存中的二进制位进行操作，因此其执行效率非常高，在程序中尽量使用位运算进行操作，这会大大提高程序的性能。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/35c5fd04622d42e28a82695a72876c0f.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/35c5fd04622d42e28a82695a72876c0f.png?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/35c5fd04622d42e28a82695a72876c0f.png" alt="img" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/35c5fd04622d42e28a82695a72876c0f.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/35c5fd04622d42e28a82695a72876c0f.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/35c5fd04622d42e28a82695a72876c0f.png?size=large 2x" data-title="img" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>那么，涉及位运算的运算符如下表所示：</p>
 <table>
 <thead>
@@ -53,7 +53,7 @@
 </tr>
 </tbody>
 </table>
-<p>看完，你可能会觉得挺简单的，==但位运算的难点并不在这，而在于其性质、高级操作和它的应用。==</p>
+<p>看完，你可能会觉得挺简单的， <font color="red">但位运算的难点并不在这，而在于其性质、高级操作和它的应用</font>。</p>
 <h2 id="位运算的性质" class="heading-element"><span>2 位运算的性质</span>
   <a href="#%e4%bd%8d%e8%bf%90%e7%ae%97%e7%9a%84%e6%80%a7%e8%b4%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
@@ -62,7 +62,7 @@
   <a href="#%e8%bf%90%e7%ae%97%e7%ac%a6%e7%9a%84%e4%bc%98%e5%85%88%e7%ba%a7" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h3><p>优先级需要弄清楚，如果不太清楚可以加小括号确保是想要的运算顺序，==这里只是相对优先级，即只是和一些常用的算术运算符做比较。==</p>
+</h3><p>优先级需要弄清楚，如果不太清楚可以加小括号确保是想要的运算顺序，<font color="red">这里只是相对优先级，即只是和一些常用的算术运算符做比较。</font></p>
 <table>
 <thead>
 <tr>
@@ -157,7 +157,7 @@
 </tr>
 </tbody>
 </table>
-<p>以上仅为已证明的运算律（可能存在遗漏），其余的博主均认为是不符合不成立的，==注意：千万不要将逻辑运算的运算律或者其他的运算律与这混为一谈。==</p>
+<p>以上仅为已证明的运算律（可能存在遗漏），其余的博主均认为是不符合不成立的，<font color="red">注意：千万不要将逻辑运算的运算律或者其他的运算律与这混为一谈。</font></p>
 <h2 id="位运算高级操作" class="heading-element"><span>3 位运算高级操作</span>
   <a href="#%e4%bd%8d%e8%bf%90%e7%ae%97%e9%ab%98%e7%ba%a7%e6%93%8d%e4%bd%9c" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
@@ -281,7 +281,7 @@
   <a href="#%e8%b4%9f%e6%95%b0%e7%9a%84%e4%bd%8d%e8%bf%90%e7%ae%97" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><p>首先，我们要知道，在计算机中，运算是使用的二进制补码，而正数的补码是它本身，==负数的补码则是符号位不变，其余按位取反，最后再$+1$得到的，== 例如：</p>
+</h2><p>首先，我们要知道，在计算机中，运算是使用的二进制补码，而正数的补码是它本身，<font color="red">负数的补码则是符号位不变，其余按位取反，最后再$+1$得到的，</font> 例如：</p>
 <p>$15$,原码:$00001111\space$补码:$00001111$</p>
 <p>$-15$,原码:$10001111\space$补码:$11110001$</p>
 <p>那么对于负数的位运算而言，它们的操作都是建立在补码上的，得到的运算结果是补码，最后将补码结果转化成一个普通的十进制数结果。

@@ -208,5 +208,5 @@ LFS 会采取一些快捷方式来提高确定有效性过程的效率。例如�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/34.%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/  
+> URL: https://hezephyr.github.io/posts/34.%E6%97%A5%E5%BF%97%E7%BB%93%E6%9E%84%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/  
 

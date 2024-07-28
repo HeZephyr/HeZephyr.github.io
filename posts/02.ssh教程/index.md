@@ -136,5 +136,5 @@ scp myServer1:main.cpp main.cpp
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/02.ssh%E6%95%99%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/02.ssh%E6%95%99%E7%A8%8B/  
 

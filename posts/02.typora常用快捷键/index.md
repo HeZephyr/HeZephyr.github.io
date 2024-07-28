@@ -87,5 +87,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/02.typora%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE/  
+> URL: https://hezephyr.github.io/posts/02.typora%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE/  
 

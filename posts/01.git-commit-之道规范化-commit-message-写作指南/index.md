@@ -343,5 +343,5 @@ Footer 部分只用于两种情况。
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.git-commit-%E4%B9%8B%E9%81%93%E8%A7%84%E8%8C%83%E5%8C%96-commit-message-%E5%86%99%E4%BD%9C%E6%8C%87%E5%8D%97/  
+> URL: https://hezephyr.github.io/posts/01.git-commit-%E4%B9%8B%E9%81%93%E8%A7%84%E8%8C%83%E5%8C%96-commit-message-%E5%86%99%E4%BD%9C%E6%8C%87%E5%8D%97/  
 

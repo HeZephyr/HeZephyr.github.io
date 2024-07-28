@@ -189,5 +189,5 @@ gcc -o array array.c -Wall -O
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/13.%E9%A1%B5/  
+> URL: https://hezephyr.github.io/posts/13.%E9%A1%B5/  
 

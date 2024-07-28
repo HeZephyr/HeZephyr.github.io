@@ -184,5 +184,5 @@ Secondary服务器将数据写入本地磁盘后，向Primary发送确认消息�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/04.gfs/  
+> URL: https://hezephyr.github.io/posts/04.gfs/  
 

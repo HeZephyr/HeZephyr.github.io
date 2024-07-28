@@ -1,4 +1,4 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>树状数组 - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84/</link><description>树状数组 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 27 Apr 2021 19:58:24 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84/" rel="self" type="application/rss+xml"/><item><title>树状数组详解(一维+二维+差分+前缀和+公式优化)</title><link>https://lruihao.cn/posts/02.%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84%E8%AF%A6%E8%A7%A3/</link><pubDate>Tue, 27 Apr 2021 19:58:24 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/02.%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84%E8%AF%A6%E8%A7%A3/</guid><description><![CDATA[<h2 id="问题引入" class="heading-element"><span>1 问题引入</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>树状数组 - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84/</link><description>树状数组 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 27 Apr 2021 19:58:24 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84/" rel="self" type="application/rss+xml"/><item><title>树状数组详解(一维+二维+差分+前缀和+公式优化)</title><link>https://hezephyr.github.io/posts/02.%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84%E8%AF%A6%E8%A7%A3/</link><pubDate>Tue, 27 Apr 2021 19:58:24 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/02.%E6%A0%91%E7%8A%B6%E6%95%B0%E7%BB%84%E8%AF%A6%E8%A7%A3/</guid><description><![CDATA[<h2 id="问题引入" class="heading-element"><span>1 问题引入</span>
   <a href="#%e9%97%ae%e9%a2%98%e5%bc%95%e5%85%a5" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -8,7 +8,7 @@
 <li>求出某区间$[l,r]$每一个数的和</li>
 </ul>
 <p>数列长度为$n( 1\leq n \leq 10^5)$，操作总数为$p(1\leq p \leq 10^5)$，时间限制为$1s$，如果是你你该如何处理？</p>
-<p>我们先来看看暴力能否出奇迹，==对于单点修改操作，我们确实能在$O(1)$的时间完成，而对于区间求和操作，那么我们累加求和的时间复杂度为$O(r-l+1)$，在最坏的情况下，高达$O(n)$== ，这样算下来，处理这个问题需要$O(np)$的时间复杂度，$1s$是处理不完的。</p>
+<p>我们先来看看暴力能否出奇迹，<font color="red">对于单点修改操作，我们确实能在$O(1)$的时间完成，而对于区间求和操作，那么我们累加求和的时间复杂度为$O(r-l+1)$，在最坏的情况下，高达$O(n)$</font> ，这样算下来，处理这个问题需要$O(np)$的时间复杂度，$1s$是处理不完的。</p>
 <p>那么，区间求和前缀和又是否可以呢？我们发现，如果用前缀和处理实际上就是让区间求和变为$O(1)$，而让单点修改就变为$O(n)$了，这样并没有任何变化。所以暴力做法肯定是不行的。</p>
 <p>学过线段树的同学一定知道怎么写这道题，没学过的可以去学习下，这里指路一篇$blog$:<a href="https://blog.csdn.net/hzf0701/article/details/107859659?ops_request_misc=%257B%2522request%255Fid%2522%253A%2522161943932916780271515336%2522%252C%2522scm%2522%253A%252220140713.130102334.pc%255Fblog.%2522%257D&amp;request_id=161943932916780271515336&amp;biz_id=0&amp;utm_medium=distribute.pc_search_result.none-task-blog-2~blog~first_rank_v2~rank_v29-2-107859659.nonecase&amp;utm_term=%E7%BA%BF%E6%AE%B5%E6%A0%91"target="_blank" rel="external nofollow noopener noreferrer">线段树入门<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
 <p>但是，这道题用线段树未免也太大材小用了,况且线段树的代码量也十分多，所以树状数组就出现了，代码量少，简单易实现。我们继续往下看。</p>
@@ -29,7 +29,7 @@ $C5 = A5$
 $C6 = A5+A6$
 $C7 = A7$
 $C8 = A1+A2+A3+A4+A5+A6+A7+A8$</p>
-<p>我们不难发现：$C[i] = A[i - 2^k+1] + A[i - 2^k+2] + &hellip; + A[i];$， //$k$为$i$的二进制中从最低位到高位连续零的长度，==换句话说，$C[i]$管辖了包括$A[i]$自己的前$2^k$个元素== ，这样的好处是什么呢？我们发现，如果对某个元素更改了，那么我们只需要更改管辖了这个元素的$C$，那么如果对某个区间$[l,r]$求和，那么我们相当于求$SUM[r]-SUM[l-1]$，而求$SUM[i]$也特别简单，我们只需要求$i$这个点管辖的区间和$C[i]$并统计，再往前跳到未被$i$管辖的区间累加$C$即可，直到到达数组头部。也就是$SUM[i] = C[i] + C[i-2^{k_1 }]+ C[(i - 2^k_1) - 2^k_2] + &hellip;..；$。</p>
+<p>我们不难发现：$C[i] = A[i - 2^k+1] + A[i - 2^k+2] + &hellip; + A[i];$， //$k$为$i$的二进制中从最低位到高位连续零的长度，<font color="red">换句话说，$C[i]$管辖了包括$A[i]$自己的前$2^k$个元素</font> ，这样的好处是什么呢？我们发现，如果对某个元素更改了，那么我们只需要更改管辖了这个元素的$C$，那么如果对某个区间$[l,r]$求和，那么我们相当于求$SUM[r]-SUM[l-1]$，而求$SUM[i]$也特别简单，我们只需要求$i$这个点管辖的区间和$C[i]$并统计，再往前跳到未被$i$管辖的区间累加$C$即可，直到到达数组头部。也就是$SUM[i] = C[i] + C[i-2^{k_1 }]+ C[(i - 2^k_1) - 2^k_2] + &hellip;..；$。</p>
 <ul>
 <li><strong>lowbit函数求解$2^k$</strong></li>
 </ul>
@@ -109,7 +109,7 @@ $C8 = A1+A2+A3+A4+A5+A6+A7+A8$</p>
 </h2><ul>
 <li>
 <p><strong>原理</strong></p>
-<p>我们首先要知道差分数组是什么，和前缀和数组其实离不开关系，$c[i]=SUM[i]-SUM[i-1]$，其中原数组相当于可以看成是存储了相邻两个前缀和的差值，那么映射到差分数组（因为原数组可以看成是存储了差分数组的前缀和）我们可以看成就是存储了相邻两个数之间的差值，即$d[i]=c[i]-c[i-1]$，而$d[1]=c[1]-c[0]=c[1]$，所以我们利用这个关系可以推导出:$a[i]=d[1]+d[2]+&hellip;+d[i]$，那么我们就是将单点查询转化为区间求和了，那么如果对于区间修改呢？对于差分数组，假设修改区间$[l,r]$，让这个区间每个元素$+x$，我们只需要更改$d[l]=d[l]+x$，$d[r+1]=d[r+1]-x$，这样我们保证只会影响到$[l,r]$这个区间的元素。==故我们通过差分把这个区间修改、单点查询的问题转化为单点修改区间查询的问题，那么我们存储的树状数组实际和是哪个存储是差分数组的树状数组。==</p>
+<p>我们首先要知道差分数组是什么，和前缀和数组其实离不开关系，$c[i]=SUM[i]-SUM[i-1]$，其中原数组相当于可以看成是存储了相邻两个前缀和的差值，那么映射到差分数组（因为原数组可以看成是存储了差分数组的前缀和）我们可以看成就是存储了相邻两个数之间的差值，即$d[i]=c[i]-c[i-1]$，而$d[1]=c[1]-c[0]=c[1]$，所以我们利用这个关系可以推导出:$a[i]=d[1]+d[2]+&hellip;+d[i]$，那么我们就是将单点查询转化为区间求和了，那么如果对于区间修改呢？对于差分数组，假设修改区间$[l,r]$，让这个区间每个元素$+x$，我们只需要更改$d[l]=d[l]+x$，$d[r+1]=d[r+1]-x$，这样我们保证只会影响到$[l,r]$这个区间的元素。<font color="red">故我们通过差分把这个区间修改、单点查询的问题转化为单点修改区间查询的问题，那么我们存储的树状数组实际和是哪个存储是差分数组的树状数组。</font></p>
 </li>
 </ul>
 <h2 id="差分树状数组公式优化区间修改区间查询" class="heading-element"><span>4 差分树状数组+公式优化（区间修改，区间查询）</span>
@@ -208,7 +208,7 @@ $$a[1]+a[2]+&hellip;+a[i]=d[1]<em>i+d[2]</em>(i-1)+&hellip;+d[i]<em>1=d[1]</em>(
 </h2><ul>
 <li>
 <p><strong>二维差分树状数组推导</strong></p>
-<p>处理这个问题，我们首先要知道二维差分数组怎么表示，那么还是和二维前缀和数组联系起来，即$c[i,j]=SUM[i,j]-SUM[i-1,j]-SUM[i,j-1]+SUM[i-1,j-1]$，原数组实际上就可以看做是存储了$(i,j)$的前缀和与$(i-1,j)$和$(i,j-1)$的前缀和的差值。 ==那么映射到二维差分数组即是$d[i,j]=c[i,j]-c[i-1,j]-c[i,j-1]+c[i-1,j-1]$，其中$d[1,1]=c[1,1]$，那么$c[n][m]=\sum_{i=1}^{n}\sum_{j=1}^{m}d[i][j]$，所以对于区间修改，我们是给$(x_1,y_1),(x_2,y_2)$之间形成的矩阵加上$x$，那么实际上我们只需要变动四个点，$d[x_1][x_2]+=x,d[x_1][y_2]-=x,d[x_2][y_1]-=x,d[x_2][y_2]+=x$== ，那么这样就和一维差分数组一样了，区间修改单点查询问题我们利用二维差分数组就可以转化为单点修改区间查询了，我们的树状数组则是建立二维差分树状数组。那么这样这三个函数同理也很简单的就可以写出来了。</p>
+<p>处理这个问题，我们首先要知道二维差分数组怎么表示，那么还是和二维前缀和数组联系起来，即$c[i,j]=SUM[i,j]-SUM[i-1,j]-SUM[i,j-1]+SUM[i-1,j-1]$，原数组实际上就可以看做是存储了$(i,j)$的前缀和与$(i-1,j)$和$(i,j-1)$的前缀和的差值。 <font color="red">那么映射到二维差分数组即是$d[i,j]=c[i,j]-c[i-1,j]-c[i,j-1]+c[i-1,j-1]$，其中$d[1,1]=c[1,1]$，那么$c[n][m]=\sum_{i=1}^{n}\sum_{j=1}^{m}d[i][j]$，所以对于区间修改，我们是给$(x_1,y_1),(x_2,y_2)$之间形成的矩阵加上$x$，那么实际上我们只需要变动四个点，$d[x_1][x_2]+=x,d[x_1][y_2]-=x,d[x_2][y_1]-=x,d[x_2][y_2]+=x$</font> ，那么这样就和一维差分数组一样了，区间修改单点查询问题我们利用二维差分数组就可以转化为单点修改区间查询了，我们的树状数组则是建立二维差分树状数组。那么这样这三个函数同理也很简单的就可以写出来了。</p>
 </li>
 </ul>
 <h2 id="二维差分树状数组公式推导区间修改区间查询" class="heading-element"><span>7 二维差分树状数组+公式推导（区间修改，区间查询）</span>

@@ -482,5 +482,5 @@ Go的RPC库是“至多一次”策略的简单实现：
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/02.%E4%BD%BF%E7%94%A8go%E8%BF%9B%E8%A1%8C%E7%BA%BF%E7%A8%8B%E5%92%8Crpc%E7%BC%96%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/02.%E4%BD%BF%E7%94%A8go%E8%BF%9B%E8%A1%8C%E7%BA%BF%E7%A8%8B%E5%92%8Crpc%E7%BC%96%E7%A8%8B/  
 

@@ -120,5 +120,5 @@ int main() {
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/05.linux-execve%E5%87%BD%E6%95%B0%E8%AF%A6%E8%A7%A3/  
+> URL: https://hezephyr.github.io/posts/05.linux-execve%E5%87%BD%E6%95%B0%E8%AF%A6%E8%A7%A3/  
 

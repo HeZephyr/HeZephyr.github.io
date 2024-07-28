@@ -238,5 +238,5 @@ CFS 通过在作业唤醒时更改其 `vruntime`来处理这种情况。具体�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/06.%E6%AF%94%E4%BE%8B%E4%BB%BD%E9%A2%9D%E8%B0%83%E5%BA%A6/  
+> URL: https://hezephyr.github.io/posts/06.%E6%AF%94%E4%BE%8B%E4%BB%BD%E9%A2%9D%E8%B0%83%E5%BA%A6/  
 

@@ -209,5 +209,5 @@ MIPS TLB 通常有 32 或 64 个这样的条目，其中大部分由用户进程
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/14.%E5%BF%AB%E8%A1%A8/  
+> URL: https://hezephyr.github.io/posts/14.%E5%BF%AB%E8%A1%A8/  
 

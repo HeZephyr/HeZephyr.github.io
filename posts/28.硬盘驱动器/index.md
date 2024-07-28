@@ -175,5 +175,5 @@ SCAN 有许多变体，其作用都差不多。例如，Coffman 等人提出了 
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/28.%E7%A1%AC%E7%9B%98%E9%A9%B1%E5%8A%A8%E5%99%A8/  
+> URL: https://hezephyr.github.io/posts/28.%E7%A1%AC%E7%9B%98%E9%A9%B1%E5%8A%A8%E5%99%A8/  
 

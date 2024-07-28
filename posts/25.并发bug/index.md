@@ -338,5 +338,5 @@ Dijkstra 的银行家算法就是这种方法的一个著名例子。遗憾的�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/25.%E5%B9%B6%E5%8F%91bug/  
+> URL: https://hezephyr.github.io/posts/25.%E5%B9%B6%E5%8F%91bug/  
 

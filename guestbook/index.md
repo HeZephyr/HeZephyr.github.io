@@ -22,5 +22,5 @@
 ---
 
 > 作者:   
-> URL: https://lruihao.cn/guestbook/  
+> URL: https://hezephyr.github.io/guestbook/  
 

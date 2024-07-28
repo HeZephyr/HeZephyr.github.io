@@ -375,5 +375,5 @@ int Hash_Remove(hash_t *H, int key, int thread_id) {
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/  
+> URL: https://hezephyr.github.io/posts/22.%E9%94%81%E5%AE%9A%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/  
 

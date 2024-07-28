@@ -48,5 +48,5 @@
 ---
 
 > 作者:   
-> URL: https://lruihao.cn/friends/  
+> URL: https://hezephyr.github.io/friends/  
 

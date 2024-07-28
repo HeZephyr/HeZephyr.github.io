@@ -218,5 +218,5 @@ if (Success == True) { // TLB Hit
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/15.%E9%AB%98%E7%BA%A7%E9%A1%B5%E8%A1%A8/  
+> URL: https://hezephyr.github.io/posts/15.%E9%AB%98%E7%BA%A7%E9%A1%B5%E8%A1%A8/  
 

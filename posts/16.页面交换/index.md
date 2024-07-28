@@ -119,5 +119,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/16.%E9%A1%B5%E9%9D%A2%E4%BA%A4%E6%8D%A2/  
+> URL: https://hezephyr.github.io/posts/16.%E9%A1%B5%E9%9D%A2%E4%BA%A4%E6%8D%A2/  
 

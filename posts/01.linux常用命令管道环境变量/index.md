@@ -181,5 +181,5 @@ export # 显示当前导出成用户变量的shell变量。
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.linux%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E7%AE%A1%E9%81%93%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/  
+> URL: https://hezephyr.github.io/posts/01.linux%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4%E7%AE%A1%E9%81%93%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F/  
 

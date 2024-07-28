@@ -345,5 +345,5 @@ services:
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.wireguard%E7%BB%84%E7%BD%91%E6%95%99%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/01.wireguard%E7%BB%84%E7%BD%91%E6%95%99%E7%A8%8B/  
 

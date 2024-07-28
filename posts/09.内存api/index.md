@@ -309,5 +309,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/09.%E5%86%85%E5%AD%98api/  
+> URL: https://hezephyr.github.io/posts/09.%E5%86%85%E5%AD%98api/  
 

@@ -120,5 +120,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.%E8%A7%A3%E5%86%B3vscode%E4%B8%AD%E4%B8%8D%E8%83%BD%E4%BD%BF%E7%94%A8%E4%B8%87%E8%83%BD%E5%A4%B4%E6%96%87%E4%BB%B6%E7%9A%84%E9%97%AE%E9%A2%98/  
+> URL: https://hezephyr.github.io/posts/01.%E8%A7%A3%E5%86%B3vscode%E4%B8%AD%E4%B8%8D%E8%83%BD%E4%BD%BF%E7%94%A8%E4%B8%87%E8%83%BD%E5%A4%B4%E6%96%87%E4%BB%B6%E7%9A%84%E9%97%AE%E9%A2%98/  
 

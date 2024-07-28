@@ -17,5 +17,5 @@ The Algorithms提供 GitHub 最大的开源算法库。
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0%E6%A8%A1%E7%89%88/  
+> URL: https://hezephyr.github.io/posts/01.%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0%E6%A8%A1%E7%89%88/  
 

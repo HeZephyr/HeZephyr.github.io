@@ -1,4 +1,4 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>线段树 - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/%E7%BA%BF%E6%AE%B5%E6%A0%91/</link><description>线段树 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 07 Aug 2020 12:17:56 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/%E7%BA%BF%E6%AE%B5%E6%A0%91/" rel="self" type="application/rss+xml"/><item><title>线段树入门</title><link>https://lruihao.cn/posts/01.%E7%BA%BF%E6%AE%B5%E6%A0%91%E5%85%A5%E9%97%A8/</link><pubDate>Fri, 07 Aug 2020 12:17:56 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/01.%E7%BA%BF%E6%AE%B5%E6%A0%91%E5%85%A5%E9%97%A8/</guid><description><![CDATA[<p>前言：理解线段树着实花了我很多时间，主要之前一直有个误区，<strong>就是对线段树中存储的信息，我认为只能是区间和，可万万没想到呀，它还可以是别的东西：区间最小值、区间最大值等等呀</strong>，我表示&#x1f464;(已黑化)，好了，言归正传，博主是完全理解了线段树之后才有勇气写这篇文章的，所以我是根据一个完全初学者到理解线段树的过程来写下这篇文章的，不会像其他文章一下难以理解，当然，本文也只是我学习整理的，如果有错误的话，还请评论区留言或私信我，共同进步。</p>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>线段树 - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/%E7%BA%BF%E6%AE%B5%E6%A0%91/</link><description>线段树 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 07 Aug 2020 12:17:56 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/%E7%BA%BF%E6%AE%B5%E6%A0%91/" rel="self" type="application/rss+xml"/><item><title>线段树入门</title><link>https://hezephyr.github.io/posts/01.%E7%BA%BF%E6%AE%B5%E6%A0%91%E5%85%A5%E9%97%A8/</link><pubDate>Fri, 07 Aug 2020 12:17:56 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.%E7%BA%BF%E6%AE%B5%E6%A0%91%E5%85%A5%E9%97%A8/</guid><description><![CDATA[<p>前言：理解线段树着实花了我很多时间，主要之前一直有个误区，<strong>就是对线段树中存储的信息，我认为只能是区间和，可万万没想到呀，它还可以是别的东西：区间最小值、区间最大值等等呀</strong>，我表示&#x1f464;(已黑化)，好了，言归正传，博主是完全理解了线段树之后才有勇气写这篇文章的，所以我是根据一个完全初学者到理解线段树的过程来写下这篇文章的，不会像其他文章一下难以理解，当然，本文也只是我学习整理的，如果有错误的话，还请评论区留言或私信我，共同进步。</p>
 <p>线段树讲解共有两篇，这一篇为入门，另一篇为进阶。</p>
 <h2 id="什么是线段树" class="heading-element"><span>1 什么是线段树？</span>
   <a href="#%e4%bb%80%e4%b9%88%e6%98%af%e7%ba%bf%e6%ae%b5%e6%a0%91" class="heading-mark">
@@ -7,7 +7,7 @@
 </h2><ul>
 <li>
 <p>线段树的基本概念</p>
-<p>在深入学习线段树之前，我们首先要了解线段树是什么？线段树本质也是一颗二叉搜索树，也被认为是区间树（即每个结点都有一段区间，我们也认为是线段）。那有小伙伴可能就要问了，什么是二叉搜索树？二叉搜索树顾名思义：==前提是一颗二叉树，它的每个结点度都小于等于2，即每个结点最多有两个子树。其次就是搜索，这是关键，我们这个线段树在其中都有一个区间，那么搜索即是可以在这个区间上搜索你想要的值，这就是搜索==，其中，每个结点存储的信息是由你来定的，如果你想求区间和，那么就可以存储区间和，如果你想求区间最大值，那么你可以存储区间最大值，只要可行，你都可以进行你想要的操作。</p>
+<p>在深入学习线段树之前，我们首先要了解线段树是什么？线段树本质也是一颗二叉搜索树，也被认为是区间树（即每个结点都有一段区间，我们也认为是线段）。那有小伙伴可能就要问了，什么是二叉搜索树？二叉搜索树顾名思义：<font color="red">前提是一颗二叉树，它的每个结点度都小于等于2，即每个结点最多有两个子树。其次就是搜索，这是关键，我们这个线段树在其中都有一个区间，那么搜索即是可以在这个区间上搜索你想要的值，这就是搜索</font>，其中，每个结点存储的信息是由你来定的，如果你想求区间和，那么就可以存储区间和，如果你想求区间最大值，那么你可以存储区间最大值，只要可行，你都可以进行你想要的操作。</p>
 <hr>
 </li>
 <li>
@@ -23,7 +23,7 @@
 <p><strong>我们进行乘除法运算的时候要使用位运算（&laquo;  &raquo;一定要仔细理解这两个运算符），而避免使用基本的数学运算</strong>，因为我们会频繁使用结点坐标更新，用位运算会更快一点，而且还可以防WR。</p>
 </li>
 <li>
-<p>在表示坐标的时候，若一个结点下标为i，那么它的父节点就是i&raquo;1。如果这个结点是这个父节点的左孩子，那么右孩子下标就是i+1。如果这个结点是父节点的右孩子，那么左孩子的下标就是i-1。那个这个结点的左孩子下标就是i&laquo;1，右孩子下标就是(i&laquo;1)=1（==这里一定要使用括号改变运算符优先级，因为位运算的优先级属实低。==）</p>
+<p>在表示坐标的时候，若一个结点下标为i，那么它的父节点就是i&raquo;1。如果这个结点是这个父节点的左孩子，那么右孩子下标就是i+1。如果这个结点是父节点的右孩子，那么左孩子的下标就是i-1。那个这个结点的左孩子下标就是i&laquo;1，右孩子下标就是(i&laquo;1)=1（<font color="red">这里一定要使用括号改变运算符优先级，因为位运算的优先级属实低。</font>）</p>
 </li>
 <li>
 <p><strong>要根据你想解决的问题来设置结点的数据信息。区间求和和区间最值所进行的是不太一样的，所更改的信息也都要注意，但都是一个本质，就是从下往上更新，到达根节点就退出</strong>。</p>
@@ -35,17 +35,17 @@
 </li>
 <li>
 <p>线段树能解决的问题</p>
-<p>线段树的适用范围很广，可以在线维护修改以及查询区间上的最值，求和。==使用一维线段树可以快速的查找某一个节点在若干条线段中出现的次数，时间复杂度为O(logN)==。线段树更可以扩充到二维线段树（矩阵树）和三维线段树（空间树），这里我们不作讲解。（其实博主也暂时不会&#x1f604;）</p>
+<p>线段树的适用范围很广，可以在线维护修改以及查询区间上的最值，求和。<font color="red">使用一维线段树可以快速的查找某一个节点在若干条线段中出现的次数，时间复杂度为O(logN)</font>。线段树更可以扩充到二维线段树（矩阵树）和三维线段树（空间树），这里我们不作讲解。（其实博主也暂时不会&#x1f604;）</p>
 </li>
 </ul>
-<p>你问我线段树算什么东西？今天我就告诉你，==单点、区间朴素查询处理做的我线段树能做！单点、区间朴素查询没有的速度我有！这就是线段树==。（战术后仰）</p>
+<p>你问我线段树算什么东西？今天我就告诉你，<font color="red">单点、区间朴素查询处理做的我线段树能做！单点、区间朴素查询没有的速度我有！这就是线段树</font>。（战术后仰）</p>
 <h2 id="线段树的基本内容" class="heading-element"><span>2 线段树的基本内容</span>
   <a href="#%e7%ba%bf%e6%ae%b5%e6%a0%91%e7%9a%84%e5%9f%ba%e6%9c%ac%e5%86%85%e5%ae%b9" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>我们先看一颗线段树：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/20180418142000345.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/20180418142000345.png?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/20180418142000345.png" alt="img" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/20180418142000345.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/20180418142000345.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/20180418142000345.png?size=large 2x" data-title="img" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<p>不然发现线段树的特点，<strong>每个结点都有一个值和区间</strong>，每个结点的左右孩子都存储了父结点的一半的区间，且它们的序号是按照层次顺序编号的。==在日常处理中，我们通常是使用结构体数组来作为线段树的存储结构，因为这样我们就可以利用下标的关系来找到父节点和孩子结点了==。例如我们已知一个结点的下标为i，那么：</p>
+<p>不然发现线段树的特点，<strong>每个结点都有一个值和区间</strong>，每个结点的左右孩子都存储了父结点的一半的区间，且它们的序号是按照层次顺序编号的。<font color="red">在日常处理中，我们通常是使用结构体数组来作为线段树的存储结构，因为这样我们就可以利用下标的关系来找到父节点和孩子结点了</font>。例如我们已知一个结点的下标为i，那么：</p>
 <ul>
 <li>
 <p>对于父结点：i&raquo;1（这个进行的操作其实就是i/2，前面提到，这样会快很多）</p>
@@ -103,7 +103,7 @@
   <a href="#%e7%ba%bf%e6%ae%b5%e6%a0%91%e7%9a%84%e5%9f%ba%e6%9c%ac%e6%93%8d%e4%bd%9c" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><p>==我们这里以结点的值value代表区间和来处理==。</p>
+</h2><p><font color="red">我们这里以结点的值value代表区间和来处理</font>。</p>
 <h3 id="点更新" class="heading-element"><span>3.1 点更新</span>
   <a href="#%e7%82%b9%e6%9b%b4%e6%96%b0" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>

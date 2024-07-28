@@ -291,5 +291,5 @@ RAID-5 的大部分分析与 RAID-4 相同。例如，两个级别的有效容�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/29.%E5%BB%89%E4%BB%B7%E7%A3%81%E7%9B%98%E5%86%97%E4%BD%99%E9%98%B5%E5%88%97/  
+> URL: https://hezephyr.github.io/posts/29.%E5%BB%89%E4%BB%B7%E7%A3%81%E7%9B%98%E5%86%97%E4%BD%99%E9%98%B5%E5%88%97/  
 

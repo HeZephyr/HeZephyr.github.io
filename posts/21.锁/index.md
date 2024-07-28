@@ -571,5 +571,5 @@ void unlock() {
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/21.%E9%94%81/  
+> URL: https://hezephyr.github.io/posts/21.%E9%94%81/  
 

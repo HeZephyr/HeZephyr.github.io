@@ -312,5 +312,5 @@ Exiting concurrent thread.
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.c-11%E5%A4%9A%E7%BA%BF%E7%A8%8B-stdthread%E8%AF%A6%E8%A7%A3/  
+> URL: https://hezephyr.github.io/posts/01.c-11%E5%A4%9A%E7%BA%BF%E7%A8%8B-stdthread%E8%AF%A6%E8%A7%A3/  
 

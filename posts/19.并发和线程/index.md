@@ -216,5 +216,5 @@ mov %eax, 0x8049a1c
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/19.%E5%B9%B6%E5%8F%91%E5%92%8C%E7%BA%BF%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/19.%E5%B9%B6%E5%8F%91%E5%92%8C%E7%BA%BF%E7%A8%8B/  
 

@@ -305,5 +305,5 @@ ready = 1;
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/20.%E7%BA%BF%E7%A8%8Bapi/  
+> URL: https://hezephyr.github.io/posts/20.%E7%BA%BF%E7%A8%8Bapi/  
 

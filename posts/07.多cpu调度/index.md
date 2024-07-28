@@ -189,5 +189,5 @@ SQMS 的第二个主要问题是缓存亲和性。例如，假设我们有五个
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/07.%E5%A4%9Acpu%E8%B0%83%E5%BA%A6/  
+> URL: https://hezephyr.github.io/posts/07.%E5%A4%9Acpu%E8%B0%83%E5%BA%A6/  
 

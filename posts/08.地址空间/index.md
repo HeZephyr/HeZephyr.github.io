@@ -127,5 +127,5 @@ VM的目标如下：
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/08.%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/  
+> URL: https://hezephyr.github.io/posts/08.%E5%9C%B0%E5%9D%80%E7%A9%BA%E9%97%B4/  
 

@@ -241,5 +241,5 @@ inode 设计中最重要的决策之一是它如何引用数据块的位置。�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/31.%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%AE%9E%E7%8E%B0/  
+> URL: https://hezephyr.github.io/posts/31.%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%AE%9E%E7%8E%B0/  
 

@@ -153,5 +153,5 @@ asm 128: movl 0x0(%ebx), %eax
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/10.%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2/  
+> URL: https://hezephyr.github.io/posts/10.%E5%9C%B0%E5%9D%80%E8%BD%AC%E6%8D%A2/  
 

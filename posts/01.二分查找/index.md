@@ -180,5 +180,5 @@ ForwardIterator upper_bound (ForwardIterator first, ForwardIterator last, const 
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE/  
+> URL: https://hezephyr.github.io/posts/01.%E4%BA%8C%E5%88%86%E6%9F%A5%E6%89%BE/  
 

@@ -81,5 +81,5 @@ const site = new Blog(&#39;菠菜眾長&#39;, &#39;Lruihao&#39;, &#39;https://lr
 ---
 
 > 作者:   
-> URL: https://lruihao.cn/about/  
+> URL: https://hezephyr.github.io/about/  
 

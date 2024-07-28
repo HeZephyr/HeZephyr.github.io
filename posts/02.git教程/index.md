@@ -278,5 +278,5 @@ git commit -m  &#34;delete file&#34;
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/02.git%E6%95%99%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/02.git%E6%95%99%E7%A8%8B/  
 

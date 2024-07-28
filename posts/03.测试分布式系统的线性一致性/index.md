@@ -34,7 +34,7 @@
 
 对于一个基于顺序规范的并发操作来说，我们会用一个一致性模型，也就是线性一致性来说明它的正确性。在一个线性一致性的系统里面，任何操作都可能在调用或者返回之间原子和瞬间执行。除了线性一致性，还有一些其他一致性的模型，但多数分布式系统都提供了线性一致性的操作：线性一致性是一个强的一致性模型，并且基于线性一致性系统，很容易去构建其他的系统。考虑到如下对 key-value store 操作的历史例子：
 
-![](https://mmbiz.qpic.cn/mmbiz_png/UpAsF3LicVxqJIFU8KB3h9L3Sh83lzkWgZS6VWRWQOZiaGtUFFeSFJJnxyulEbhSjacvxcSWZicEjS3cGkNH8tGsw/640?wx_fmt=png)
+![img](https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/640.jpeg)
 
 这个历史是一个线性的。在下面图片的蓝色地方，我们现实的标明了线性一致的点。这个顺序历史 `Put(&#34;x&#34;, &#34;0&#34;)`, `Get(&#34;x&#34;) -&gt; &#34;0&#34;`, `Put(&#34;x&#34;, &#34;1&#34;)`, `Get(&#34;x&#34;) -&gt; &#34;1&#34;`，对于顺序规范来说就是一个正确的历史。
 
@@ -104,5 +104,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/03.%E6%B5%8B%E8%AF%95%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BA%BF%E6%80%A7%E4%B8%80%E8%87%B4%E6%80%A7/  
+> URL: https://hezephyr.github.io/posts/03.%E6%B5%8B%E8%AF%95%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BA%BF%E6%80%A7%E4%B8%80%E8%87%B4%E6%80%A7/  
 

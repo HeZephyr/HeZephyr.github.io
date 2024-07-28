@@ -182,5 +182,5 @@ Fletcher校验和是一种略微复杂的算法，以John G. Fletcher的名字�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/36.%E6%95%B0%E6%8D%AE%E5%AE%8C%E6%95%B4%E6%80%A7%E5%92%8C%E4%BF%9D%E6%8A%A4/  
+> URL: https://hezephyr.github.io/posts/36.%E6%95%B0%E6%8D%AE%E5%AE%8C%E6%95%B4%E6%80%A7%E5%92%8C%E4%BF%9D%E6%8A%A4/  
 

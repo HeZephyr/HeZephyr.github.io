@@ -18,5 +18,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/03.%E8%A7%A3%E5%86%B3linux%E7%B3%BB%E7%BB%9Fcentos7%E7%9A%84%E5%BC%80%E6%9C%BA%E6%8A%A5%E9%94%99welcome-to-emergency-mode/  
+> URL: https://hezephyr.github.io/posts/03.%E8%A7%A3%E5%86%B3linux%E7%B3%BB%E7%BB%9Fcentos7%E7%9A%84%E5%BC%80%E6%9C%BA%E6%8A%A5%E9%94%99welcome-to-emergency-mode/  
 

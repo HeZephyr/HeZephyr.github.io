@@ -51,5 +51,5 @@ c:
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/02.%E4%BF%AE%E6%94%B9dosbox%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%B0%83%E6%95%B4%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E6%8C%82%E8%BD%BD%E7%A8%8B%E5%BA%8F%E8%87%AA%E5%8A%A8%E8%BF%90%E8%A1%8C/  
+> URL: https://hezephyr.github.io/posts/02.%E4%BF%AE%E6%94%B9dosbox%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E8%B0%83%E6%95%B4%E7%AA%97%E5%8F%A3%E5%A4%A7%E5%B0%8F%E6%8C%82%E8%BD%BD%E7%A8%8B%E5%BA%8F%E8%87%AA%E5%8A%A8%E8%BF%90%E8%A1%8C/  
 

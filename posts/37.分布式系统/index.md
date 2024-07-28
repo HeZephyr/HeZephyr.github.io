@@ -253,5 +253,5 @@ RPC 包通常通过在其消息格式中提供明确定义的字节顺序来处�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/37.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/  
+> URL: https://hezephyr.github.io/posts/37.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/  
 

@@ -1289,5 +1289,5 @@ awk &#39;{
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/07.shell%E5%AE%9E%E6%88%98/  
+> URL: https://hezephyr.github.io/posts/07.shell%E5%AE%9E%E6%88%98/  
 

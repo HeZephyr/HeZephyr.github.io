@@ -1732,5 +1732,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/03.go%E4%BC%98%E7%A7%80%E8%B5%84%E6%BA%90/  
+> URL: https://hezephyr.github.io/posts/03.go%E4%BC%98%E7%A7%80%E8%B5%84%E6%BA%90/  
 

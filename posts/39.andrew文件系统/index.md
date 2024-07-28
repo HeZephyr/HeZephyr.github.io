@@ -144,5 +144,5 @@ AFS 还包括用于灵活的用户管理访问控制的设施。因此，在使�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/39.andrew%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/  
+> URL: https://hezephyr.github.io/posts/39.andrew%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/  
 

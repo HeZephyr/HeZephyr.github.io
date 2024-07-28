@@ -229,5 +229,5 @@ source ~/.tmux.conf
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.tmux%E6%95%99%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/01.tmux%E6%95%99%E7%A8%8B/  
 

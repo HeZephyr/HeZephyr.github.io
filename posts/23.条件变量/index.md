@@ -483,5 +483,5 @@ Lampson 和 Redell 将这种条件称为**覆盖条件**，因为它涵盖了（
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/  
+> URL: https://hezephyr.github.io/posts/23.%E6%9D%A1%E4%BB%B6%E5%8F%98%E9%87%8F/  
 

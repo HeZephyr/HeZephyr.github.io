@@ -320,5 +320,5 @@ FTL 遇到的最后一种情况称为**完全合并**，需要更多的工作。
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/35.%E5%9F%BA%E4%BA%8E%E9%97%AA%E5%AD%98%E7%9A%84ssd/  
+> URL: https://hezephyr.github.io/posts/35.%E5%9F%BA%E4%BA%8E%E9%97%AA%E5%AD%98%E7%9A%84ssd/  
 

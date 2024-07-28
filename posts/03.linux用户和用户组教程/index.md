@@ -565,5 +565,5 @@ done
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/03.linux%E7%94%A8%E6%88%B7%E5%92%8C%E7%94%A8%E6%88%B7%E7%BB%84%E6%95%99%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/03.linux%E7%94%A8%E6%88%B7%E5%92%8C%E7%94%A8%E6%88%B7%E7%BB%84%E6%95%99%E7%A8%8B/  
 

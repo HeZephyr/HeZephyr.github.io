@@ -293,5 +293,5 @@ COW 技术的一个重要优点是它使得保持文件系统的一致性变得�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/33.fsck%E5%92%8C%E6%97%A5%E5%BF%97/  
+> URL: https://hezephyr.github.io/posts/33.fsck%E5%92%8C%E6%97%A5%E5%BF%97/  
 

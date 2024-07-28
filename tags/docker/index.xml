@@ -1,4 +1,4 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Docker - 标签 | ZephyrHe</title><link>https://lruihao.cn/tags/docker/</link><description>Docker - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 13 Feb 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://lruihao.cn/tags/docker/" rel="self" type="application/rss+xml"/><item><title>Docker入门教程</title><link>https://lruihao.cn/posts/01.docker%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/</link><pubDate>Sun, 13 Feb 2022 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://lruihao.cn/posts/01.docker%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/</guid><description><![CDATA[<h2 id="初识docker" class="heading-element"><span>1 初识Docker</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Docker - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/docker/</link><description>Docker - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 13 Feb 2022 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/docker/" rel="self" type="application/rss+xml"/><item><title>Docker入门教程</title><link>https://hezephyr.github.io/posts/01.docker%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/</link><pubDate>Sun, 13 Feb 2022 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.docker%E5%85%A5%E9%97%A8%E6%95%99%E7%A8%8B/</guid><description><![CDATA[<h2 id="初识docker" class="heading-element"><span>1 初识Docker</span>
   <a href="#%e5%88%9d%e8%af%86docker" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -6,7 +6,7 @@
   <a href="#docker%e5%bc%80%e6%ba%90%e9%a1%b9%e7%9b%ae" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h3><p>Docker是基于Go语言实现的云开源项目，诞生于2013年初，用于支持创建和使用 Linux容器。它的主要目标是“Build, Ship and Run Any App, Anywhere”，即通过对应用封装（Packaging）、分发（Deployment）、运行（Runtime）等生命管理，达到应用组件级别的 ==“一次封装、到处运行”== 。这里的应用组件既可以是一个应用，也可以是一套数据库服务，甚至是一个操作系统或编译器。</p>
+</h3><p>Docker是基于Go语言实现的云开源项目，诞生于2013年初，用于支持创建和使用 Linux容器。它的主要目标是“Build, Ship and Run Any App, Anywhere”，即通过对应用封装（Packaging）、分发（Deployment）、运行（Runtime）等生命管理，达到应用组件级别的 <font color="red">“一次封装、到处运行”</font> 。这里的应用组件既可以是一个应用，也可以是一套数据库服务，甚至是一个操作系统或编译器。</p>
 <h3 id="linux容器技术" class="heading-element"><span>1.2 Linux容器技术</span>
   <a href="#linux%e5%ae%b9%e5%99%a8%e6%8a%80%e6%9c%af" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
@@ -20,7 +20,7 @@
   </a>
 </h3><ul>
 <li><strong>Docker容器虚拟化</strong>
-举个简单的应用场景的例子，假设用户试图基于最常用的LAMP（Linux+Apache+MySQL+PHP）组合来运维一个网站。按照最传统的做法，首先需要安装Apache、Mysql和PHP以及它们各自运行所依赖的环境；之后分别对它们进行配置。经过大量操作后，然后还需要进行功能测试，看是否工作正常；如果不正常，则意味着更多的时间代价和不可控的风险。可以想象，如果再加上更多的应用，事情会变得更加难以处理。更为可怕的是，如果需要进行服务器迁移，如从腾讯云迁移到阿里云，往往需要重新部署和调试。==而Docker提供了一种更为聪明的方式，通过容器来打包应用，意味着迁移只需要再服务器上启动需要的容器就可以了，节约大量的宝贵时间，并降低部署过程中出现问题的风险。==</li>
+举个简单的应用场景的例子，假设用户试图基于最常用的LAMP（Linux+Apache+MySQL+PHP）组合来运维一个网站。按照最传统的做法，首先需要安装Apache、Mysql和PHP以及它们各自运行所依赖的环境；之后分别对它们进行配置。经过大量操作后，然后还需要进行功能测试，看是否工作正常；如果不正常，则意味着更多的时间代价和不可控的风险。可以想象，如果再加上更多的应用，事情会变得更加难以处理。更为可怕的是，如果需要进行服务器迁移，如从腾讯云迁移到阿里云，往往需要重新部署和调试。<font color="red">而Docker提供了一种更为聪明的方式，通过容器来打包应用，意味着迁移只需要再服务器上启动需要的容器就可以了，节约大量的宝贵时间，并降低部署过程中出现问题的风险。</font></li>
 <li><strong>Docker在开发和运维的优势</strong>
 Docker可以在任何环境、任意时间让应用正常运行。在开发和运维中有4大优势：更快速的交付和部署；更高效的资源利用；更轻松的迁移和扩展；更简单的更新管理。</li>
 <li><strong>Docker与虚拟机的比较</strong></li>
@@ -71,7 +71,7 @@ Docker可以在任何环境、任意时间让应用正常运行。在开发和�
 Docker镜像（Image）类似于虚拟机镜像，可以理解为一个面向Docker引擎的只读模板，包含了文件系统。例如一个镜像可以只包含一个完整的Ubuntu操作系统环境，可以把它称为一个Ubuntu镜像。镜像也可以安装了Apache应用程序，可以把它称为一个Apache镜像。
 镜像是创建Docker容器的基础。通过版本管理和增量的文件系统，Docker提供了一套十分简单的机制来创建和更新现有的镜像，用户甚至可以从网上下载一个已经做好的应用镜像，并通过简单的命令就可以直接使用。</li>
 <li><strong>容器（Container）</strong>
-Docker容器（Container）类似于一个轻量级的沙箱，Docker利用容器来运行和隔离应用。容器是从镜像创建的应用运行实例，可以将其启动、开始、停止、删除，而这些容器都是相互隔离、互不可见的。==我们实际是可以将容器看作是一个简易版的Linux系统环境（包括root用户权限、进程空间、用户空间和网络空间等），以及运行在其中的应用程序打包而成的应用盒子。==
+Docker容器（Container）类似于一个轻量级的沙箱，Docker利用容器来运行和隔离应用。容器是从镜像创建的应用运行实例，可以将其启动、开始、停止、删除，而这些容器都是相互隔离、互不可见的。<font color="red">我们实际是可以将容器看作是一个简易版的Linux系统环境（包括root用户权限、进程空间、用户空间和网络空间等），以及运行在其中的应用程序打包而成的应用盒子。</font>
 镜像自身是只读的。容器从镜像启动的时候，Docker会在镜像的最上层创建一个可写层，镜像本身将保持不变。如果认为虚拟机是模拟运行的一整套操作系统（提供了运行态环境和其他系统环境）和跑在上面的应用，那么Docker容器就是独立运行的一个或一组应用，以及它们的必需运行环境。</li>
 <li><strong>仓库（Repository）</strong>
 Docker仓库（Repository）类似于代码仓库，是Docker集中存放镜像文件的场所。而注册服务器（Registry）是存放仓库的地方，其上往往存放着多个仓库。每个仓库集中存放某一类镜像，往往包括多个镜像文件，通过不同的标签（tag）来进行区分。例如存放Ubuntu操作系统镜像的仓库，称为Ubuntu仓库，其中可能包括20.04等不同版本的镜像。根据所存储的镜像公开分享与否，Docker仓库可以分为公开仓库（Public）和私有仓库（Private）两种形式。目前，最大的公开仓库是Docker Hub，存放着数量庞大的镜像供用户下载，国内的公开仓库包括Docker Pool等，可提供稳定的国内访问。
@@ -128,7 +128,7 @@ options参数说明：</p>
 <ul>
 <li>repository：来自于哪个仓库，比如ubuntu仓库。</li>
 <li>tag：镜像的标签信息，比如20.04或latest。用于标记来自同一个仓库的不同镜像。</li>
-<li>==image id：镜像的ID号，这个特别重要，唯一标识镜像。==</li>
+<li><font color="red">image id：镜像的ID号，这个特别重要，唯一标识镜像。</font></li>
 <li>created：镜像创建时间。</li>
 <li>size：镜像大小。</li>
 </ul>
@@ -256,7 +256,7 @@ Dockerfile由一行行命令语句组成，并且支持以<code>#</code>开头�
   <a href="#%e5%ad%98%e5%87%ba%e5%92%8c%e8%bd%bd%e5%85%a5%e9%95%9c%e5%83%8f" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h3><p>我们可以使用<code>docker save</code>和<code>docker load</code>命令来存出和载入镜像。 ==存出即将镜像保存成tar归档文件，载入即将使用<code>docker save</code>命令导出的tar归档文件载入称为镜像文件。== 命令格式如下：</p>
+</h3><p>我们可以使用<code>docker save</code>和<code>docker load</code>命令来存出和载入镜像。 <font color="red">存出即将镜像保存成tar归档文件，载入即将使用<code>docker save</code>命令导出的tar归档文件载入称为镜像文件。</font> 命令格式如下：</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt">1
@@ -369,7 +369,7 @@ Dockerfile由一行行命令语句组成，并且支持以<code>#</code>开头�
 下面这个实例将启动一个bash终端，允许用户进行交互，可以使用Linux命令。
 <code>docker run -it ubuntu:20.04 /bin/bash</code>
 <a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/f28c825c687f4545b2f3a5966466051f.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a>
-其中root为用户名，@后面的为容器ID。我们用<code>ps</code>命令查看进程发现只运行了bash应用，并没有运行其他不需要的进程。可以使用Ctrl+d或输入<code>exit</code>命令来退出容器。当退出容器之后，该容器就自动处于终止状态了。 ==这是因为对于Docker容器来说，当运行的应用（此例子中为bash）退出后，容器也就没有再运行的必要了。==</li>
+其中root为用户名，@后面的为容器ID。我们用<code>ps</code>命令查看进程发现只运行了bash应用，并没有运行其他不需要的进程。可以使用Ctrl+d或输入<code>exit</code>命令来退出容器。当退出容器之后，该容器就自动处于终止状态了。 <font color="red">这是因为对于Docker容器来说，当运行的应用（此例子中为bash）退出后，容器也就没有再运行的必要了。</font></li>
 </ul>
 <h3 id="启动终止容器" class="heading-element"><span>3.3 启动终止容器</span>
   <a href="#%e5%90%af%e5%8a%a8%e7%bb%88%e6%ad%a2%e5%ae%b9%e5%99%a8" class="heading-mark">
@@ -423,7 +423,7 @@ Docker自1.3版本起，提供了一个更方便的工具exec，该命令可以�
   <a href="#%e5%88%a0%e9%99%a4%e5%ae%b9%e5%99%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h3><p>可以使用<code>docker rm</code>命令来删除==处于终止状态的容器==，命令格式如下：
+</h3><p>可以使用<code>docker rm</code>命令来删除<font color="red">处于终止状态的容器</font>，命令格式如下：
 <code>docker rm [OPTIONS] CONTAINER [CONTAINER...]</code>
 其中OPTIONS说明：</p>
 <ul>
@@ -500,7 +500,7 @@ Docker自1.3版本起，提供了一个更方便的工具exec，该命令可以�
 <p>实例：
 <code>docker  import ubuntu-20220212.tar myubunt:latest</code>
 <a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fd4457a141224da88a6c87e130f17253-20231125205414592.png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a>
-我们知道，前面我们学习过<code>docker load</code>命令来导入一个镜像文件。实际上，既可以使用<code>docker load</code>命令来导入镜像存储文件到本地的镜像库，也可以使用<code>docker import</code>命令来导入一个容器快照到本地镜像库。 ==这两者的区别在于容器快照文件将丢弃所有的历史记录和元信息（仅保存容器当时的快照状态)，，而镜像存储文件将保存完整记录，体积也要大。==</p>
+我们知道，前面我们学习过<code>docker load</code>命令来导入一个镜像文件。实际上，既可以使用<code>docker load</code>命令来导入镜像存储文件到本地的镜像库，也可以使用<code>docker import</code>命令来导入一个容器快照到本地镜像库。 <font color="red">这两者的区别在于容器快照文件将丢弃所有的历史记录和元信息（仅保存容器当时的快照状态)，，而镜像存储文件将保存完整记录，体积也要大。</font></p>
 <h2 id="仓库" class="heading-element"><span>4 仓库</span>
   <a href="#%e4%bb%93%e5%ba%93" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>

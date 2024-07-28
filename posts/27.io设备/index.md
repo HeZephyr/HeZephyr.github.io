@@ -300,5 +300,5 @@ void ide_intr() {
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/27.io%E8%AE%BE%E5%A4%87/  
+> URL: https://hezephyr.github.io/posts/27.io%E8%AE%BE%E5%A4%87/  
 

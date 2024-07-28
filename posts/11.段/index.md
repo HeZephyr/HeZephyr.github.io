@@ -126,5 +126,5 @@ if (Offset &gt;= Bounds[Segment]) {
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/11.%E6%AE%B5/  
+> URL: https://hezephyr.github.io/posts/11.%E6%AE%B5/  
 

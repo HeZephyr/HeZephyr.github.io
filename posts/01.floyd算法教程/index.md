@@ -145,5 +145,5 @@ void floyd(){
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.floyd%E7%AE%97%E6%B3%95%E6%95%99%E7%A8%8B/  
+> URL: https://hezephyr.github.io/posts/01.floyd%E7%AE%97%E6%B3%95%E6%95%99%E7%A8%8B/  
 

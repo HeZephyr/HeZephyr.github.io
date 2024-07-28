@@ -463,5 +463,5 @@ void Zem_post(Zem_t *s) {
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/24.%E4%BF%A1%E5%8F%B7%E9%87%8F/  
+> URL: https://hezephyr.github.io/posts/24.%E4%BF%A1%E5%8F%B7%E9%87%8F/  
 

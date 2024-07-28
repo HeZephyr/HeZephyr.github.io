@@ -237,5 +237,5 @@ ASLR 对于用户级程序来说是一种非常有用的防御手段，因此它
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/18.%E5%AE%8C%E6%95%B4vm%E7%B3%BB%E7%BB%9F/  
+> URL: https://hezephyr.github.io/posts/18.%E5%AE%8C%E6%95%B4vm%E7%B3%BB%E7%BB%9F/  
 

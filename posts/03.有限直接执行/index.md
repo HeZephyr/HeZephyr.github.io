@@ -91,5 +91,5 @@ Parent process context switch time: 160.000000 microseconds
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/  
+> URL: https://hezephyr.github.io/posts/03.%E6%9C%89%E9%99%90%E7%9B%B4%E6%8E%A5%E6%89%A7%E8%A1%8C/  
 

@@ -479,5 +479,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.c-%E9%9D%A2%E7%BB%8F/  
+> URL: https://hezephyr.github.io/posts/01.c-%E9%9D%A2%E7%BB%8F/  
 

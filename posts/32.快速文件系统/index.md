@@ -168,5 +168,5 @@ FFS 采用不同的布局解决了这个问题，如上图右侧所示。通过�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/32.%E5%BF%AB%E9%80%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/  
+> URL: https://hezephyr.github.io/posts/32.%E5%BF%AB%E9%80%9F%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/  
 

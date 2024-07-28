@@ -358,5 +358,5 @@ Stats: IO Busy  15 (71.43%)
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D/  
+> URL: https://hezephyr.github.io/posts/01.%E8%BF%9B%E7%A8%8B%E4%BB%8B%E7%BB%8D/  
 

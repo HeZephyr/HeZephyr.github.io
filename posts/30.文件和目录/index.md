@@ -772,5 +772,5 @@ AFS on /afs type afs (rw)
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/30.%E6%96%87%E4%BB%B6%E5%92%8C%E7%9B%AE%E5%BD%95/  
+> URL: https://hezephyr.github.io/posts/30.%E6%96%87%E4%BB%B6%E5%92%8C%E7%9B%AE%E5%BD%95/  
 

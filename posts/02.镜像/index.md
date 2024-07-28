@@ -8,5 +8,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/02.%E9%95%9C%E5%83%8F/  
+> URL: https://hezephyr.github.io/posts/02.%E9%95%9C%E5%83%8F/  
 

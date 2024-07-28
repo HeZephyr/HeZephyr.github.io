@@ -43,7 +43,7 @@
 
 ### vite相较于webpack的优势
 
-&gt; 然而，当我们开始构建越来越大型的应用时，需要处理的 JavaScript 代码量也呈指数级增长。包含数千个模块的大型项目相当普遍。基于 JavaScript 开发的工具就会开始遇到性能瓶颈：==通常需要很长时间（甚至是几分钟！）才能启动开发服务器，即使使用模块热替换（HMR），文件修改后的效果也需要几秒钟才能在浏览器中反映出来。==如此循环往复，迟钝的反馈会极大地影响开发者的开发效率和幸福感。
+&gt; 然而，当我们开始构建越来越大型的应用时，需要处理的 JavaScript 代码量也呈指数级增长。包含数千个模块的大型项目相当普遍。基于 JavaScript 开发的工具就会开始遇到性能瓶颈：&lt;font color=&#34;red&#34;&gt;通常需要很长时间（甚至是几分钟！）才能启动开发服务器，即使使用模块热替换（HMR），文件修改后的效果也需要几秒钟才能在浏览器中反映出来。&lt;/font&gt;如此循环往复，迟钝的反馈会极大地影响开发者的开发效率和幸福感。
 
 起因：我们的项目越大，构建工具（webpack）所要处理的js代码就越多【跟webpack的一个构建过程（工作流程有关）】
 
@@ -71,7 +71,7 @@ npm run start
 &gt;
 &gt; webpack的编译原理，AST抽象语法分析的工具，分析出js文件有哪些导入导出操作
 &gt;
-&gt; ==构建工具是运行在服务端的==
+&gt; &lt;font color=&#34;red&#34;&gt;构建工具是运行在服务端的&lt;/font&gt;
 &gt;
 &gt; ```js
 &gt; (function(modules) {
@@ -102,7 +102,7 @@ npm run start
 1. 帮我们全局安装了一个东西：`create-vite`（vite的脚手架）
 2. 直接运行这个`create-vite` bin目录下的一个执行配置
 
-==误区：认为官网中使用对应的yarn create构建项目的过程也是vite在做的事情==
+&lt;font color=&#34;red&#34;&gt;误区：认为官网中使用对应的yarn create构建项目的过程也是vite在做的事情&lt;/font&gt;
 
 &gt; 我们之前接触过vue-cli，create-vite和vite的关系是：create-vite内置了vite。使用vue-cli会内置webpack
 
@@ -665,5 +665,5 @@ ViteAliases({
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.vite%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D/  
+> URL: https://hezephyr.github.io/posts/01.vite%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7%E4%BB%8B%E7%BB%8D/  
 

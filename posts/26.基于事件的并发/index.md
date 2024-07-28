@@ -209,5 +209,5 @@ rc = write(sd, buffer, size);
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/26.%E5%9F%BA%E4%BA%8E%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%B9%B6%E5%8F%91/  
+> URL: https://hezephyr.github.io/posts/26.%E5%9F%BA%E4%BA%8E%E4%BA%8B%E4%BB%B6%E7%9A%84%E5%B9%B6%E5%8F%91/  
 

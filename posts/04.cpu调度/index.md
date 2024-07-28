@@ -185,5 +185,5 @@ Final statistics:
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/04.cpu%E8%B0%83%E5%BA%A6/  
+> URL: https://hezephyr.github.io/posts/04.cpu%E8%B0%83%E5%BA%A6/  
 

@@ -19,5 +19,5 @@
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AE%9E%E7%94%A8%E5%B0%8F%E6%8A%80%E5%B7%A7/  
+> URL: https://hezephyr.github.io/posts/01.%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AE%9E%E7%94%A8%E5%B0%8F%E6%8A%80%E5%B7%A7/  
 

@@ -708,5 +708,5 @@ int main(){
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/01.%E6%95%B0%E4%BD%8Ddp/  
+> URL: https://hezephyr.github.io/posts/01.%E6%95%B0%E4%BD%8Ddp/  
 

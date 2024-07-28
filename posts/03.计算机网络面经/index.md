@@ -1190,5 +1190,5 @@ XSS（Cross-Site Scripting，跨站脚本攻击）是一种常见的网络安全
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/03.%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E9%9D%A2%E7%BB%8F/  
+> URL: https://hezephyr.github.io/posts/03.%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E9%9D%A2%E7%BB%8F/  
 

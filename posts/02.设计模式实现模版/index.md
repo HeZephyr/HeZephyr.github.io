@@ -42,5 +42,5 @@
 ---
 
 > 作者: Pursuit  
-> URL: https://lruihao.cn/posts/02.%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%A8%A1%E7%89%88/  
+> URL: https://hezephyr.github.io/posts/02.%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%A8%A1%E7%89%88/  
 

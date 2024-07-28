@@ -53,5 +53,5 @@ github开发了一套查找工具，非常全面，也可以使用这个工具�
 ---
 
 > 作者: [HeZephyr](https://github.com/HeZephyr)  
-> URL: https://lruihao.cn/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/  
+> URL: https://hezephyr.github.io/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/  
 
