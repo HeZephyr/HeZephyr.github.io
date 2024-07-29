@@ -1,16 +1,17 @@
 # ZephyrHe
 
-共计 121 篇文章
+共计 125 篇文章
 
 ## 2024
 
-共计 62 篇文章
+共计 65 篇文章
 
 - 07-25 [【MIT 6.5840(6.824)学习笔记】Raft](https://hezephyr.github.io/posts/07.raft/ "2024-07-25 00:00:00")
-- 07-19 [【论文阅读笔记】 In Search of an Understandable Consensus Algorithm (Extended Version)](https://hezephyr.github.io/posts/02.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0in-search-of-an-understandable-consensus-algorithm-extended-version/ "2024-07-19 00:00:00")
-- 07-17 [【论文阅读笔记】Hierarchical Neural Coding for Controllable CAD Model Generation](https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/ "2024-07-17 00:00:00")
-- 07-17 [【论文阅读笔记】 SkexGen: Autoregressive Generation of CAD Construction Sequences with Disentangled Codebooks](https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/ "2024-07-17 00:00:00")
-- 07-17 [【论文阅读笔记】 Attention Is All You Need](https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/ "2024-07-17 00:00:00")
+- 07-19 [【论文阅读笔记】In Search of an Understandable Consensus Algorithm (Extended Version)](https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0in-search-of-an-understandable-consensus-algorithm-extended-version/ "2024-07-19 00:00:00")
+- 07-19 [【论文阅读笔记】Hierarchical Neural Coding for Controllable CAD Model Generation](https://hezephyr.github.io/posts/07.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/ "2024-07-19 00:00:00")
+- 07-19 [【论文阅读笔记】 SkexGen: Autoregressive Generation of CAD Construction Sequences with Disentangled Codebooks](https://hezephyr.github.io/posts/06.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/ "2024-07-19 00:00:00")
+- 07-17 [【论文阅读笔记】DeepCAD: A Deep Generative Network for Computer-Aided Design Models](https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0deepcad/ "2024-07-17 00:00:00")
+- 07-07 [【论文阅读笔记】Attention Is All You Need](https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/ "2024-07-07 00:00:00")
 - 06-09 [Shell 23道例题实战](https://hezephyr.github.io/posts/07.shell%E5%AE%9E%E6%88%98/ "2024-06-09 09:39:47")
 - 06-02 [计算机网络 面试题目总结](https://hezephyr.github.io/posts/03.%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E9%9D%A2%E7%BB%8F/ "2024-06-02 19:45:50")
 - 06-01 [数据结构与算法 面试题目总结](https://hezephyr.github.io/posts/02.%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E9%9D%A2%E7%BB%8F/ "2024-06-01 20:13:44")
@@ -21,7 +22,9 @@
 - 05-15 [【MIT 6.5840(6.824) 】Lab2:Key/Value Server 设计实现](https://hezephyr.github.io/posts/06.mit-6.58406.824-lab2-kv-server/ "2024-05-15 00:00:00")
 - 05-14 [【MIT 6.5840(6.824)】Lab1:MapReduce 设计实现](https://hezephyr.github.io/posts/05.mit-6.58406.824-lab1mapreduce-%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0/ "2024-05-14 19:56:28")
 - 05-14 [【MIT 6.5840(6.824)学习笔记】 分布式系统介绍](https://hezephyr.github.io/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/ "2024-05-14 14:12:32")
-- 05-12 [【论文阅读笔记】 MapReduce: Simplified Data Processing on Large Clusters](https://hezephyr.github.io/posts/01.mapreduce/ "2024-05-12 00:00:00")
+- 05-12 [AI时代下的GPU生存工具包：每个开发人员必须了解的最基本知识](https://hezephyr.github.io/posts/ai%E6%97%B6%E4%BB%A3%E4%B8%8B%E7%9A%84gpu%E7%94%9F%E5%AD%98%E5%B7%A5%E5%85%B7%E5%8C%85%E6%AF%8F%E4%B8%AA%E5%BC%80%E5%8F%91%E4%BA%BA%E5%91%98%E5%BF%85%E9%A1%BB%E4%BA%86%E8%A7%A3%E7%9A%84%E6%9C%80%E5%9F%BA%E6%9C%AC%E7%9F%A5%E8%AF%86/ "2024-05-12 00:00:00")
+- 05-12 [【论文阅读笔记】The Google File System](https://hezephyr.github.io/posts/02.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0gfs/ "2024-05-12 00:00:00")
+- 05-12 [【论文阅读笔记】MapReduce: Simplified Data Processing on Large Clusters](https://hezephyr.github.io/posts/01.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0mapreduce/ "2024-05-12 00:00:00")
 - 05-11 [优秀的CS学习网站](https://hezephyr.github.io/posts/01.%E8%AF%BE%E7%A8%8B%E7%BD%91%E7%AB%99/ "2024-05-11 21:46:26")
 - 05-11 [Andrew文件系统](https://hezephyr.github.io/posts/39.andrew%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ "2024-05-11 21:38:23")
 - 05-11 [网络文件系统](https://hezephyr.github.io/posts/38.%E7%BD%91%E7%BB%9C%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ "2024-05-11 21:37:27")
@@ -94,7 +97,7 @@
 
 ## 2022
 
-共计 25 篇文章
+共计 26 篇文章
 
 - 05-24 [Linux用户和用户组教程](https://hezephyr.github.io/posts/03.linux%E7%94%A8%E6%88%B7%E5%92%8C%E7%94%A8%E6%88%B7%E7%BB%84%E6%95%99%E7%A8%8B/ "2022-05-24 10:27:01")
 - 05-01 [设计模式之模板方法模式详解（Java实现）](https://hezephyr.github.io/posts/14.%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E4%B9%8B%E6%A8%A1%E6%9D%BF%E6%96%B9%E6%B3%95%E6%A8%A1%E5%BC%8F%E8%AF%A6%E8%A7%A3java%E5%AE%9E%E7%8E%B0/ "2022-05-01 09:44:58")
@@ -121,6 +124,7 @@
 - 01-21 [Vim教程](https://hezephyr.github.io/posts/02.vim%E6%95%99%E7%A8%8B/ "2022-01-21 10:00:00")
 - 01-21 [Tmux教程](https://hezephyr.github.io/posts/01.tmux%E6%95%99%E7%A8%8B/ "2022-01-21 00:00:00")
 - 01-21 [Linux常用文件管理命令](https://hezephyr.github.io/posts/02.linux%E5%B8%B8%E7%94%A8%E6%96%87%E4%BB%B6%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4/ "2022-01-21 00:00:00")
+- 01-21 [Linux 系统调用函数fork、vfork、clone详解](https://hezephyr.github.io/posts/08.linux-forkvforkclone%E8%AF%A6%E8%A7%A3/ "2022-01-21 00:00:00")
 
 ## 2021
 

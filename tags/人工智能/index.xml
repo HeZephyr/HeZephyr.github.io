@@ -1,168 +1,11 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>人工智能 - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/</link><description>人工智能 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Wed, 17 Jul 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/" rel="self" type="application/rss+xml"/><item><title>【论文阅读笔记】 Attention Is All You Need</title><link>https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/</link><pubDate>Wed, 17 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/</guid><description><![CDATA[<h2 id="1-引言" class="heading-element"><span>1 1 引言</span>
-  <a href="#1-%e5%bc%95%e8%a8%80" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>循环神经网络(RNN)，特别是长短期记忆和门控循环神经网络（<strong>编码器-解码器</strong>架构），已成为序列建模和转换问题（如语言建模和机器翻译）的先进方法，众多研究在不断推动其发展。</p>
-<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=small" data-sub-html="<h2>RNN做机器翻译</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN" alt="RNN做机器翻译" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=large 2x" data-title="RNN做机器翻译" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<p>但RNN通常<font color="red">沿输入和输出序列的符号位置</font>进行计算，其固有的顺序性导致训练示例内难以并行化，在序列长度较长时，由于内存限制跨示例的批处理，这一问题更加突出。尽管近期通过一些技术改进了计算效率，<font color="red">但顺序计算的基本限制仍未改变</font>。</p>
-<p>且RNN使用共享权值矩阵，在面临较长序列时，会有梯度消失的问题(也可以说是后面词的梯度会覆盖前面的梯度)。即使后序的LSTM和GRU对这一部分做了改进，但也无法完全解决该问题。</p>
-<p><font color="red">注意力机制</font>已成为各种序列建模和转换模型的重要组成部分，能在不考虑输入或输出序列距离的情况下对依赖关系进行建模，但在大多数情况下与循环网络结合使用。</p>
-<p>作者提出了 Transformer 模型，该模型摒弃了循环单元和卷积单元，完全依赖注意力机制来建立输入和输出之间的全局依赖关系，允许更多的并行化。</p>
-<h2 id="2-背景" class="heading-element"><span>2 2 背景</span>
-  <a href="#2-%e8%83%8c%e6%99%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p><font color="red">减少序列计算量和加速计算</font>是序列处理模型中的基本思想。ByteNet和ConvS2S通过使用卷积神经网络并行计算，计算量和序列中位置的距离相关。ConvS2S是线性关系，而ByteNet是对数关系，使得长距离关系学习困难。Transformer将这个过程减少到常数规模，尽管降低了有效分辨率，但<strong>多头注意力机制</strong>弥补了这一点。</p>
-<p>自注意力机制（内部注意力机制）为<font color="red">序列的不同位置分配权重，并学习表示向量</font>，已在阅读理解、文本摘要等任务中表现出色。</p>
-<p>端到端记忆网络通常基于循环注意力机制，已用于简单语言翻译等任务。而Transformer 是<font color="red">第一个完全依赖自注意力</font>来计算其输入和输出表示的转换模型。</p>
-<h2 id="3-模型架构" class="heading-element"><span>3 3 模型架构</span>
-  <a href="#3-%e6%a8%a1%e5%9e%8b%e6%9e%b6%e6%9e%84" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>Transformer中沿用了非常经典的编码器-解码器架构，编码器将输入的序列$(x_1,\dots,x_n)$转化成一个表示向量$\boldsymbol{z}=(z_1,\dots,z_n)$，而编码器依据向量$\boldsymbol{z}$逐步生成输出序列$(y_1,\dots,y_m)$，并且模型在每个步骤中都是<strong>自回归</strong>的，会将先前生成的符号作为生成下一个的额外输入，例如这一步要生成$y_t$，要将$(y_1,\dots,y_{t-1})$都拿到也作为输入。</p>
-<p>同时Transformer模型在编码器和解码器中都使用堆叠自注意力机制和逐点全连接层，如下图的左半部分和右半部分所示。</p>
-<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Transformer_Architecture" alt="image-20240707194838925" style="zoom: 33%;" />
-<h3 id="31-编码器堆叠和解码器堆叠" class="heading-element"><span>3.1 3.1 编码器堆叠和解码器堆叠</span>
-  <a href="#31-%e7%bc%96%e7%a0%81%e5%99%a8%e5%a0%86%e5%8f%a0%e5%92%8c%e8%a7%a3%e7%a0%81%e5%99%a8%e5%a0%86%e5%8f%a0" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>编码器由 $6$ 个相同的层堆叠而成。每个层包含两个子层：<font color="red">多头自注意力机制和逐位置全连接前馈神经网络</font>。每个子层都使用了残差连接，然后进行层规范化（<strong>防止模型过拟合</strong>）。假设每一层的输入是$x$，那么每一层的输出结果可以表示为：
-$$
-\text{LayerNorm}(x+\text{Sublayer(x)})
-$$
-其中</p>
-<ul>
-<li>$\text{SubLayer}$是当前子层本身实现的运算函数，比如注意力运算和全连接运算；</li>
-<li>模型中的所有子层以及嵌入层的输出维度均为 $d_{\text{model}} = 512$（便于残差连接）。</li>
-</ul>
-<p>解码器同样由 6 个层组成。其结构与编码器类似，但多了一个<strong>对编码器输出进行关注的多头注意力子层</strong>。并且在<strong>自注意力子层中进行了修改</strong>，以防止信息左向流动。这种掩码机制，结合输出嵌入向量向后偏移一个位置，确保位置 $i$ 的预测仅依赖于位置小于 $i$ 的已知输出。</p>
-<h3 id="32-注意力机制" class="heading-element"><span>3.2 3.2 注意力机制</span>
-  <a href="#32-%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>注意力机制就是对一系列的query和一系列的key-value对，我们需要确定对于每个query而言不同 value 的重要程度，而这个权重是根据 query 和key 的相关度计算得到的。</p>
-<h4 id="321-缩放的点积注意力机制" class="heading-element"><span>3.2.1 3.2.1 缩放的点积注意力机制</span>
-  <a href="#321-%e7%bc%a9%e6%94%be%e7%9a%84%e7%82%b9%e7%a7%af%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p>Transformer模型中使用的是缩放的点积注意力机制。在这种机制中，注意力计算涉及query和key的维度为  $d_k$ )，以及value的维度为 $d_v$ 。通过引入一个<strong>缩放因子</strong>$\sqrt{d_k}$，可以控制注意力分布的稳定性和计算效率。</p>
-<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaled_Dot_Product_Attention" alt="image-20240707205349089" style="zoom:33%;" />
-<p>我们用向量化的方式可以将这种注意力机制的计算过程表示成：
-$$
-\text{Attention}(Q,K,V)=\text{softmax}(\frac{QK^T}{\sqrt{d_k}})V
-$$
-与传统的注意力机制相比，缩放的点积注意力计算速度更快。缩放参数用于调节注意力计算的规模，以确保对于不同大小的输入，注意力权重的计算结果都能保持在合理的范围内。特别是在$\text{softmax}$函数的应用中，由于指数函数的快速增长特性，<font color="red">缩放可以有效防止某些权重过大</font>，而其他权重接近零的情况，确保了计算结果的平稳性和有效性。</p>
-<h4 id="322-多头注意力机制" class="heading-element"><span>3.2.2 3.2.2 多头注意力机制</span>
-  <a href="#322-%e5%a4%9a%e5%a4%b4%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><h4 id="heading" class="heading-element"><span>3.2.3 </span>
-  <a href="#heading" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p>Transformer采用了多头注意力机制，将query、key和value进行$h$次投影，然后对$h$个投影并行计算注意力，再将这些结果组合并线性投影生成最终的多头注意力输出。多头注意力使模型能够共同关注不同表示子空间和不同位置的信息。</p>
-<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Multi_Head_Attention" alt="image-20240707214205509" style="zoom:50%;" />
-<p>多头注意力机制的计算公式为：
-$$
-\operatorname{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) W^O
-$$
-其中每个头的计算方式为：</p>
-<p>$$
-\text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)
-$$
-参数的维度如下：</p>
-<ul>
-<li>$( Q, K, V)$ 的输入维度为 $( d_{model} )$（通常为$512$）</li>
-<li>$W_i^Q \in \mathbb{R}^{d_{model} \times d_k},  W_i^K \in \mathbb{R}^{d_{model} \times d_k}, W_i^V \in \mathbb{R}^{d_{model} \times d_v}, W^O \in \mathbb{R}^{hd_v \times d_{model}}$</li>
-</ul>
-<p>作者在Transformer中设置 $h = 8$  个头，每个头的维度为 $d_k = d_v = \frac{d_{model}}{h} = 64$。</p>
-<h4 id="323-transformer中注意力机制的应用" class="heading-element"><span>3.2.4 3.2.3 Transformer中注意力机制的应用</span>
-  <a href="#323-transformer%e4%b8%ad%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6%e7%9a%84%e5%ba%94%e7%94%a8" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><ul>
-<li>在解码器的“编码器-解码器注意力层”中，query 来自上一个解码器层，而 key 和值 value 来自编码器的输出。这使得解码器中的每个位置都可以参与到输入序列所有位置的注意力计算中。</li>
-</ul>
-<ol>
-<li><strong>编码器-解码器注意力层</strong>： 在这一层中，query 来自上一个解码器，而记忆 key 和 value 来自编码器的输出。这使得解码器中的每个位置都可以关注输入序列中的所有位置。</li>
-<li><strong>编码器中的自注意力层</strong>： 编码器包含自注意力层。在这种自注意力机制中，<font color="red">query, key 和 value 都来自同一位置，即编码器前一层的输出</font>。这样，编码器中的每个位置都可以关注编码器前一层中的所有位置，从而捕捉输入序列中不同位置之间的全局依赖关系。</li>
-<li><strong>解码器中的自注意力层</strong>： 解码器中的自注意力层的key，value和query也是同源的。但为了保持自回归属性，防止序列中前面的内容被后面的内容所影响，解码器在自注意力计算中加入了掩码机制。具体来说，通过在缩放的点积注意力中，将$\operatorname{softmax}$输入中对应非法连接的值设置为$-\infin$，来屏蔽这些连接。</li>
-</ol>
-<h3 id="33-逐位置全连接前馈神经网络" class="heading-element"><span>3.3 3.3 逐位置全连接前馈神经网络</span>
-  <a href="#33-%e9%80%90%e4%bd%8d%e7%bd%ae%e5%85%a8%e8%bf%9e%e6%8e%a5%e5%89%8d%e9%a6%88%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><h3 id="transformer中的逐位置全连接前馈神经网络" class="heading-element"><span>3.4 Transformer中的逐位置全连接前馈神经网络</span>
-  <a href="#transformer%e4%b8%ad%e7%9a%84%e9%80%90%e4%bd%8d%e7%bd%ae%e5%85%a8%e8%bf%9e%e6%8e%a5%e5%89%8d%e9%a6%88%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>在Transformer中，逐位置全连接前馈神经网络用于增强模型对序列中每个位置信息的处理能力，这种网络结构包含两个线性变换层和$\operatorname{ReLU}$激活函数，用于每个位置独立地进行相同的操作。其数学表示如下：</p>
-<p>$$
-\text{FFN}(x) = \max(0, x W_1 + b_1) W_2 + b_2
-$$</p>
-<p>虽然不同位置的线性变换相同，但各层使用的参数不同。其中，$x$ 是输入向量，维度为 $d_{\text{model}} = 512$ ，而内层的维度为$d_{ff}=2048$，$W_1$ 和 $W_2$ 是两个线性变换的权重矩阵，$b_1$ 和 $b_2$ 是相应的偏置向量。这个结构类似于<code>kernel size</code>为1的卷积操作。</p>
-<h3 id="34-嵌入和softmax" class="heading-element"><span>3.5 3.4 嵌入和Softmax</span>
-  <a href="#34-%e5%b5%8c%e5%85%a5%e5%92%8csoftmax" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>和其他序列转换模型类似，Transformer 使用学习得到的嵌入将输入的token和输出的token转换为维度为 $ d_{\text{model}} $ 的向量。Transformer 还使用学习得到的线性变换和$\text{softmax}$函数将解码器的输出转换为预测的下一个token的概率。在Transformer中两个嵌入层和$\text{softmax}$之前的线性变换层之间共享相同的权重矩阵（<strong>减少模型的参数数量，降低过拟合的风险</strong>），同时在嵌入层中，我们将这些权重乘以  $\sqrt{d_{\text{model}}}$（<strong>缩放嵌入权重，防止梯度消失</strong>）。</p>
-<h3 id="35-位置编码" class="heading-element"><span>3.6 3.5 位置编码</span>
-  <a href="#35-%e4%bd%8d%e7%bd%ae%e7%bc%96%e7%a0%81" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>在Transformer模型中，由于没有循环和卷积单元，为了处理序列数据的位置信息，引入了位置编码。位置编码是为序列中的每个位置添加特定的向量表示，以便模型能够区分不同位置的token。在Transformer中的位置编码使用了sin函数和cos函数，这种方法不同于传统的学习得到的位置嵌入，而是采用固定的函数形式，即</p>
-<p>$$
-\text{PE}<em>{\text{pos}, 2i} = \sin\left(\frac{\text{pos}}{10000^{\frac{2i}{ d</em>{\text{model}}}}}\right)\
-\text{PE}<em>{\text{pos}, 2i+1} = \cos\left(\frac{\text{pos}}{10000^{\frac{2i}{ d</em>{\text{model}}}}}\right)
-$$</p>
-<p>这里的$\text{pos}$表示位置而$i$表示维度，也就是对于位于$\text{pos}$位置的token的嵌入向量第$i$维加上这样一个值。</p>
-<h2 id="4-为什么使用自注意力机制" class="heading-element"><span>4 4 为什么使用自注意力机制</span>
-  <a href="#4-%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8%e8%87%aa%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>在处理序列数据时，长距离依赖关系的学习是一个关键挑战。论文中对比了使用自注意力、循环单元和卷积单元等不同模型结构时的计算量、时间复杂度和最大依赖路径长度。其中，最大依赖路径长度指的是任意两个输入输出位置之间信息传递的最长路径。</p>
-<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=small" data-sub-html="<h2>image-20240707224337637</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths" alt="image-20240707224337637" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=large 2x" data-title="image-20240707224337637" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<p>在传统的循环神经网络（RNN）中，信息是逐步传递的，因此全局视角下，任意两个位置之间的最长信息传递路径往往是以序列长度 $n$ 为量级的。这种逐步传递导致了RNN在捕捉长距离依赖时可能面临的挑战，尤其是在处理长序列时效果不佳。</p>
-<p>相比之下，<font color="red">Transformer利用自注意力机制直接将每个位置与所有其他位置进行关联，避免了逐步传递的过程</font>，使得任意两个位置之间的信息传递路径变得极为直接和高效。这种直接的路径传递方式使得Transformer能够更有效地捕捉到长距离的依赖关系，而不受序列长度的限制。</p>
-<p>因此，Transformer凭借其独特的注意力机制，实现了“Attention is all you need”的理念，强调了在序列建模中注意力机制的重要性和效果。它不仅仅是一种模型结构的创新，更是在解决长距离依赖问题上的一次重大突破。Transformer的成功不仅在于其高效的信息传递路径，还在于其能够在更大范围内捕捉和利用序列中的关联信息，从而提升了序列建模任务的性能和效果。</p>
-<h2 id="5-训练" class="heading-element"><span>5 5 训练</span>
-  <a href="#5-%e8%ae%ad%e7%bb%83" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>在论文中，训练Transformer模型涉及到几个关键的优化和正则化策略。</p>
-<h3 id="51-优化器" class="heading-element"><span>5.1 5.1 优化器</span>
-  <a href="#51-%e4%bc%98%e5%8c%96%e5%99%a8" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>模型的训练使用了Adam优化器，并采用了一种自适应的学习率。学习率 $\text{lr}$ 的计算方式如下所示：
-$$
-\text{lr} = d_{\text{model}}^{-0.5} \times \min(\text{step_num}^{-0.5}, \text{step_num} \times \text{warm_up_steps}^{-1.5})
-$$
-这种自适应学习率的设计有助于在训练初期快速提升学习率，以加速模型收敛，而在训练后期逐渐降低学习率，以更细致地调整模型参数，提升训练的稳定性和效果。</p>
-<h3 id="52-正则化" class="heading-element"><span>5.2 5.2 正则化</span>
-  <a href="#52-%e6%ad%a3%e5%88%99%e5%8c%96" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>Transformer模型采用了多种正则化方法，以提升泛化能力和训练稳定性：</p>
-<ol>
-<li>
-<p><strong>残差连接</strong>：在每个子层之间都使用了残差连接，这种连接方式有助于减少梯度消失问题，并简化了模型的训练和优化过程。</p>
-</li>
-<li>
-<p><strong>Dropout</strong>：在输入嵌入向量和位置编码相加后的层中使用了Dropout，选择的Dropout概率为0.1。Dropout通过随机地将部分神经元的输出置为零，有助于防止模型过拟合，并增强泛化能力。</p>
-</li>
-<li>
-<p><strong>标签平滑处理</strong>：这是一种用于改善模型训练和提高评价指标（如BLEU分数）的技术。标签平滑处理通过将真实标签替换为一个分布更平滑的目标分布，从而减少模型对训练数据中特定标签的过度自信，提升泛化能力和性能评估的一致性。</p>
-</li>
-</ol>
-]]></description></item><item><title>【论文阅读笔记】 SkexGen: Autoregressive Generation of CAD Construction Sequences with Disentangled Codebooks</title><link>https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/</link><pubDate>Wed, 17 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/</guid><description><![CDATA[<h2 id="摘要" class="heading-element"><span>1 摘要</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>人工智能 - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/</link><description>人工智能 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 19 Jul 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/%E4%BA%BA%E5%B7%A5%E6%99%BA%E8%83%BD/" rel="self" type="application/rss+xml"/><item><title>【论文阅读笔记】 SkexGen: Autoregressive Generation of CAD Construction Sequences with Disentangled Codebooks</title><link>https://hezephyr.github.io/posts/06.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/</link><pubDate>Fri, 19 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/06.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/</guid><description><![CDATA[<h2 id="摘要" class="heading-element"><span>1 摘要</span>
   <a href="#%e6%91%98%e8%a6%81" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>SkexGen是一种新颖的<font color="red">自回归生成模型</font>，用于创建CAD构造序列，其中包含<font color="red">草图和拉伸建模操作</font>。这个模型利用不同的Transformer架构将构造序列中的<strong>拓扑、几何和拉伸变化</strong>编码到<strong>解耦的码本</strong>中。<strong>自回归</strong>Transformer解码器根据码本向量生成具有特定属性的CAD构造序列。广泛的实验表明，我们的解耦码本表示可以生成多样且高质量的CAD模型，增强了用户的控制能力，并能够有效探索设计空间。</p>
 <p><a href="https://github.com/samxuxiang/SkexGen"target="_blank" rel="external nofollow noopener noreferrer">【code】<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
-<h2 id="1-引言" class="heading-element"><span>2 1 引言</span>
-  <a href="#1-%e5%bc%95%e8%a8%80" class="heading-mark">
+<h2 id="引言" class="heading-element"><span>2 引言</span>
+  <a href="#%e5%bc%95%e8%a8%80" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>SkexGen是一种新颖的自回归生成模型，使用离散码本进行CAD模型生成。作者采用草图和拉伸建模语言来描述CAD构造序列，其中草图操作创建二维原语，拉伸操作将它们提升并组合成三维。<font color="red">Transformer编码器学习到解耦的潜在表示，作为三个码本，分别捕捉构造序列的拓扑、几何和拉伸变化</font>。给定码本向量，自回归Transformer解码器生成草图和拉伸构造序列，进而处理成CAD模型。</p>
@@ -172,8 +15,8 @@ $$
 <li><strong>解耦的码本</strong>，编码构造序列的拓扑、几何和拉伸变化，实现了设计的有效控制和探索。</li>
 <li>在<strong>公共基准</strong>上的广泛定性和定量评估，展示了最先进的性能。</li>
 </ul>
-<h2 id="2-相关工作" class="heading-element"><span>3 2 相关工作</span>
-  <a href="#2-%e7%9b%b8%e5%85%b3%e5%b7%a5%e4%bd%9c" class="heading-mark">
+<h2 id="相关工作" class="heading-element"><span>3 相关工作</span>
+  <a href="#%e7%9b%b8%e5%85%b3%e5%b7%a5%e4%bd%9c" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><ul>
@@ -196,8 +39,8 @@ $$
 <p>自引入以来，码本已在许多图像和音频生成任务中证明有效，提高了生成图像的多样性并提供了额外的用户控制。由于其高结构规律性，它们特别适合于编码CAD建模序列。</p>
 </li>
 </ul>
-<h2 id="3-草图和拉伸构造序列" class="heading-element"><span>4 3 草图和拉伸构造序列</span>
-  <a href="#3-%e8%8d%89%e5%9b%be%e5%92%8c%e6%8b%89%e4%bc%b8%e6%9e%84%e9%80%a0%e5%ba%8f%e5%88%97" class="heading-mark">
+<h2 id="草图和拉伸构造序列" class="heading-element"><span>4 草图和拉伸构造序列</span>
+  <a href="#%e8%8d%89%e5%9b%be%e5%92%8c%e6%8b%89%e4%bc%b8%e6%9e%84%e9%80%a0%e5%ba%8f%e5%88%97" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>作者定义了一个草图和拉伸构造序列表示法，作为基元的层次结构，这一构造基于TurtleGen和DeepCAD的基础，并进行了若干修改，使表示法更具表现力和学习适应性，如下图所示，该示例模型由两个草图组成，这些草图由面、环和曲线构成。序列以拓扑token（$T_1$）开始，表示曲线的起点（类型为弧线），接着两个几何token（$G_1,G_2$），每个token存储一个二维点坐标，。</p>
@@ -211,14 +54,14 @@ $$
 <li><strong>拉伸草图</strong>：通过拉伸草图形成的三维体积。</li>
 <li><strong>草图和拉伸模型</strong>：通过布尔操作（例如交集、并集和差集）由多个拉伸草图组成。<font color="red">注意，DeepCAD的表示法没有面基元，无法表示具有多个面的草图（例如Figure 1中的ES1）</font>。</li>
 </ul>
-<h2 id="4-skexgen架构" class="heading-element"><span>5 4 SkexGen架构</span>
-  <a href="#4-skexgen%e6%9e%b6%e6%9e%84" class="heading-mark">
+<h2 id="skexgen架构" class="heading-element"><span>5 SkexGen架构</span>
+  <a href="#skexgen%e6%9e%b6%e6%9e%84" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>SkexGen 是一种自回归生成模型，通过两个网络分支中的三个解耦码本学习草图和拉伸模型的变体。图2展示了SkexGen的架构。“草图”分支学习二维草图的拓扑和几何变体，“拉伸”分支学习三维拉伸的变体（如方向）。两个分支架构类似，本节重点介绍草图分支，包含两个编码器和一个解码器。</p>
 <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/SkexGen_Architecture.png" alt="image-20240709221648006" style="zoom:50%;" />
-<h3 id="41-拓扑编码器" class="heading-element"><span>5.1 4.1 拓扑编码器</span>
-  <a href="#41-%e6%8b%93%e6%89%91%e7%bc%96%e7%a0%81%e5%99%a8" class="heading-mark">
+<h3 id="拓扑编码器" class="heading-element"><span>5.1 拓扑编码器</span>
+  <a href="#%e6%8b%93%e6%89%91%e7%bc%96%e7%a0%81%e5%99%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>拓扑编码器接收输入的子序列，token为：</p>
@@ -248,14 +91,14 @@ $$</p>
 <p>编码器基于Transformer（<font color="red">四层，每层包含八头自注意层、层规范化和前馈层</font>）。根据Vision Transformer，<strong>输入的拓扑信息编码为一个“码token”</strong>，预先加入到输入中，并初始化为一个可学习的嵌入$Z_{tp}$。令$Z_{tp}^e$为编码器输出的码token嵌入。嵌入$Z_{tp}^e$被量化为大小为$N({\mathbf{b}_{tp}\text{ | }i=1,2\cdots N})$的<strong>码本最近码</strong>。</p>
 <p>编码和量化后的最终码token $Z_{tp}^Q$被传递给解码器。</p>
 <p>$$
-Z^Q_{tp} \leftarrow \mathbf{b}^{(k)}<em>{tp}, \text{where }
-k = \text{argmin}</em>{j} | Z^e_{<em>{tp}} - b^{(j)}</em>{tp} |^2
+Z^Q_{tp} \leftarrow \mathbf{b}^{(k)}_{tp}, \text{where }
+k = \text{argmin}_{j} | Z^e_{_{tp}} - b^{(j)}_{tp} |^2
 $$</p>
-<p>f这里为了简单起见，只假设了一个码token，拓扑编码器实际上由四个码token，并产生四个输出码token（$Z^{Q_{(1)}}<em>{tp},Z^{Q</em>{(2)}}<em>{tp},Z^{Q</em>{(3)}}<em>{tp},Z^{Q</em>{(4)}}_{tp}$）。作者尝试了不同的码本大小，发现 $N = 500$ 可以取得良好效果。</p>
+<p>f这里为了简单起见，只假设了一个码token，拓扑编码器实际上由四个码token，并产生四个输出码token（$Z^{Q_{(1)}}_{tp},Z^{Q_{(2)}}_{tp},Z^{Q_{(3)}}_{tp},Z^{Q_{(4)}}_{tp}$）。作者尝试了不同的码本大小，发现 $N = 500$ 可以取得良好效果。</p>
 </li>
 </ul>
-<h3 id="42-几何编码器" class="heading-element"><span>5.2 4.2 几何编码器</span>
-  <a href="#42-%e5%87%a0%e4%bd%95%e7%bc%96%e7%a0%81%e5%99%a8" class="heading-mark">
+<h3 id="几何编码器" class="heading-element"><span>5.2 几何编码器</span>
+  <a href="#%e5%87%a0%e4%bd%95%e7%bc%96%e7%a0%81%e5%99%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><ul>
@@ -287,13 +130,13 @@ $$</p>
 <p><strong>架构</strong></p>
 <ul>
 <li>类似于拓扑编码器，基于Transformer。</li>
-<li>生成嵌入 $Z^{{e_{(i)}}}<em>{ge}$ 和量化后的码token $Z^{Q</em>{(i)}}_{ge}$ 。</li>
+<li>生成嵌入 $Z^{{e_{(i)}}}_{ge}$ 和量化后的码token $Z^{Q_{(i)}}_{ge}$ 。</li>
 <li>使用两个码token，码本大小 $N = 1000$。</li>
 </ul>
 </li>
 </ul>
-<h3 id="43-草图解码器" class="heading-element"><span>5.3 4.3 草图解码器</span>
-  <a href="#43-%e8%8d%89%e5%9b%be%e8%a7%a3%e7%a0%81%e5%99%a8" class="heading-mark">
+<h3 id="草图解码器" class="heading-element"><span>5.3 草图解码器</span>
+  <a href="#%e8%8d%89%e5%9b%be%e8%a7%a3%e7%a0%81%e5%99%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>草图解码器以拓扑和几何码本为输入，生成几何token $G$和结束基元token $E$（用于曲线/环/面/草图），以恢复草图子序列。</p>
@@ -311,25 +154,25 @@ $$</p>
 </li>
 <li>
 <p><strong>交叉注意力</strong></p>
-<p><font color="red">Transformer架构通过交叉注意力从拓扑和几何码本中分别取四个和两个量化码本向量</font>。为了区分两个不同的码本，我们借鉴位置编码的思想，分别向拓扑码 ${ Z^{Q_{(i)}}<em>{tp} }$ 和几何码 ${ Z^{Q</em>{(i)}}<em>{ge} }$ 添加可学习嵌入向量 $\mathbf{p}^{(q</em>{tp})} \in \mathbb{R}^{4 \times d_E}$和 $\mathbf{p}^{(q_{ge})} \in \mathbb{R}^{2 \times d_E}$ ：</p>
+<p><font color="red">Transformer架构通过交叉注意力从拓扑和几何码本中分别取四个和两个量化码本向量</font>。为了区分两个不同的码本，我们借鉴位置编码的思想，分别向拓扑码 ${ Z^{Q_{(i)}}_{tp} }$ 和几何码 ${ Z^{Q_{(i)}}_{ge} }$ 添加可学习嵌入向量 $\mathbf{p}^{(q_{tp})} \in \mathbb{R}^{4 \times d_E}$和 $\mathbf{p}^{(q_{ge})} \in \mathbb{R}^{2 \times d_E}$ ：</p>
 <p>$$
-Z^{{Q_{(i)}}}<em>{tp} + p^{(q</em>{tp})} \quad \text{or} \quad
-Z^{Q_{(i)}}<em>{ge}+ p^{(q</em>{ge})}.
+Z^{{Q_{(i)}}}_{tp} + p^{(q_{tp})} \quad \text{or} \quad
+Z^{Q_{(i)}}_{ge}+ p^{(q_{ge})}.
 $$</p>
 <p>基础网络设置与编码器相同（即四层，每层八头），<font color="red">但它是带掩码的自回归（仅关注先前的标记）</font>。</p>
 </li>
 </ul>
-<h3 id="44-训练" class="heading-element"><span>5.4 4.4 训练</span>
-  <a href="#44-%e8%ae%ad%e7%bb%83" class="heading-mark">
+<h3 id="训练" class="heading-element"><span>5.4 训练</span>
+  <a href="#%e8%ae%ad%e7%bb%83" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>拓扑编码器、几何编码器和草图解码器通过三种损失函数联合训练：</p>
 <p>$$
-\sum_K \text{CrossEntropy}(h^\text{out}<em>K, h^\text{gt}<em>K) + \
-| \text{sg} (Z^{e}</em>{tp}) - \mathbf{b}</em>{tp} |<em>2^2 + \beta
-| Z^{e}</em>{tp} - \text{sg} (\mathbf{b}<em>{tp}) |<em>2^2 + \
-| \text{sg} (Z^{e}</em>{ge}) - \mathbf{b}</em>{ge}
-|<em>2^2 + \beta | Z^{e}</em>{ge} - \text{sg} (b_{ge}) |_2^2.
+\sum_K \text{CrossEntropy}(h^\text{out}_K, h^\text{gt}_K) + \
+| \text{sg} (Z^{e}_{tp}) - \mathbf{b}_{tp} |_2^2 + \beta
+| Z^{e}_{tp} - \text{sg} (\mathbf{b}_{tp}) |_2^2 + \
+| \text{sg} (Z^{e}_{ge}) - \mathbf{b}_{ge}
+|_2^2 + \beta | Z^{e}_{ge} - \text{sg} (b_{ge}) |_2^2.
 $$</p>
 <ul>
 <li>
@@ -340,8 +183,8 @@ $$</p>
 </li>
 </ul>
 <p>为了简化，我们省略了每个编码器中多个码本标记的明确写出。<font color="red">给定一个真实子序列，我们运行两个编码器并自回归地运行解码器，直到生成相同数量的标记</font>。训练采用教师强制的方式，即将真实token而非预测token输入解码器，保证每次迭代解码器仅专注于单步训练，从而简化训练流程并提升效率</p>
-<h3 id="45-生成" class="heading-element"><span>5.5 4.5 生成</span>
-  <a href="#45-%e7%94%9f%e6%88%90" class="heading-mark">
+<h3 id="生成" class="heading-element"><span>5.5 生成</span>
+  <a href="#%e7%94%9f%e6%88%90" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>SkexGen 生成 CAD 模型分两步：</p>
@@ -370,8 +213,8 @@ $$</p>
 </ul>
 </li>
 </ol>
-<h2 id="5-实验" class="heading-element"><span>6 5 实验</span>
-  <a href="#5-%e5%ae%9e%e9%aa%8c" class="heading-mark">
+<h2 id="实验" class="heading-element"><span>6 实验</span>
+  <a href="#%e5%ae%9e%e9%aa%8c" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>实验验证目标：</p>
@@ -386,8 +229,8 @@ $$</p>
 <p>SkexGen在设计探索和插值应用中的表现</p>
 </li>
 </ul>
-<h3 id="51-实验设置" class="heading-element"><span>6.1 5.1 实验设置</span>
-  <a href="#51-%e5%ae%9e%e9%aa%8c%e8%ae%be%e7%bd%ae" class="heading-mark">
+<h3 id="实验设置" class="heading-element"><span>6.1 实验设置</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%ae%be%e7%bd%ae" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><ul>
@@ -421,8 +264,8 @@ $$</p>
 </ul>
 </li>
 </ul>
-<h3 id="52-随机生成" class="heading-element"><span>6.2 5.2 随机生成</span>
-  <a href="#52-%e9%9a%8f%e6%9c%ba%e7%94%9f%e6%88%90" class="heading-mark">
+<h3 id="随机生成" class="heading-element"><span>6.2 随机生成</span>
+  <a href="#%e9%9a%8f%e6%9c%ba%e7%94%9f%e6%88%90" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>为了评估 SkexGen 生成高质量和多样化结果的能力，我们随机生成每种类型的20,000个样本，并将 SkexGen 与四个其他基线进行比较：</p>
@@ -461,15 +304,15 @@ $$</p>
 <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222201905.png" alt="image-20240709222201905" style="zoom:50%;" />
 <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222300874.png" alt="image-20240709222300874" style="zoom: 33%;" />
 <p><strong>运行时间评估</strong>：尽管SkexGen的自回归采样过程使其比DeepCAD慢，但比CurveGen（具有两个依赖的自回归解码器）快，显示出采样效率的优化空间。</p>
-<h3 id="53-可控生成" class="heading-element"><span>6.3 5.3 可控生成</span>
-  <a href="#53-%e5%8f%af%e6%8e%a7%e7%94%9f%e6%88%90" class="heading-mark">
+<h3 id="可控生成" class="heading-element"><span>6.3 可控生成</span>
+  <a href="#%e5%8f%af%e6%8e%a7%e7%94%9f%e6%88%90" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>解耦码本实现了设计控制与探索，如下图所示：左侧“拓扑条件”：固定拓扑码，其他码通过核采样获得，展示相同结构的不同变体。右侧“几何条件”：固定几何码，改变其他码，体现一致几何下的多样形态。</p>
 <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222419490.png" alt="image-20240709222419490" style="zoom: 33%;" />
 <p>为了定量衡量三个码本之间的解耦程度，作者参考了$\beta\text{-VAE}$的评估方法。通过保持一个拓扑、几何或拉伸标记相同，并对其他部分进行采样，生成一对草图和拉伸序列。然后训练一个小型基于Transformer的分类器，通过编码潜在空间中所有数据对的平均成对差异来识别固定的码。SkexGen的分类准确率为99.8 ± 0.1%，证实码本间解耦效果显著。</p>
-<h3 id="54-应用" class="heading-element"><span>6.4 5.4 应用</span>
-  <a href="#54-%e5%ba%94%e7%94%a8" class="heading-mark">
+<h3 id="应用" class="heading-element"><span>6.4 应用</span>
+  <a href="#%e5%ba%94%e7%94%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><ul>
@@ -482,14 +325,14 @@ $$</p>
 <p>通过混合不同数据的拓扑、几何和拉伸码，创造新颖设计组合。图8示例：保持拓扑形状，调整几何位置，如多个圆柱按方形布局排列。这些混合结果体现了系统的创新设计能力，超越了传统方法的局限。</p>
 </li>
 </ul>
-<h2 id="6-总结" class="heading-element"><span>7 6 总结</span>
-  <a href="#6-%e6%80%bb%e7%bb%93" class="heading-mark">
+<h2 id="总结" class="heading-element"><span>7 总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>SkexGen是一种新颖的自回归生成模型，专为CAD构造序列设计。它利用不同的Transformer架构将CAD构造序列中的拓扑、几何和拉伸变化编码为解耦码本。这些解码器可以生成具有特定属性的CAD构造序列。SkexGen的优势在于其能够生成多样且高质量的CAD模型，同时提高用户的控制能力和设计空间的探索效率。</p>
 <p>模型的评估在一个大规模的CAD数据集上进行，结果表明，SkexGen相比多个基准和最新方法，生成的CAD模型更为真实和多样。此外，SkexGen的架构也增强了用户在设计过程中的控制能力，使其能够更有效地探索不同设计空间。</p>
-<h4 id="61-限制" class="heading-element"><span>7.0.1 6.1 限制</span>
-  <a href="#61-%e9%99%90%e5%88%b6" class="heading-mark">
+<h4 id="限制" class="heading-element"><span>7.0.1 限制</span>
+  <a href="#%e9%99%90%e5%88%b6" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h4><ol>
@@ -498,12 +341,737 @@ $$</p>
 <li><strong>拓扑和几何的分离</strong>：虽然这种分离有助于提高控制和生成多样性，但在实际应用中可能会导致模型难以学习到拓扑和几何之间的复杂关系。</li>
 <li><strong>有限的建模操作</strong>：SkexGen主要关注草图和拉伸操作，未涉及其他的CAD建模操作，如旋转、扫掠、布尔运算等，限制了其应用范围（<font color="red">但可以通过导入CAD工具后编辑实现其他CAD建模操作</font>）。</li>
 </ol>
-<h4 id="62-创新点" class="heading-element"><span>7.0.2 6.2 创新点</span>
-  <a href="#62-%e5%88%9b%e6%96%b0%e7%82%b9" class="heading-mark">
+<h4 id="创新点" class="heading-element"><span>7.0.2 创新点</span>
+  <a href="#%e5%88%9b%e6%96%b0%e7%82%b9" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h4><ol>
 <li><strong>自回归生成模型</strong>：SkexGen是一个自回归生成模型，能够生成高质量和多样化的CAD构建序列。</li>
 <li><strong>解耦码本</strong>：使用了解耦码本架构，分别编码CAD构建序列中的拓扑、几何和拉伸变化，提高了用户控制和设计空间的探索效率。</li>
 </ol>
-]]></description></item><item><title>【论文阅读笔记】Hierarchical Neural Coding for Controllable CAD Model Generation</title><link>https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/</link><pubDate>Wed, 17 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/</guid><description></description></item></channel></rss>
+]]></description></item><item><title>【论文阅读笔记】Hierarchical Neural Coding for Controllable CAD Model Generation</title><link>https://hezephyr.github.io/posts/07.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/</link><pubDate>Fri, 19 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/07.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/</guid><description><![CDATA[<h2 id="摘要" class="heading-element"><span>1 摘要</span>
+  <a href="#%e6%91%98%e8%a6%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>作者提出了一种CAD的创新生成模型，该模型将CAD模型的高级设计概念表示为从全局部件排列到局部曲线几何的三层神经代码的层级树，并且通过指定目标设计的代码树来控制CAD模型的生成或完成。具体而言，<font color="red">一种带有“掩码跳过连接”的向量量化变分自编码器(VAE)的新变体在三个层次上提取设计变化作为神经码本。两阶段的级联自回归Transformer学习从不完整的CAD模型生成代码树，然后根据预期设计完成CAD模型</font>。广泛的实验表明，在<strong>无条件生成等传统任务</strong>上表现出优越性能，同时在<strong>条件生成任务</strong>中实现了新颖的交互能力。</p>
+<p><a href="https://github.com/samxuxiang/hnc-cad"target="_blank" rel="external nofollow noopener noreferrer">【code】<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h2 id="引言" class="heading-element"><span>2 引言</span>
+  <a href="#%e5%bc%95%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>大多数现代CAD设计工具采用“草图和拉伸”风格的工作流程，<font color="red">以这种方式创建的CAD模型具有自然的树结构，支持局部编辑</font>。树叶处的曲线可以调整并重新生成拉伸以更新最终形状。对于设计师来说，重要的是编辑要保留“设计意图”。而设计意图定义也有不同：</p>
+<ul>
+<li>
+<p>Otey等人将设计意图定义为“在修改时CAD模型的预期行为”</p>
+</li>
+<li>
+<p>Martin描述为“对象之间的关系，使得对一个对象的更改可以自动传播到其他对象”。</p>
+</li>
+</ul>
+<p>虽然“草图和拉伸”允许局部更改，但它不提供在编辑模型时给出预期行为所需的关系。一个能理解设计意图的计算系统将彻底改变CAD的实践。这种系统可以帮助设计师在：</p>
+<ol>
+<li>
+<p>根据高级设计概念生成多样化的CAD模型；</p>
+</li>
+<li>
+<p>在约束某些模型属性的情况下修改现有的CAD模型；</p>
+</li>
+<li>
+<p>交互式地自动完成设计（如下图）。</p>
+ <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Example_For_User_Editing" alt="image-20240710195839501" style="zoom:33%;" />
+</li>
+</ol>
+<p>但目前还没有这样的系统，当前行业标准通过手动指定参数和方程，以定义轮廓的位置和尺寸，以及用于对齐几何的约束，这种称为<font color="red">参数化CAD</font>的过程需要<font color="red">专业技能，并且在意外编辑时很容易出错</font>。下图展示了编辑约束不良的CAD模型的几何形状时原始设计意图被破坏的示例。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Example_failures_of_parametric_CAD.png" alt="image-20240710195948645" style="zoom:50%;" />
+<p><strong>现有的工作并未利用CAD设计的层次性来提供有效的设计控制</strong>。作者提出了一种新颖的生成网络，将CAD模型的设计意图捕获为从局部几何特征到全局部件排列的三层神经代码树，并根据编码树或不完整的CAD模型指定的设计意图控制CAD模型的生成或完成。CAD模型以建模操作的序列形式生成，然后转换为工业标准的边界表示（B-Rep）格式，以便在CAD软件中进行编辑。</p>
+<p>具体来说，作者提出了一种带有“掩码跳过连接”的矢量量化VAE变体，从大规模草图和拉伸CAD数据集（<a href="https://drive.google.com/drive/folders/1mSJBZjKC-Z5I7pLPTgb4b5ZP-Y6itvGG"target="_blank" rel="external nofollow noopener noreferrer">DeepCAD数据集<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>）中学习设计变化形成三个神经码本。掩码跳过连接简单但有效，可以提取高度抽象的码本，使代码与生成的几何形状之间的关系变得直观。然后，两阶段级联自回归Transformer学习生成：</p>
+<ol>
+<li>
+<p>给定不完整CAD模型的三层代码树</p>
+</li>
+<li>
+<p>给定编码树和不完整数据的完整CAD模型</p>
+</li>
+</ol>
+<p>设计师还可以直接提供编码树以生成模型。</p>
+<p>与其他生成baseline的定性和定量评估表明，在随机生成任务中，该系统生成了更逼真和复杂的模型。在用户控制的条件生成任务中，系统展示了灵活和优越的几何控制，这得益于层次编码树表示，优于当前最先进的基于深度学习的生成模型（例如SkexGen，DeepCAD）。总之，我们的贡献包括：</p>
+<ul>
+<li>编码层次设计概念的神经代码树表示，支持高质量和复杂模型的生成、设计意图感知的用户编辑和设计自动完成。</li>
+<li>带有掩码跳过连接的新型向量量化变分自编码器，用于增强代码簿学习。</li>
+<li>在CAD模型生成方面相对于之前的最先进方法的性能提升。</li>
+</ul>
+<h2 id="相关工作" class="heading-element"><span>3 相关工作</span>
+  <a href="#%e7%9b%b8%e5%85%b3%e5%b7%a5%e4%bd%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>
+<p><strong>构造性实体几何（CSG）</strong></p>
+<p>3D形状由参数化基元通过布尔运算组成的CSG树表达。这种轻量级表示通过程序合成和无监督学习重建CAD形状。但参数化CAD仍主导机械设计，并且广泛使用草图和拉伸建模操作。</p>
+</li>
+<li>
+<p><strong>直接CAD生成</strong></p>
+<p>最近一些工作专注于<font color="red">在没有任何CAD建模序列监督的情况下直接生成CAD模型</font>。作者更专注于以草图和拉伸序列形式进行的参数化CAD的可控生成。</p>
+</li>
+<li>
+<p><strong>草图和拉伸CAD生成</strong></p>
+<p>最近大规模参数化CAD数据集的可用性使基于学习的方法能够利用CAD建模序列历史和草图约束生成工程草图和实体模型。生成的序列可以用实体建模内核解析，以获得包含2D工程草图或3D CAD形状的可编辑参数化CAD文件。此外，生成可以受目标B-rep、草图、图像、体素网格或点云的影响。<font color="red">但这种控制是全局级别的，而作者旨在支持设计保持编辑和自动完成等应用程序的全局和局部级别的层次控制</font>。</p>
+</li>
+<li>
+<p><strong>用户控制的CAD生成</strong></p>
+<p>提供用户对生成过程的控制，同时保持设计意图，是生成模型在实际CAD软件中采用的关键。尽管以前的方法可以基于高级指导生成多样化的形状，但使用户能够控制生成过程更具挑战性。Sketch2CAD和Free2CAD专注于设计过程的局部控制，并且需要大量的输入。最近的一些工作还利用文本提示和用户指定的指导。SkexGen允许用户通过解耦全局控制CAD形状的拓扑和几何来探索设计变化。然而，其方法仅有助于从零开始创建新设计，<strong>无法轻易修改以提供用户期望的智能编辑CAD模型或自动完成下一步操作的交互体验</strong>。<font color="red">与现有工作不同，作者的方法利用CAD模型内部存在的自然层次结构，提供对生成过程的全局和局部控制。</font></p>
+</li>
+</ul>
+<h2 id="层次cad属性" class="heading-element"><span>4 层次CAD属性</span>
+  <a href="#%e5%b1%82%e6%ac%a1cad%e5%b1%9e%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>草图和拉伸的CAD模型具有自然的层次结构，如下图所示。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Model_for_CAD.png" alt="image-20240710200053395" style="zoom: 33%;" />
+<p>其中一个环定义了一条封闭的曲线路径，一个轮廓在草图平面内由一个外环和一些内环限定了一个封闭区域，而一个实体则表示一组拉伸的轮廓组合成整个模型。我们的目标是实现在生成CAD模型时的局部和全局控制，即用户可以编辑任何一个实体，并期望其余部分自动进行合理的更新。为了实现这一目标，我们在神经网络的潜在空间中捕捉这种层次结构。<font color="red">在层次结构的较高层上，网络学习较低层次几何实体的相对位置，即构成模型的轮廓和拉伸的边界框</font>。具体来说，我们将CAD模型视为一个实心（S）—轮廓（P）—环（L）树：</p>
+<ul>
+<li>
+<p><strong>环（L）</strong> ：在树的叶子上，我们有环。每个环由一组线和弧或一个圆组成。环（L）的属性定义为一系列由特殊$\text{&lt;SEP&gt;}$ token分隔的x-y坐标：
+$$
+L = {(x_1, y_1), (x_2, y_2), \text{&lt;SEP&gt;}, (x_3, y_3), \ldots}.
+$$</p>
+<p>线由两个点（起点和终点）的xy坐标表示；弧由三个点表示，包括起点、中点和终点；圆由曲线上四个均匀分布的点表示。使用这种表示法，<strong>可以通过点的数量识别曲线类型</strong>。我们对环中的曲线进行排序，使得初始曲线是起点坐标最小的曲线，下一条是与其逆时针方向相连的曲线。</p>
+</li>
+<li>
+<p><strong>轮廓（P）</strong>：轮廓位于叶子层之上。由于环的几何结构在叶子层捕捉，轮廓节点的属性定义为草图平面内环的二维边界框参数系列：</p>
+<p>$$
+P = {(x_i, y_i, w_i, h_i)}_{i=1}^{N^{\text{loop}}_i}.
+$$</p>
+<p>其中$i$是轮廓内$N^{\text{loop}}_i$个环的索引。$(x_i, y_i)$是边界框的左下角，$(w_i, h_i)$是宽度和高度。<font color="red">我们通过对所有二维边界框的左下角进行升序排序来确定轮廓$P$中边界框参数的顺序</font>。</p>
+</li>
+<li>
+<p><strong>实体（S）</strong>：在轮廓层之上，我们有通过拉伸一个或多个轮廓形成的三维实体模型。实体节点的属性捕获拉伸轮廓的排列，使用一系列三维边界框参数：</p>
+<p>$$
+S = {(x_j, y_j, z_j, w_j, h_j, d_j)}_{j=1}^{N^{\text{profile}}_j}.
+$$</p>
+<p>其中$j$是模型中$N^{\text{profile}}_j$个拉伸轮廓的索引。$(x_j, y_j, z_j)$是边界框的左下角，$(w_j, h_j, d_j)$是其尺寸。同样，$S$中的参数按所有拉伸的三维边界框的左下角进行升序排序。</p>
+</li>
+</ul>
+<h2 id="三层码本学习" class="heading-element"><span>5 三层码本学习</span>
+  <a href="#%e4%b8%89%e5%b1%82%e7%a0%81%e6%9c%ac%e5%ad%a6%e4%b9%a0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>给定一个以S-P-L树格式表示的草图和拉伸CAD模型数据集，一种新的向量量化VAE（VQ-VAE）变体学习它们的潜在模式，作为三个离散的码本，这些码本将CAD模型编码为一棵神经码树，用于下游应用。</p>
+<p>遵循SkexGen，我们用于学习码本的架构基础是一个VQ-VAE，由一个Transformer编码器$E$和解码器$D$组成，如下图所示。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Architecture_CAD?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Architecture_CAD?size=small" data-sub-html="<h2>image-20240710200229628</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Architecture_CAD" alt="image-20240710200229628" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Architecture_CAD?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Architecture_CAD?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Architecture_CAD?size=large 2x" data-title="image-20240710200229628" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>我们独立学习L、P和S的码本。与SkexGen和之前的掩码学习工作不同，我们在从编码器输入到解码器输入的跳过连接上应用掩码。直观来说，一个标准的VQ-VAE（即没有跳过连接）被训练用来恢复实例特定的输入细节，这对于正在学习实例无关设计模式的量化码来说是一个挑战。一个天真的跳过连接允许解码器通过直接复制输入来作弊。<font color="red">掩码跳过连接迫使解码器从未掩码元素中关联部分细节和填补缺失部分，其中关系由编码在码中的设计模式引导</font>。</p>
+<ul>
+<li>
+<p><strong>编码器：</strong> 考虑一个$L$（方程1），包含一系列的x-y坐标和特殊的$\text{&lt;SEP&gt;}$ token。我们使用65维的独热向量来表示一个token，其中一个坐标被量化为6位（即64维），$\text{&lt;SEP&gt;}$需要一个额外的维度。设$T^E_t$表示Transformer编码器的第$t$个token的256维嵌入。嵌入初始化为：</p>
+<p>$$
+T_t^E\leftarrow\begin{cases}\text{MLP}(W_\text{emb}x_t\parallel
+W_\text{emb}y_t)+\gamma_t\quad\text{(for x-y)},\\text{MLP}
+(W_\text{emb}&lt;\text{SEP}&gt;\parallel W_\text{emb}&lt;\text{SEP}&gt;)+
+\gamma_t.\end{cases}
+$$</p>
+<p>$W_\text{emb}$是一个$65\times 32$的token嵌入矩阵。$\parallel$是拼接运算符。$\text{MLP}$是一个两层的多层感知器。$\gamma_t$是一个可学习的256维位置嵌入。第二种情况是对于$\text{&lt;SEP&gt;}$，其值重复两次。对于P和S，我们处理每个二维或三维边界框参数的方式与$x_t, y_t$坐标相同，但没有$\text{&lt;SEP&gt;}$ token。</p>
+</li>
+<li>
+<p><strong>向量量化：</strong> 编码器$E$的输出，序列长度为$T$，首先进行平均池化，形成$\overline{E}(T^E)$。然后应用标准的向量量化程序来获得一个256维的码本向量$c$。更具体地说，我们比较码本向量$\mathbf{b}$和编码的$\overline{E}(T^E)$之间的欧几里得距离，并执行最近邻查找。
+$$
+\mathbf{c}\leftarrow\mathbf{b}_k,\quad\text{where}\quad
+k=\mathrm{argmin}_i\left|\left|\overline{E}(T^E)-\mathbf{b}_i\right|\right|^2.
+$$</p>
+</li>
+<li>
+<p><strong>带掩码跳过连接的解码器：</strong> 解码器接收量化码$c$和掩码的x-y坐标和$\text{&lt;SEP&gt;}$ token序列，并预测被掩码的token。例如，在一个环节点的情况下，任何$x_t, y_t$和$\text{&lt;SEP&gt;}$ token都可以被掩码（具体来说，每个模型随机掩码30%到70%的token）。设$T^D_t$表示为解码器输入的第$t$个token的嵌入。每个token的嵌入方式与编码器嵌入方程完全相同，只是被掩码的token的嵌入被一个可学习的共享32维掩码token嵌入$m$取代。来自编码器的256维码本向量$c$与${T^D_t}$拼接在一起并传递给解码器$D$，解码器有四个自注意力层。这里的思想是迫使编码器学习有用的潜在特征，可以帮助解码器预测被掩码的token。最后，在解码器后对每个token嵌入（除了码本向量）应用一个MLP，以生成(2 × 65)维的logits，即一对在65类标签上的概率值，分别用于预测xy坐标或$\text{&lt;SEP&gt;}$ token。</p>
+</li>
+<li>
+<p><strong>损失函数：</strong> 训练损失由三项组成：</p>
+<p>$$
+\begin{aligned}&amp;\sum_{t}\mathrm{EMD}\Big(D(\mathbf{c},{T_{t}^{D}})
+, \mathbb{1}_{T_{t}}\Big)+\&amp;\left|\left|sg[\overline{E}(T^{E})]-\mathbf{c}\right|\right|_{2}^{2}+\beta\left|\left|\overline{E}(T^{E})-sg[\mathbf{c}]\right|\right|_{2}^{2}.\end{aligned}
+$$</p>
+<p>第一项是解码器输出概率和相应数据属性的独热编码$\mathbb{1}_{T_t}$之间的平方EMD损失。损失仅应用于被掩码的token。我们使用的EMD损失函数，该函数假设有序的类标签，并对接近真实值的预测进行较少的惩罚。这比交叉熵损失更好，因为x-y坐标携带距离关系，使得损失可以集中在远离真实值的预测上。注意，我们对环数据属性中的$\text{&lt;SEP&gt;}$ token处理不同，应用标准的交叉熵损失，因为这不是一个有序类标签。</p>
+<p>第二和第三项是VQ-VAE中使用的码本和承诺损失。$sg$表示停止梯度操作，在前向传播中是恒等函数，但在后向传播中阻止梯度。$\beta$缩放承诺损失，设为$0.25$。我们使用衰减率为$0.99$的指数移动平均更新。</p>
+</li>
+</ul>
+<h2 id="可控cad生成" class="heading-element"><span>6 可控CAD生成</span>
+  <a href="#%e5%8f%af%e6%8e%a7cad%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>环、轮廓和实体码本使我们能够将CAD模型的设计概念表达为层次化的神经代码，从而实现多样化和高质量的生成、新颖的用户控制以指定设计意图，以及自动完成不完整的CAD模型。具体来说，给定一个不完整的CAD模型作为草图和拉伸构建序列：</p>
+<ol>
+<li>模型编码器将输入序列转换为潜在嵌入；</li>
+<li>自回归Transformer<strong>根据嵌入的输入序列</strong>生成代码树；</li>
+<li>第二个自回归Transformer<font color="red">根据嵌入的输入序列和代码树</font>生成完整的CAD模型。</li>
+</ol>
+<ul>
+<li>
+<p><strong>模型编码器：</strong> 模型编码器的主体是标准的Transformer编码器模块，具有6个自注意力层。我们借用了SkexGen中使用的格式，并将模型表示为一个token序列，每个token是一个独热向量，唯一确定一个曲线类型、量化曲线参数和量化拉伸参数。编码器将独热向量转换为一系列256维的潜在嵌入${T^E_t}$。</p>
+</li>
+<li>
+<p><strong>编码树生成器：</strong> $G_\text{code}$是一个自回归解码器，它生成代码的层次结构${T^C_t}$。每个实体、轮廓或环从相应的码本中分配一个代码，条件是编码的嵌入${T^E_t}$。类似于层次属性表示，层次代码表示为一系列特征向量，指示代码或分隔token。具体来说，一个特征是一个独热向量，其大小是三个码本中代码的总数加上一个分隔符。例如，考虑上图示例中的代码树，包含一个实体、两个轮廓和两个或四个环。这个树的特征表示为$[S, \text{&lt;SEP&gt;}, P, L, L, \text{&lt;SEP&gt;}, P, L, L, L, L]$。这里我们执行神经代码树的深度优先遍历，边界命令$\text{&lt;SEP&gt;}$用于指示轮廓和环代码的新分组。</p>
+<p>$G_\text{code}$有6个自注意力（SA）层与6个交叉注意力（CA）层交替。第一个SA层是在查询token${T^{\bar{C}}_t}$上，每个查询token由位置编码$\gamma_t$初始化并自回归估计。每个CA层的输入是${T^E_t}$。每个SA或CA层都有8个头的注意力，随后是一个Add-Norm层。一个查询token ${T^{\bar{c}}_t}$将有一个生成的代码索引，该索引转换为一个代码${T^C_t}$。分隔符被一个可学习的嵌入取代。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240729230535954.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240729230535954.png?size=small" data-sub-html="<h2>image-20240729230535954</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240729230535954.png" alt="image-20240729230535954" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240729230535954.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240729230535954.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240729230535954.png?size=large 2x" data-title="image-20240729230535954" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>Codebook表示从代码索引到代码的映射。我们使用标准的交叉熵损失训练$G_\text{code}$。注意，对于无条件生成，我们删除部分CAD模型编码器，并仅使用查询token ${T^{\bar{C}}_t}$训练SA层，没有交叉注意力层和${T^E_t}$。</p>
+</li>
+<li>
+<p><strong>模型生成器：</strong> 模型生成器是第二个自回归解码器$G_\text{cad}$，生成一个草图和拉伸的CAD模型。$G_\text{cad}$与SkexGen解码器相同，不同的是部分CAD模型嵌入${T^E_t}$和层次神经代码${T^C_t}$通过交叉注意力层控制生成，而SkexGen仅允许全局代码的指定。架构规格与第一个解码器相同。查询token ($T^\text{out}_t$)包含生成的CAD命令序列作为独热向量，我们使用相同的标准交叉熵损失。</p>
+</li>
+</ul>
+<h2 id="实验" class="heading-element"><span>7 实验</span>
+  <a href="#%e5%ae%9e%e9%aa%8c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>本节展示了无条件和有条件生成的结果，证明了以下几点：</p>
+<ol>
+<li>相较于当前最先进的技术，生成的质量更高、种类更多、复杂性更强；</li>
+<li>通过层次化神经代码实现可控生成；</li>
+<li>两个重要应用，用户编辑和自动补全。</li>
+</ol>
+<h3 id="实验设置" class="heading-element"><span>7.1 实验设置</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%ae%be%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>数据集</strong>: 使用大规模DeepCAD数据集，包含178,238个草图及拉伸模型，按90%训练、5%验证、5%测试划分。去除重复模型和属性，并限制训练模型的复杂度（最多5个实体、20个环/轮廓、60条曲线/环、200个命令/序列），最终训练集包含102,114个实体、60,584个轮廓、150,158个环和124,451个草图和拉伸序列用于CAD模型训练。对于CAD工程图，我们遵循SkexGen并从DeepCAD中提取草图。在移除重复后，共有99,650个草图用于训练。</p>
+</li>
+<li>
+<p><strong>实施细节</strong>: 在Nvidia RTX A6000 GPU上训练，批次大小256。码本模块和生成模块分别训练250和350轮。采用改进的Transformer主干，输入嵌入维度256，前馈维度512，Dropout率0.1，各含6层、每层8头注意力。码本学习网络有4层。使用AdamW优化器，学习率0.001，线性预热2000步。测试时采用核采样，对输入曲线坐标添加随机噪声减少过拟合，针对码本坍塌问题采取重新初始化策略。最优代码本大小约为轮廓和实体3,500，环2,500，压缩比约60x、17x和29x。</p>
+</li>
+</ul>
+<h3 id="指标" class="heading-element"><span>7.2 指标</span>
+  <a href="#%e6%8c%87%e6%a0%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>五个已建立的指标定量评估随机生成</p>
+<ul>
+<li>
+<p><strong>点云指标</strong>：基于模型表面采样的2000点比较生成和真实数据的点云集，评估多样性与质量。</p>
+<ul>
+<li>覆盖率（COV）：至少匹配一个生成样本的真实模型百分比，反映生成形状的多样性。</li>
+<li>最小匹配距离（MMD）：平均最小匹配距离，衡量两组之间的接近程度。</li>
+<li>Jensen-Shannon散度（JSD）：两个概率分布间的相似性，计算占用相同空间位置的频率。</li>
+</ul>
+</li>
+<li>
+<p><strong>token指标</strong>：衡量唯一性。数值字段量化为6位。</p>
+<ul>
+<li>新颖性（Novel）：未出现在训练集中的生成CAD序列比例。</li>
+<li>唯一性（Unique）：在生成集中仅出现一次的数据比例。</li>
+</ul>
+</li>
+</ul>
+<h3 id="无条件生成" class="heading-element"><span>7.3 无条件生成</span>
+  <a href="#%e6%97%a0%e6%9d%a1%e4%bb%b6%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>对比DeepCAD与SkexGen，所有方法生成10,000个CAD模型，与测试集随机选取的2,500个真实模型比较。</p>
+<ul>
+<li>
+<p>**定量评估：**如下表所示，我们的方法在所有三个点云评估指标上超越baseline，展现显著的质量和多样性提升。在Unique指标上，我们的方法与SkexGen相当，远超DeepCAD。Novel指标上略逊于SkexGen，但明显优于DeepCAD；此差距源于较小且多样性不足的训练集，且仅包含少量复杂形状所致。SkexGen因无法生成非常复杂的模型而受此影响较小。</p>
+  <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240710200626544.png" alt="image-20240710200626544" style="zoom:50%;" />
+</li>
+<li>
+<p><strong>定性评估：</strong> 下图显示我们的方法能生成结构良好、几何形状复杂、部件布局精细的CAD模型，与真实世界实例相似。</p>
+  <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Quanlitative_Evaluation" alt="image-20240710200812020" style="zoom: 33%;" />
+</li>
+<li>
+<p><strong>人工评估：</strong> 通过亚马逊众包平台进行人类感知质量评估，针对具有三个或更多拉伸的模型。在与真实模型并列展示的情况下，我们的方法在“真实感”评分上表现突出，分布对称，表明生成模型难以被区分。比较之下，DeepCAD和SkexGen的分布偏向“较不真实”，表明易被识别为简单或不规范的模型。我们的方法中有49.2%的生成模型被认定为比训练数据更“真实”，SkexGen为46.9%，DeepCAD为38.7%。</p>
+  <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/human_evaluation" alt="image-20240710200951339" style="zoom:50%;" />
+</li>
+</ul>
+<h3 id="可控生成" class="heading-element"><span>7.4 可控生成</span>
+  <a href="#%e5%8f%af%e6%8e%a7%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>我们在两种“编辑”和一种“自动补全”应用场景中展示了可控生成。</p>
+<ul>
+<li>
+<p><strong>代码树编辑：</strong> 用户可编辑不同层次的代码节点，实现局部到全局的CAD层次修改，这是以往方法所不具备的。编辑结果多样化且控制精确，如下图所示。</p>
+  <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240710201053164.png" alt="image-20240710201053164" style="zoom:50%;" />
+</li>
+<li>
+<p><strong>保持设计的编辑：</strong> 在固定代码树的基础上，用户可迭代地调整模型参数以细化设计，同时保持当前设计不变。如下图所示，局部尺寸调整后，相关部分会自动调整以适应更改。</p>
+  <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240710201145516.png" alt="image-20240710201145516" style="zoom: 33%;" />
+</li>
+<li>
+<p><strong>从用户输入的自动补全：</strong> 根据用户提供的部分轮廓或环，预测可能的代码集以完成CAD模型。图9和图10展示了从部分轮廓和拉伸轮廓开始的自动补全结果，每行展示不同生成代码的结果。相比最近邻搜索baseline，我们的方法在多样性和精确匹配用户输入方面表现更优，如图11所示。</p>
+  <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240710201749115.png" alt="image-20240710201749115" style="zoom: 33%;" />
+</li>
+</ul>
+<h2 id="总结" class="heading-element"><span>8 总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>作者引入了一种新颖的可控CAD生成模型。方法的关键是三层神经编码，它在建模层次结构的不同层次上捕获设计模式和意图。本文在包含用户反馈的智能生成设计方向上又迈出了重要一步。广泛的评估显示，生成质量有了显著提升，并展示了作者的分层神经编码在意图感知编辑和自动补全等应用中的巨大潜力。其主要创新点和限制如下：</p>
+<p><strong>创新点：</strong></p>
+<ol>
+<li><strong>分层神经编码</strong>：提出了一种三层次的神经编码方法，将CAD模型的高级设计概念表示为从全局部件布局到局部曲线几何的树状结构。</li>
+<li><strong>设计意图的捕捉与控制</strong>：通过指定目标设计来生成或完成CAD模型，使用代码树来控制生成过程。</li>
+<li><strong>新型变分自编码器（VAE）</strong>：提出了一种新型的向量量化VAE变体，具有“掩蔽跳跃连接”，用于从大规模草图和挤出CAD数据集中提取设计变化作为神经代码本。</li>
+<li><strong>两阶段级联自回归变换器</strong>：用于从不完整的CAD模型生成代码树，然后根据预期设计完成CAD模型。</li>
+</ol>
+<p><strong>限制：</strong></p>
+<ol>
+<li><strong>有效性问题</strong>：当前系统在生成具有自相交边或实体的CAD模型时可能存在有效性问题，因为损失函数没有明确地惩罚无效的几何形状。<font color="red">未来的工作是增加一个损失函数，利用领域知识明确对 CAD 模型的无效性进行惩罚</font>。</li>
+<li><strong>恢复失败的能力</strong>：系统在面对失败情况时，缺乏从错误中恢复的能力，这主要是因为缺乏“无效CAD模型数据集”来训练这种恢复机制。</li>
+<li><strong>模型格式限制</strong>：该方法使用的是草图和拉伸CAD格式，这可能排除了其他流行的建模操作，如旋转、镜像和扫掠等。</li>
+</ol>
+]]></description></item><item><title>【论文阅读笔记】DeepCAD: A Deep Generative Network for Computer-Aided Design Models</title><link>https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0deepcad/</link><pubDate>Wed, 17 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0deepcad/</guid><description><![CDATA[<h2 id="引言" class="heading-element"><span>1 引言</span>
+  <a href="#%e5%bc%95%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>现有3D生成模型：</p>
+<ul>
+<li>
+<p><strong>3D点云</strong>：大量离散的3D点组成的数据表示形式；</p>
+</li>
+<li>
+<p><strong>多边形网格</strong>：一系列相连的多边形组成的3D模型；</p>
+</li>
+<li>
+<p><strong>水平集场</strong>：使用数值函数来表示物体的边界，并根据函数值的正负来确定物体内部和外部的区域；</p>
+</li>
+</ul>
+<p>仅能创建3D形状的离散表示，都缺少生成3D形状设计本质的能力—绘制过程。</p>
+<p>作者提出了一个深度生成网络DeepCAD，能够输出CAD工具（如AutoCAD）中用于构建3D形状的操作序列，这是CAD模型的“绘制”过程。</p>
+<p>这是CAD设计的生成模型的<strong>第一个工作</strong>，挑战在于<font color="red">CAD设计的顺序和参数化性质</font>。CAD模型由一系列几何操作（例如，曲线草图、拉伸、圆角、布尔、倒角）组成，每个操作由某些不规则的参数（<strong>离散或连续</strong>）控制。故以前开发的3D生成模型不适合CAD模型生成。</p>
+<p>为了克服这些挑战，需要寻求一种能够协调CAD模型中的不规则性的表示，作者考虑最常用的CAD操作（命令），并将它们统一在一个公共结构中，该结构对其命令类型、参数和序列顺序进行编码，通过<font color="red">类比CAD命令序列和自然语言</font>，作者提出了一种<font color="red">基于Transformer网络的自编码器，它将CAD模型嵌入到潜在空间中，然后将潜在向量解码成CAD模型</font>。<a href="https://github.com/ChrisWu1997/DeepCAD"target="_blank" rel="external nofollow noopener noreferrer">【code】<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p>为了训练这个自编码器，作者还创建了一个新的CAD命令序列数据集，以促进未来基于学习的CAD设计的研究。<a href="https://drive.google.com/drive/folders/1mSJBZjKC-Z5I7pLPTgb4b5ZP-Y6itvGG"target="_blank" rel="external nofollow noopener noreferrer">【dataset】<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p>下图是DeepCAD的生成演示。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DeepCAD_Generation" alt="image-20240708205521814" style="zoom:50%;" />
+<h2 id="相关工作" class="heading-element"><span>2 相关工作</span>
+  <a href="#%e7%9b%b8%e5%85%b3%e5%b7%a5%e4%bd%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>
+<p><strong>参数化形状推断</strong></p>
+<p>深度学习的进步使得神经网络模型能够分析几何数据，推断出参数化形状。具体工作如下：</p>
+<ul>
+<li><strong>ParSeNet</strong>：将3D点云分解为一组参数化的表面补丁。</li>
+<li><strong>PIE-NET</strong>：从3D点云中提取参数化的边界曲线。</li>
+<li><strong>UV-Net 和 BrepNet</strong>：专注于编码参数化模型的边界曲线和表面。</li>
+<li><strong>Li等人</strong>：训练了一种神经网络，在合成数据上将2D用户草图转换为CAD操作。</li>
+<li><strong>Xu等人</strong>：应用神经引导搜索，从参数化实心形状中推断出CAD建模序列。</li>
+</ul>
+</li>
+<li>
+<p><strong>3D形状生成模型</strong></p>
+<p>大多数现有方法生成离散形式的3D形状，如体素化形状、点云、多边形网格、隐式签名距离场。<font color="red">生成的形状可能存在噪声，缺乏锐利的几何特征，不便于用户编辑</font>。新方法使用神经网络模型生成3D形状作为一系列几何操作。</p>
+<ul>
+<li><strong>CSGNet</strong>：基于体素化形状输入推断CSG操作序列。</li>
+<li><strong>UCSG-Net</strong>：无监督情况下推断CSG树。</li>
+<li><strong>领域特定语言（DSLs）</strong>：通过DSLs合成3D形状，如ShapeAssembly。</li>
+<li><strong>作者工作</strong>：<font color="red">自编码器网络输出一系列CAD操作指定的CAD模型</font>。CAD模型成为工业生产标准形状表示，可以直接<strong>导入CAD工具</strong>进行用户编辑，也可转换为<strong>点云和多边形网格</strong>。<font color="red">这是第一个直接生成CAD设计的生成模型</font>。</li>
+</ul>
+</li>
+<li>
+<p><strong>基于Transformer的模型</strong></p>
+<p>Transformer网络作为基于注意力的构建模块，成功应用于自然语言处理、图像处理和其他类型数据。并行工作在约束的CAD草图生成上也依赖于Transformer网络。</p>
+<p>与作者工作相关的还有DeepSVG-用于生成可缩放矢量图（SVG）图像的Transformer网络。SVG图像由参数化原语（如直线和曲线）描述，原语无特定顺序或依赖关系。</p>
+<p>与SVG不同，<font color="red">CAD命令在3D中描述，可以是相互依赖的，必须遵循特定顺序</font>。所以需要寻求一种新的方法在基于Transformer的自编码器中编码CAD命令及其顺序。</p>
+</li>
+</ul>
+<h2 id="方法" class="heading-element"><span>3 方法</span>
+  <a href="#%e6%96%b9%e6%b3%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>DeepCAD围绕对CAD命令序列的新表示方法（3.1.2），这种CAD表示方法特别适合于输入到神经网络中。此外，这种表示法还引导出一个自然的训练目标函数（3.4）。为了训练DeepCAD，作者创建了一个新数据集，其规模远远大于同类数据集（3.3）。</p>
+<h3 id="神经网络的cad表示" class="heading-element"><span>3.1 神经网络的CAD表示</span>
+  <a href="#%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c%e7%9a%84cad%e8%a1%a8%e7%a4%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>CAD 模型提供了两个层次的表示。</p>
+<ul>
+<li>
+<p>在用户交互层面，CAD 模型被描述为用户在 CAD 软件中创建实心形状时执行的一系列操作，例如用户在二维平面上绘制一个闭合曲线轮廓，然后将其拉伸成三维实心形状，再通过布尔运算等进行处理。我们将这种规范称为 <strong>CAD 命令序列</strong>。</p>
+</li>
+<li>
+<p>在命令序列背后，是 <font color="red">CAD 模型的内核表示</font>，广为人知的是边界表示（B-rep）。给定一个命令序列，其 B-rep 会自动计算出来，通常通过行业标准库 Parasolid。它由拓扑组件及其连接组成，以形成一个实心形状。</p>
+</li>
+</ul>
+<p>我们的目标是生成 CAD 命令序列的模型，而不是 B-rep。<font color="red">这是因为 B-rep 是命令序列的抽象：命令序列可以很容易地转换为 B-rep，但反之则很难，因为不同的命令序列可能会生成相同的 B-rep</font>。此外，命令序列是人类可理解的，便于编辑和应用于各种下游任务。</p>
+<h4 id="cad命令的规范" class="heading-element"><span>3.1.1 CAD命令的规范</span>
+  <a href="#cad%e5%91%bd%e4%bb%a4%e7%9a%84%e8%a7%84%e8%8c%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>CAD 工具支持丰富的命令集，作者仅考虑了一组常用的命令，这些命令分为两类：草图和拉伸。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DeepCAD_Command_Type" alt="image-20240708205620579" style="zoom: 33%;" />
+<p>尽管概念上简单，但它们足够表达生成各种形状。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CAD_Construction_Process" alt="image-20240708205725122" style="zoom:50%;" />
+<ul>
+<li>
+<p>草图命令用于在三维空间中的二维平面上指定闭合曲线，每个闭合曲线称为<strong>一个环</strong>，多个环形成一个闭合区域，称为<strong>轮廓</strong>。我们的表示方法中，一个轮廓由其边界上的环列表描述（如Figure 2中的“Sketch 1”）；<font color="red">一个环总是以指示命令开始，后跟一系列曲线命令。我们列出环上的所有曲线，并按逆时针顺序排列，开始点为最左下角的曲线</font>。实际中，我们考虑三种最常用的曲线命令：<strong>画直线、弧线和圆</strong>。这些命令占了我们大规模现实数据集中 <strong>92%</strong> 的比例。</p>
+<p>每个曲线命令由其曲线类型（$t_i\in {\langle\text{SQL}\rangle,\text{L,A,R}}$）和参数（Table 1）描述，曲线参数指定了曲线在草图平面的局部参考框架中的二维位置。由于每个环中的曲线是一个接一个连接的，为了简洁，我们从参数列表中排除了曲线的起始位置；<font color="red">第一条曲线总是从草图平面的原点开始，原点的世界空间坐标在拉伸命令中指定</font>。简言之，一个草图轮廓由一个环列表描述（$S=[Q_1,\dots,Q_N]$），每个环$Q_i$由一系列从指示命令开始的曲线组成，例如$Q_i=[\langle\text{SQL}\rangle, C_1,\dots,C_{n_i}]$，每个曲线命令$C_j=(t_j,p_j)$指定曲线类型$t_j$及其形状参数$p_j$。</p>
+</li>
+<li>
+<p>拉伸命令有两个目的。</p>
+<ul>
+<li>
+<p>它将草图轮廓从二维平面拉伸成三维实体，拉伸类型可以是<strong>单向、对称或双向</strong>。</p>
+</li>
+<li>
+<p>它通过布尔运算指定如何将新拉伸的三维实体与先前创建的形状合并：<strong>创建新实体，或者与现有实体连接、切割或相交</strong>。</p>
+</li>
+</ul>
+<p>拉伸命令还需要定义草图平面的三维方向和其二维局部参考框架，这是通过旋转矩阵（Table 1中$(\theta,\gamma,\phi)$参数确定）定义的（<font color="red">为了跟平面局部参考系对齐，并将$z$轴与平面的法线方向对齐</font>）。命令参数包括一个拉伸轮廓的比例因子$s$。</p>
+</li>
+</ul>
+<p>通过这些命令，我们将一个 CAD 模型$M$描述为交替出现的曲线命令和拉伸命令序列。换句话说$M=[C_1,\dots,C_{N_c}]$，其中每个$C_i=(c_i,p_i)$指定命令类型和参数。</p>
+<h4 id="网络友好的表示" class="heading-element"><span>3.1.2 网络友好的表示</span>
+  <a href="#%e7%bd%91%e7%bb%9c%e5%8f%8b%e5%a5%bd%e7%9a%84%e8%a1%a8%e7%a4%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>我们的 CAD 模型 M 的规范类似于自然语言，<font color="red">词汇表由一系列 CAD 命令组成，形成句子</font>。句子的主语是草图轮廓；谓语是拉伸。这种类比表明我们可以利用在自然语言处理中成功的网络结构（如 <strong>Transformer 网络</strong>，<font color="red">LLMs</font>）来实现我们的目标。</p>
+<p>然而，CAD 命令在几个方面与自然语言不同。每个命令有不同数量的参数。在某些命令（例如拉伸）中，<font color="red">参数是连续值和离散值的混合</font>，参数值跨越不同范围。这些特性使得命令序列不适合直接用于神经网络。</p>
+<p>为了克服这一挑战，我们对命令序列的维度进行<strong>正则化</strong>。</p>
+<ul>
+<li>
+<p>首先，对于每个命令，其参数堆叠成一个 $16×1$ 的向量，其元素对应于Table 1中所有命令的集合参数（例如$p_i=[x,y,\alpha,f,r,\theta,\phi,\gamma,p_x,p_y,p_z,s,e_1,e_2,b,u]$）。<font color="red">每个命令的未使用参数设置为 -1</font>。</p>
+</li>
+<li>
+<p>接着，我们<strong>固定</strong>每个 CAD 模型 $M$ 的命令总数 $N_c$，<font color="red">并通过添加空命令来填充 CAD 模型的命令序列</font>，直到序列长度达到 $N_c$。我们选择 $N_c = 60$，这是训练数据集中出现的最大命令序列长度。</p>
+</li>
+<li>
+<p>此外，我们通过<font color="red">量化连续参数来统一连续和离散参数</font>。为此，我们将每个 CAD 模型规范化到一个 $2×2×2$ 的立方体内；我们还将<strong>每个草图轮廓规范化到其边界框内</strong>，并在拉伸命令中包括一个比例因子$s$来恢复规范化轮廓到其原始大小。这种规范化限制了连续参数的范围，使我们能够将其值量化为 $256$ 个级别，并使用 $8$ 位整数表示。结果是，所有命令参数都只有离散值集合。<font color="red">参数量化不仅是训练基于 Transformer 网络的常见实践，对于 CAD 模型来说，它对于提高生成质量尤为重要</font>。在 CAD 设计中，必须遵循某些几何关系，例如平行和垂直的草图线条。然而，如果生成模型直接生成连续参数，通过参数回归获得的值容易产生错误，破坏这些严格的关系。相反，参数量化使网络能够将参数“分类”到特定级别，从而更好地遵循学习到的几何关系。</p>
+</li>
+</ul>
+<p>作者在 4.1 中通过消融研究实验证明对 CAD 命令表示选择的正确性。</p>
+<h3 id="cad模型的自编码器" class="heading-element"><span>3.2 CAD模型的自编码器</span>
+  <a href="#cad%e6%a8%a1%e5%9e%8b%e7%9a%84%e8%87%aa%e7%bc%96%e7%a0%81%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>DeepCAD的网络架构如下：</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DeepCAD_Network_Architecture" alt="image-20240708205823395" style="zoom:33%;" />
+<p>一旦训练完成，网络的解码器部分将自然地作为 CAD 生成模型。我们的自编码器基于 Transformer 网络，受其在处理序列数据方面成功的启发。自编码器输入一个 CAD 命令序列$M = [C1,\dots , C_{N_c}]$，其中 $N_c$ 是固定数量。</p>
+<p>首先，每个命令 $C_i$ 被分别投射到维度为 $d_E = 256$ 的连续嵌入空间。然后，将所有嵌入组合起来输入编码器 $E$，输出一个潜在向量 $z\in \mathbb{R}^{256}$。解码器以潜在向量 $z$ 作为输入，输出生成的 CAD 命令序列 $\hat{M}$。</p>
+<ul>
+<li>
+<p>嵌入部分</p>
+<p>与自然语言处理的方法类似，我们首先将每个命令 $C_i$ 投射到一个公共嵌入空间。然而，不同于自然语言中的词语，一个 CAD 命令 $C_i = (t_i, p_i)$ 有两个部分：命令类型 $t_i$ 和参数 $p_i$。因此，我们将 $C_i$ 的嵌入计算为三个嵌入的总和，即</p>
+<p>$$
+e(C_i) = e^\text{cmd}_i + e^{\text{param}}_i + e^\text{pos}_i\in \R^{d_E},
+$$</p>
+<ul>
+<li>
+<p>第一个嵌入 $e^{\text{cmd}}_i$ 表示<strong>命令类型 $t_i$</strong>，由 $e^\text{cmd}_i=W_\text{cmd} \delta_i^c$ 给出。这里 $W_\text{cmd}\in\R^{d_E\times 6}$ 是一个可学习矩阵，$\delta_i^c\in \R^6$ 是一个指示命令类型 $t_i$ 的独热向量。</p>
+</li>
+<li>
+<p>第二个嵌入$e^{\text{param}}_i$ 考虑<strong>命令参数</strong>。每个命令有 $16$ 个参数，每个参数被量化为一个 $8$ 位整数。我们将这些整数转换为维度为 $2^8+1=257$ 的独热向量$\delta^p_{i,j}(j=1\dots16)$，<strong>并将所有独热向量堆叠成矩阵</strong>$\delta^p_i\in\R^{257\times16}$。然后使用另一个可学习矩阵 $W_\text{param}^b\in\R^{d_E\times 257}$ 单独嵌入每个参数，并通过线性层 $W_\text{param}^a\in\R^{d_E\times 16d_E}$组合这些单独的嵌入，即</p>
+<p>$$
+e^{\text{param}}_i=W_\text{param}^a\text{flat}(W_\text{param}^b\delta^p_i),
+$$</p>
+<p>其中$\text{flat}(\cdot)$将输入矩阵展平为向量</p>
+</li>
+<li>
+<p>最后，位置嵌入 $e^\text{pos}_i$ 表示命令 $C_i$ <strong>在整个命令序列中的索引</strong>，由 $e^\text{pos}_i = W_\text{pos}\delta_i$ 定义，其中 $W_\text{pos}\delta_i\in\R^{d_E\times N_c}$ 是一个可学习矩阵，$\delta_i\in\R^{N_c}$ 是一个在索引 $i$ 处填充 $1$ 其他位置填充$0$的独热向量。</p>
+</li>
+</ul>
+</li>
+<li>
+<p>编码器</p>
+<p>编码器 $E$ 由四层 Transformer 块组成，<strong>每层有八个注意力头和 $512$ 的前馈维度</strong>。编码器将嵌入序列 $[e_1, \dots, e_{N_c}]$ 作为输入，输出向量 $[e&rsquo;_1,\dots, e&rsquo;_{N_c}]$，每个向量的维度为 $d_E = 256$。输出向量最终<font color="red">被平均</font>以生成一个 $d_E$ 维的潜在向量 $z$。</p>
+</li>
+<li>
+<p>解码器</p>
+<p>解码器 $D$ 也建立在 Transformer 块上，具有与编码器相同的超参数设置。它以学习到的常量嵌入为输入，同时关注潜在向量 $z$。最后一个 Transformer 块的输出被送入线性层，以预测 CAD 命令序列 $\hat{M} = [ \hat{C}_1,\dots, \hat{C}_{N_c}]$，包括每个命令的命令类型 $\hat{t}_i$ 和参数 $\hat{t}_i$。与自然语言处理中常用的自回归策略不同，我们采用<font color="red">前馈策略</font>，模型的预测可以分解为</p>
+<p>$$
+p(\hat{M}|z,\Theta)=\prod_{i=1}^{N_c}p(\hat{t}_i,\hat{p}_i|z,\Theta),
+$$</p>
+<p>其中$\Theta$表示解码器的网络参数。</p>
+</li>
+</ul>
+<h3 id="cad数据集的创建" class="heading-element"><span>3.3 CAD数据集的创建</span>
+  <a href="#cad%e6%95%b0%e6%8d%ae%e9%9b%86%e7%9a%84%e5%88%9b%e5%bb%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>现有数据集：</p>
+<ul>
+<li>
+<p><strong>ABC数据集</strong>：虽包含百万级别的CAD设计，但这些设计采用B-rep格式，缺乏如何通过CAD操作构建设计的具体信息；</p>
+</li>
+<li>
+<p><strong>Fusion 360 Gallery数据集</strong>：虽然提供了CAD设计及其构建指令序列，但规模仅有约8000个设计，不足以训练出泛化能力强大的生成模型。</p>
+</li>
+</ul>
+<p>鉴于此，作者决定创建一个全新的、大规模的数据集，该数据集不仅数量庞大，还提供了CAD命令序列，旨在满足训练自动编码网络的需求，并为未来的研究提供资源。</p>
+<p>新数据集构建过程始于ABC数据集：</p>
+<ol>
+<li>
+<p>利用其中每个CAD模型链接至Onshape的原始设计。</p>
+</li>
+<li>
+<p>接着，通过Onshape的FeatureScript语言（一种专门用于解析CAD操作与参数的领域特定语言），作者筛选出仅使用“草图”和“拉伸”操作的模型，舍弃了那些采用更复杂操作的模型。</p>
+</li>
+<li>
+<p>对于符合条件的模型，作者编写了一段FeatureScript程序来提取其草图轮廓和拉伸操作，并将其转化为Table 1中列出的命令格式。</p>
+</li>
+</ol>
+<p>最终，作者收集到了总计<strong>178,238</strong>个以CAD命令序列形式描述的CAD设计，这个数量级远超现有同类型数据集。数据集进一步被随机划分为90%的训练集、5%的验证集以及5%的测试集，以备训练和测试之用。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/DeepCAD_Dataset" alt="image-20240708210100248" style="zoom:33%;" />
+<h3 id="训练和运行时生成" class="heading-element"><span>3.4 训练和运行时生成</span>
+  <a href="#%e8%ae%ad%e7%bb%83%e5%92%8c%e8%bf%90%e8%a1%8c%e6%97%b6%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="训练阶段" class="heading-element"><span>3.4.1 训练阶段</span>
+  <a href="#%e8%ae%ad%e7%bb%83%e9%98%b6%e6%ae%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>我们利用构建的数据集对自编码器网络进行训练，采用标准的交叉熵损失函数作为优化目标。具体而言，定义预测的CAD模型$\hat{M}$与真实模型$M$之间的损失函数为：</p>
+<p>$$
+\mathcal{L} = \sum_{i=1}^{N_c} \ell(\hat{t}_i,t_i) + \beta \sum_{i=1}^{N_c} \sum_{j=1}^{N_p} \ell(\hat{p}_{i,j},p_{i,j}),
+$$</p>
+<p>其中，$\mathcal{L}(·, ·)$表示标准的交叉熵损失，$N_p$每个命令的参数数量（在我们的示例中，$N_p = 16$），而$\beta$是一个权重项，用于平衡两项损失（在我们的示例中，$\beta = 2$）。值得注意的是，在真实的命令序列中，有些命令是空的（即填充命令$\langle \text{EOS} \rangle$），而有些命令参数未使用（标记为$-1$）。在这种情况下，这些元素对上述损失函数中的求和部分不做贡献。</p>
+<p>训练过程中，我们使用<font color="red">Adam优化器</font>，初始学习率为$0.001$，并设置线性预热期为前$2000$步。所有Transformer模块的Dropout率设定为$0.1$，并在反向传播中应用梯度裁剪值为$1.0$。我们以批处理大小$512$对网络进行$1000$轮的训练。</p>
+<h4 id="cad生成阶段" class="heading-element"><span>3.4.2 CAD生成阶段</span>
+  <a href="#cad%e7%94%9f%e6%88%90%e9%98%b6%e6%ae%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>当自编码器训练完成后，我们可以使用一个$256$维的潜在向量$z$来表示一个CAD模型。为了自动生成CAD模型，我们运用latent-GAN技术于已学得的潜在空间上。生成器和判别器都是简单的多层感知机（MLP）网络，各自包含四层隐藏层，它们的训练采用带有梯度惩罚的Wasserstein-GAN策略。最后，生成CAD模型时，我们从多元高斯分布中采样一个随机向量，并将其输入GAN的生成器中。GAN的输出是一个潜在向量$z$，随后将其输入基于Transformer的解码器，从而生成CAD模型。</p>
+<h2 id="实验" class="heading-element"><span>4 实验</span>
+  <a href="#%e5%ae%9e%e9%aa%8c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>我们从两个角度评估我们的自编码器网络：<strong>CAD模型的自编码性能</strong>（4.1）和<strong>潜在空间形状生成</strong>（4.2）。我们还讨论了可以受益于CAD生成模型的潜在应用（4.3）。由于之前没有针对CAD设计的生成模型，因此无法<strong>直接进行比较</strong>。我们的目标是通过一系列消融实验理解模型在不同指标下的性能，并验证我们的算法选择。</p>
+<h4 id="cad模型的自编码" class="heading-element"><span>4.0.3 CAD模型的自编码</span>
+  <a href="#cad%e6%a8%a1%e5%9e%8b%e7%9a%84%e8%87%aa%e7%bc%96%e7%a0%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><font color="red">自编码性能通常用于指示生成模型表达目标数据分布的程度</font>。我们使用自编码器网络对训练数据集中不存在的CAD模型$M$进行编码，然后将所得的潜在向量解码成CAD模型$\hat{M}$。通过比较$M$和$\hat{M}$的差异来评估自编码器的性能。</p>
+<ul>
+<li>
+<p><strong>指标</strong></p>
+<ul>
+<li>
+<p><strong>命令准确率</strong>（$\text{ACC}_{\text{cmd}}$）：衡量预测的CAD命令类型的正确性；</p>
+<p>$$
+\text{ACC}_{\text{cmd}}=\frac{1}{N_c} \sum_{t=1}^{N_c}\mathbb{I}[t_i=\hat{t_i}]
+,
+$$</p>
+</li>
+<li>
+<p><strong>参数准确率</strong>（$\text{ACC}_\text{param}$）：衡量命令参数的正确性；</p>
+<p>$$
+\text{ACC}_\text{param} = \frac{1}{K} \sum_{i=1}^{N_c} \sum_{j=1}^{\left| \hat{p}_i \right|} \mathbb{I}[|p_{i,j} - \hat{p}_{i,j}| &lt; \eta]\mathbb{I}[t_i = \hat{t}_i],
+$$</p>
+<p>其中$K=\sum_{i=1}^{N_c}\mathbb{I}[t_i=\hat{t}_i]|p_i|$是所有正确恢复命令中的参数总数。注意$p_{i,j}$和$\hat{p}_{i,j}$都被量化为$8$位整数，选择$\eta$是作为考虑参数量化的容差阈值，在实践中，我们选择了$\eta=3$（256个级别）</p>
+</li>
+<li>
+<p>此外，我们使用Chamfer距离（CD）来评估3D几何体的质量，通过均匀采样2000个点来计算参考形状和生成形状之间的CD。另外，我们还报告无效率，即无法转换为点云的输出CAD模型的百分比。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>比较方法</strong></p>
+<p>由于缺乏现有的CAD生成模型，我们比较了几种模型变体以验证我们的数据表示和训练策略。具体包括以下几种变体：Alt-Rel、Alt-Trans、Alt-ArcMid、Alt-Regr和Ours+Aug。每种变体在数据表示或训练策略上有所不同。</p>
+</li>
+</ul>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Quantitative_evaluation_of_autoencoding" alt="image-20240708210209763" style="zoom: 50%;" />
+<p>总体而言，Ours+Aug（即使用合成数据增强训练）<strong>表现最佳</strong>，表明<font color="red">随机组合数据可以提高网络的泛化能力</font>。Alt-ArcMid的性能与Ours相似，说明中点表示法是表示弧的可行替代方法。Alt-Trans在CD方面略逊于Ours。虽然Alt-Rel的参数准确率（ACCparam）高于Ours，但其CD分数较大且有时会出现无效拓扑，例如在Figure 4中第二行中的黄色模型有两个三角形环路相互相交，导致拓扑无效，这是由于预测曲线位置的误差累积导致的。Alt-Regr由于不量化连续参数，误差较大，可能破坏关键的几何关系，如平行边和垂直边，例如Figure 4中的第一行。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Comparison_of_autoencoding_results" alt="image-20240708210312512" style="zoom:33%;" />
+<p>我们还验证了我们自编码器的泛化，在其他更小的数据集（来自Autodesk Fusion 360）上评估它表现出良好的泛化能力，实现了可比较的定量性能。</p>
+<h3 id="形状生成" class="heading-element"><span>4.1 形状生成</span>
+  <a href="#%e5%bd%a2%e7%8a%b6%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>由于CAD设计没有现成的生成模型，我们选择将我们的模型与l-GAN进行比较，l-GAN是一种被广泛研究的点云三维形状生成模型。我们注意到，我们的目标并不是要显示出孰优孰劣，因为这两种生成模型有不同的应用领域。相反，我们证明了我们的模型即使在点云生成模型的度量下也能产生可比的形状质量。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Randomly_Generated_3D_Shapes" alt="image-20240708210552910" style="zoom: 33%;" />
+<p>此外，如Figure 5所示，我们模型中的形状具有更清晰的几何细节，并且可以轻松地进行用户编辑(Figure 7)。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/User_Editing_Friendly" alt="image-20240708210641303" style="zoom: 50%;" />
+<p>为了与点云生成模型进行定量比较，我们遵循l-GAN中使用的指标。这些度量标准用于衡量两组3D点云形状之间的差异，即真实形状集合$S$和生成形状集合$G$。</p>
+<ul>
+<li>
+<p><strong>覆盖率（COV）</strong>：衡量$S$中的形状有多少可以很好地近似为G中的形状；</p>
+</li>
+<li>
+<p><strong>最小匹配距离（MMD）</strong>：表示$S$和$G$中两个点云之间的最小匹配距离来衡量$G$的保真度；</p>
+</li>
+<li>
+<p><strong>Jensen-Shannon散度(JSD)</strong>：衡量$S$和$G$的点云分布的相似性</p>
+</li>
+</ul>
+<p>然后，我们将真实和生成的CAD模型转换为点云，并评估这些度量标准。结果如下：</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Shape_Generation_measured_under_point_cloud_metrics" alt="image-20240708210452316" style="zoom:50%;" />
+<p>表明我们的方法在点云度量标准方面与l-GAN具有可比性的性能。然而，由于其参数化表示，CAD模型具有比点云更平滑的表面和更锐利的几何特征。</p>
+<h3 id="未来应用" class="heading-element"><span>4.2 未来应用</span>
+  <a href="#%e6%9c%aa%e6%9d%a5%e5%ba%94%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ol>
+<li>
+<p>借助CAD生成模型，可以将点云（例如通过3D扫描获取的）重建为CAD模型，例如作者这里使用自编码器将CAD模型$M$编码为潜在向量$c$。然后，利用PointNet++编码器训练它将$M$的点云表示编码为相同的潜在向量$c$。在推断时，给定一个点云，我们使用PointNet++编码器将其映射到潜在向量，然后使用我们的自编码器解码为CAD模型。</p>
+ <img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2024-07-08-16-40-21-1720428018357.png" title="" alt="" data-align="center">
+</li>
+<li>
+<p>生成的CAD模型可以直接导入CAD工具进行用户编辑。</p>
+</li>
+</ol>
+<h2 id="总结" class="heading-element"><span>5 总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>作者提出了DeepCAD，第一个一个用于CAD设计的深度生成模型。几乎所有以前的3D生成模型都产生离散的3D形状，如体素、点云和网格。为此，作者还引入了一个大型CAD模型数据集，每个模型都表示为一个CAD命令序列。</p>
+<p>在构建CAD生成模型的过程中，作者的方法存在以下几个主要限制：</p>
+<ol>
+<li>
+<p><strong>曲线命令类型有限</strong>：目前，作者仅考虑了三种最常用的曲线命令类型（直线、弧线和圆）。然而，其他曲线命令也可以轻松添加，例如可以通过三个控制点以及起点来指定的三次贝塞尔曲线，其参数结构可以按照3.1中描述的方式进行。</p>
+</li>
+<li>
+<p><strong>操作命令的局限性</strong>：虽然像旋转草图这样的操作可以类似于拉伸命令进行编码，但某些CAD操作（如倒角）作用于形状边界的部分，因此需要参考模型的B-rep（边界表示），而不仅仅是其他命令。<font color="red">将这些命令纳入生成模型仍需进一步研究</font>。</p>
+</li>
+<li>
+<p><strong>拓扑有效性无法保证</strong>：并非每个CAD命令序列都能生成拓扑上有效的形状。作者的生成网络不能保证其输出的CAD序列的拓扑一致性。在实践中，生成的CAD命令序列很少失败，但随着命令序列变长，失败的可能性增加。</p>
+ <img title="" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/2024-07-08-16-45-09-1720428305187.png" alt="" data-align="center" width="396"></li>
+</ol>
+]]></description></item><item><title>【论文阅读笔记】Attention Is All You Need</title><link>https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/</link><pubDate>Sun, 07 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/</guid><description><![CDATA[<h2 id="引言" class="heading-element"><span>1 引言</span>
+  <a href="#%e5%bc%95%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>循环神经网络(RNN)，特别是长短期记忆和门控循环神经网络（<strong>编码器-解码器</strong>架构），已成为序列建模和转换问题（如语言建模和机器翻译）的先进方法，众多研究在不断推动其发展。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=small" data-sub-html="<h2>RNN做机器翻译</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN" alt="RNN做机器翻译" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=large 2x" data-title="RNN做机器翻译" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>但RNN通常<font color="red">沿输入和输出序列的符号位置</font>进行计算，其固有的顺序性导致训练示例内难以并行化，在序列长度较长时，由于内存限制跨示例的批处理，这一问题更加突出。尽管近期通过一些技术改进了计算效率，<font color="red">但顺序计算的基本限制仍未改变</font>。</p>
+<p>且RNN使用共享权值矩阵，在面临较长序列时，会有梯度消失的问题(也可以说是后面词的梯度会覆盖前面的梯度)。即使后序的LSTM和GRU对这一部分做了改进，但也无法完全解决该问题。</p>
+<p><font color="red">注意力机制</font>已成为各种序列建模和转换模型的重要组成部分，能在不考虑输入或输出序列距离的情况下对依赖关系进行建模，但在大多数情况下与循环网络结合使用。</p>
+<p>作者提出了 Transformer 模型，该模型摒弃了循环单元和卷积单元，完全依赖注意力机制来建立输入和输出之间的全局依赖关系，允许更多的并行化。</p>
+<h2 id="背景" class="heading-element"><span>2 背景</span>
+  <a href="#%e8%83%8c%e6%99%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><font color="red">减少序列计算量和加速计算</font>是序列处理模型中的基本思想。ByteNet和ConvS2S通过使用卷积神经网络并行计算，计算量和序列中位置的距离相关。ConvS2S是线性关系，而ByteNet是对数关系，使得长距离关系学习困难。Transformer将这个过程减少到常数规模，尽管降低了有效分辨率，但<strong>多头注意力机制</strong>弥补了这一点。</p>
+<p>自注意力机制（内部注意力机制）为<font color="red">序列的不同位置分配权重，并学习表示向量</font>，已在阅读理解、文本摘要等任务中表现出色。</p>
+<p>端到端记忆网络通常基于循环注意力机制，已用于简单语言翻译等任务。而Transformer 是<font color="red">第一个完全依赖自注意力</font>来计算其输入和输出表示的转换模型。</p>
+<h2 id="模型架构" class="heading-element"><span>3 模型架构</span>
+  <a href="#%e6%a8%a1%e5%9e%8b%e6%9e%b6%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Transformer中沿用了非常经典的编码器-解码器架构，编码器将输入的序列$(x_1,\dots,x_n)$转化成一个表示向量$\boldsymbol{z}=(z_1,\dots,z_n)$，而编码器依据向量$\boldsymbol{z}$逐步生成输出序列$(y_1,\dots,y_m)$，并且模型在每个步骤中都是<strong>自回归</strong>的，会将先前生成的符号作为生成下一个的额外输入，例如这一步要生成$y_t$，要将$(y_1,\dots,y_{t-1})$都拿到也作为输入。</p>
+<p>同时Transformer模型在编码器和解码器中都使用堆叠自注意力机制和逐点全连接层，如下图的左半部分和右半部分所示。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Transformer_Architecture" alt="image-20240707194838925" style="zoom: 33%;" />
+<h3 id="编码器堆叠和解码器堆叠" class="heading-element"><span>3.1 编码器堆叠和解码器堆叠</span>
+  <a href="#%e7%bc%96%e7%a0%81%e5%99%a8%e5%a0%86%e5%8f%a0%e5%92%8c%e8%a7%a3%e7%a0%81%e5%99%a8%e5%a0%86%e5%8f%a0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>编码器由 $6$ 个相同的层堆叠而成。每个层包含两个子层：<font color="red">多头自注意力机制和逐位置全连接前馈神经网络</font>。每个子层都使用了残差连接，然后进行层规范化（<strong>防止模型过拟合</strong>）。假设每一层的输入是$x$，那么每一层的输出结果可以表示为：
+$$
+\text{LayerNorm}(x+\text{Sublayer(x)})
+$$
+其中</p>
+<ul>
+<li>$\text{SubLayer}$是当前子层本身实现的运算函数，比如注意力运算和全连接运算；</li>
+<li>模型中的所有子层以及嵌入层的输出维度均为 $d_{\text{model}} = 512$（便于残差连接）。</li>
+</ul>
+<p>解码器同样由 6 个层组成。其结构与编码器类似，但多了一个<strong>对编码器输出进行关注的多头注意力子层</strong>。并且在<strong>自注意力子层中进行了修改</strong>，以防止信息左向流动。这种掩码机制，结合输出嵌入向量向后偏移一个位置，确保位置 $i$ 的预测仅依赖于位置小于 $i$ 的已知输出。</p>
+<h3 id="注意力机制" class="heading-element"><span>3.2 注意力机制</span>
+  <a href="#%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>注意力机制就是对一系列的query和一系列的key-value对，我们需要确定对于每个query而言不同 value 的重要程度，而这个权重是根据 query 和key 的相关度计算得到的。</p>
+<h4 id="缩放的点积注意力机制" class="heading-element"><span>3.2.1 缩放的点积注意力机制</span>
+  <a href="#%e7%bc%a9%e6%94%be%e7%9a%84%e7%82%b9%e7%a7%af%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>Transformer模型中使用的是缩放的点积注意力机制。在这种机制中，注意力计算涉及query和key的维度为  $d_k$ )，以及value的维度为 $d_v$ 。通过引入一个<strong>缩放因子</strong>$\sqrt{d_k}$，可以控制注意力分布的稳定性和计算效率。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaled_Dot_Product_Attention" alt="image-20240707205349089" style="zoom:33%;" />
+<p>我们用向量化的方式可以将这种注意力机制的计算过程表示成：
+$$
+\text{Attention}(Q,K,V)=\text{softmax}(\frac{QK^T}{\sqrt{d_k}})V
+$$
+与传统的注意力机制相比，缩放的点积注意力计算速度更快。缩放参数用于调节注意力计算的规模，以确保对于不同大小的输入，注意力权重的计算结果都能保持在合理的范围内。特别是在$\text{softmax}$函数的应用中，由于指数函数的快速增长特性，<font color="red">缩放可以有效防止某些权重过大</font>，而其他权重接近零的情况，确保了计算结果的平稳性和有效性。</p>
+<h4 id="多头注意力机制" class="heading-element"><span>3.2.2 多头注意力机制</span>
+  <a href="#%e5%a4%9a%e5%a4%b4%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><h4 id="heading" class="heading-element"><span>3.2.3 </span>
+  <a href="#heading" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>Transformer采用了多头注意力机制，将query、key和value进行$h$次投影，然后对$h$个投影并行计算注意力，再将这些结果组合并线性投影生成最终的多头注意力输出。多头注意力使模型能够共同关注不同表示子空间和不同位置的信息。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Multi_Head_Attention" alt="image-20240707214205509" style="zoom:50%;" />
+<p>多头注意力机制的计算公式为：
+$$
+\operatorname{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) W^O
+$$
+其中每个头的计算方式为：</p>
+<p>$$
+\text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)
+$$
+参数的维度如下：</p>
+<ul>
+<li>$( Q, K, V)$ 的输入维度为 $( d_{model} )$（通常为$512$）</li>
+<li>$W_i^Q \in \mathbb{R}^{d_{model} \times d_k},  W_i^K \in \mathbb{R}^{d_{model} \times d_k}, W_i^V \in \mathbb{R}^{d_{model} \times d_v}, W^O \in \mathbb{R}^{hd_v \times d_{model}}$</li>
+</ul>
+<p>作者在Transformer中设置 $h = 8$  个头，每个头的维度为 $d_k = d_v = \frac{d_{model}}{h} = 64$。</p>
+<h4 id="transformer中注意力机制的应用" class="heading-element"><span>3.2.4 Transformer中注意力机制的应用</span>
+  <a href="#transformer%e4%b8%ad%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6%e7%9a%84%e5%ba%94%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><ul>
+<li>在解码器的“编码器-解码器注意力层”中，query 来自上一个解码器层，而 key 和值 value 来自编码器的输出。这使得解码器中的每个位置都可以参与到输入序列所有位置的注意力计算中。</li>
+</ul>
+<ol>
+<li><strong>编码器-解码器注意力层</strong>： 在这一层中，query 来自上一个解码器，而记忆 key 和 value 来自编码器的输出。这使得解码器中的每个位置都可以关注输入序列中的所有位置。</li>
+<li><strong>编码器中的自注意力层</strong>： 编码器包含自注意力层。在这种自注意力机制中，<font color="red">query, key 和 value 都来自同一位置，即编码器前一层的输出</font>。这样，编码器中的每个位置都可以关注编码器前一层中的所有位置，从而捕捉输入序列中不同位置之间的全局依赖关系。</li>
+<li><strong>解码器中的自注意力层</strong>： 解码器中的自注意力层的key，value和query也是同源的。但为了保持自回归属性，防止序列中前面的内容被后面的内容所影响，解码器在自注意力计算中加入了掩码机制。具体来说，通过在缩放的点积注意力中，将$\operatorname{softmax}$输入中对应非法连接的值设置为$-\infin$，来屏蔽这些连接。</li>
+</ol>
+<h3 id="逐位置全连接前馈神经网络" class="heading-element"><span>3.3 逐位置全连接前馈神经网络</span>
+  <a href="#%e9%80%90%e4%bd%8d%e7%bd%ae%e5%85%a8%e8%bf%9e%e6%8e%a5%e5%89%8d%e9%a6%88%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h3 id="transformer中的逐位置全连接前馈神经网络" class="heading-element"><span>3.4 Transformer中的逐位置全连接前馈神经网络</span>
+  <a href="#transformer%e4%b8%ad%e7%9a%84%e9%80%90%e4%bd%8d%e7%bd%ae%e5%85%a8%e8%bf%9e%e6%8e%a5%e5%89%8d%e9%a6%88%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在Transformer中，逐位置全连接前馈神经网络用于增强模型对序列中每个位置信息的处理能力，这种网络结构包含两个线性变换层和$\operatorname{ReLU}$激活函数，用于每个位置独立地进行相同的操作。其数学表示如下：</p>
+<p>$$
+\text{FFN}(x) = \max(0, x W_1 + b_1) W_2 + b_2
+$$</p>
+<p>虽然不同位置的线性变换相同，但各层使用的参数不同。其中，$x$ 是输入向量，维度为 $d_{\text{model}} = 512$ ，而内层的维度为$d_{ff}=2048$，$W_1$ 和 $W_2$ 是两个线性变换的权重矩阵，$b_1$ 和 $b_2$ 是相应的偏置向量。这个结构类似于<code>kernel size</code>为1的卷积操作。</p>
+<h3 id="嵌入和softmax" class="heading-element"><span>3.5 嵌入和Softmax</span>
+  <a href="#%e5%b5%8c%e5%85%a5%e5%92%8csoftmax" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>和其他序列转换模型类似，Transformer 使用学习得到的嵌入将输入的token和输出的token转换为维度为 $ d_{\text{model}} $ 的向量。Transformer 还使用学习得到的线性变换和$\text{softmax}$函数将解码器的输出转换为预测的下一个token的概率。在Transformer中两个嵌入层和$\text{softmax}$之前的线性变换层之间共享相同的权重矩阵（<strong>减少模型的参数数量，降低过拟合的风险</strong>），同时在嵌入层中，我们将这些权重乘以  $\sqrt{d_{\text{model}}}$（<strong>缩放嵌入权重，防止梯度消失</strong>）。</p>
+<h3 id="位置编码" class="heading-element"><span>3.6 位置编码</span>
+  <a href="#%e4%bd%8d%e7%bd%ae%e7%bc%96%e7%a0%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在Transformer模型中，由于没有循环和卷积单元，为了处理序列数据的位置信息，引入了位置编码。位置编码是为序列中的每个位置添加特定的向量表示，以便模型能够区分不同位置的token。在Transformer中的位置编码使用了sin函数和cos函数，这种方法不同于传统的学习得到的位置嵌入，而是采用固定的函数形式，即</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/test.image.latex-20240729215814533.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/test.image.latex-20240729215814533.png?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/test.image.latex-20240729215814533.png" alt="img" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/test.image.latex-20240729215814533.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/test.image.latex-20240729215814533.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/test.image.latex-20240729215814533.png?size=large 2x" data-title="img" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>这里的$\text{pos}$表示位置而$i$表示维度，也就是对于位于$\text{pos}$位置的token的嵌入向量第$i$维加上这样一个值。</p>
+<h2 id="为什么使用自注意力机制" class="heading-element"><span>4 为什么使用自注意力机制</span>
+  <a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8%e8%87%aa%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在处理序列数据时，长距离依赖关系的学习是一个关键挑战。论文中对比了使用自注意力、循环单元和卷积单元等不同模型结构时的计算量、时间复杂度和最大依赖路径长度。其中，最大依赖路径长度指的是任意两个输入输出位置之间信息传递的最长路径。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=small" data-sub-html="<h2>image-20240707224337637</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths" alt="image-20240707224337637" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=large 2x" data-title="image-20240707224337637" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>在传统的循环神经网络（RNN）中，信息是逐步传递的，因此全局视角下，任意两个位置之间的最长信息传递路径往往是以序列长度 $n$ 为量级的。这种逐步传递导致了RNN在捕捉长距离依赖时可能面临的挑战，尤其是在处理长序列时效果不佳。</p>
+<p>相比之下，<font color="red">Transformer利用自注意力机制直接将每个位置与所有其他位置进行关联，避免了逐步传递的过程</font>，使得任意两个位置之间的信息传递路径变得极为直接和高效。这种直接的路径传递方式使得Transformer能够更有效地捕捉到长距离的依赖关系，而不受序列长度的限制。</p>
+<p>因此，Transformer凭借其独特的注意力机制，实现了“Attention is all you need”的理念，强调了在序列建模中注意力机制的重要性和效果。它不仅仅是一种模型结构的创新，更是在解决长距离依赖问题上的一次重大突破。Transformer的成功不仅在于其高效的信息传递路径，还在于其能够在更大范围内捕捉和利用序列中的关联信息，从而提升了序列建模任务的性能和效果。</p>
+<h2 id="训练" class="heading-element"><span>5 训练</span>
+  <a href="#%e8%ae%ad%e7%bb%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在论文中，训练Transformer模型涉及到几个关键的优化和正则化策略。</p>
+<h3 id="优化器" class="heading-element"><span>5.1 优化器</span>
+  <a href="#%e4%bc%98%e5%8c%96%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>模型的训练使用了Adam优化器，并采用了一种自适应的学习率。学习率 $\text{lr}$ 的计算方式如下所示：
+<a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/lr_learn_compute?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/lr_learn_compute?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/lr_learn_compute" alt="img" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/lr_learn_compute?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/lr_learn_compute?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/lr_learn_compute?size=large 2x" data-title="img" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>这种自适应学习率的设计有助于在训练初期快速提升学习率，以加速模型收敛，而在训练后期逐渐降低学习率，以更细致地调整模型参数，提升训练的稳定性和效果。</p>
+<h3 id="正则化" class="heading-element"><span>5.2 正则化</span>
+  <a href="#%e6%ad%a3%e5%88%99%e5%8c%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Transformer模型采用了多种正则化方法，以提升泛化能力和训练稳定性：</p>
+<ol>
+<li>
+<p><strong>残差连接</strong>：在每个子层之间都使用了残差连接，这种连接方式有助于减少梯度消失问题，并简化了模型的训练和优化过程。</p>
+</li>
+<li>
+<p><strong>Dropout</strong>：在输入嵌入向量和位置编码相加后的层中使用了Dropout，选择的Dropout概率为0.1。Dropout通过随机地将部分神经元的输出置为零，有助于防止模型过拟合，并增强泛化能力。</p>
+</li>
+<li>
+<p><strong>标签平滑处理</strong>：这是一种用于改善模型训练和提高评价指标（如BLEU分数）的技术。标签平滑处理通过将真实标签替换为一个分布更平滑的目标分布，从而减少模型对训练数据中特定标签的过度自信，提升泛化能力和性能评估的一致性。</p>
+</li>
+</ol>
+]]></description></item></channel></rss>

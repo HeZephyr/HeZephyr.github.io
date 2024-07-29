@@ -1,7 +1,7 @@
 # 【MIT 6.5840(6.824)】Lab1:MapReduce 设计实现
 
 
-## 1 介绍
+## 介绍
 
 本次实验是实现一个简易版本的`MapReduce`，你需要实现一个工作程序（worker process）和一个调度程序（coordinator process）。工作程序用来调用Map和Reduce函数，并处理文件的读取和写入。调度程序用来协调工作任务并处理失败的任务。你将构建出跟 [MapReduce论文](http://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf) 里描述的类似的东西。（注意：本实验中用&#34;coordinator&#34;替代里论文中的&#34;master&#34;。）
 
@@ -21,7 +21,7 @@
 - [x] Pass lab test
 - [ ] Communicate over TCP/IP and read/write files using a shared file system
 
-## 2 原框架解析
+## 原框架解析
 
 * `src/mrapps/wc.go`
 
@@ -86,9 +86,9 @@
 
 	![img](https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png)
 
-## 3 设计实现
+## 设计实现
 
-### 3.1 任务分析
+### 任务分析
 
 总体而言，`Worker`通过RPC轮询`Coordinator`请求任务，例如Map或者Reduce任务，`Coordinator`将剩余任务分配给`Worker`处理（先处理完Map任务才能处理Reduce任务）。
 
@@ -110,7 +110,7 @@ MapReduce处理WordCount程序的流程如下图所示：
 
 ![img](https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png)
 
-### 3.2 RPC
+### RPC
 
 通信时首先需要确定这个消息是什么类型, 通过前述分析可知：
 
@@ -163,9 +163,9 @@ type MessageReply struct {
 
 对于通信，原框架已提供Unix套接字通信，如果有想法，我们可以将 RPC 设置为通过 TCP/IP 而不是 Unix 套接字进行通信（请参阅 `Coordinator.server()` 中注释掉的行），并使用共享文件系统读/写文件。
 
-### 3.2 Coordinator
+### Coordinator
 
-#### 3.2.1 结构
+#### 结构
 
 如前所述，`Coordinator`需要管理任务的状态信息，对于一个任务而言，我们这里定义它的状态为：未分配、已分配、完成、失败。
 
@@ -203,7 +203,7 @@ type Coordinator struct {
 }
 ```
 
-#### 3.2.2 初始化
+#### 初始化
 
 我们需要对`Coordinator`初始化，其中最重要的是更新任务初始状态，一开始都是未分配，
 
@@ -239,7 +239,7 @@ func MakeCoordinator(files []string, nReduce int) *Coordinator {
 }
 ```
 
-#### 3.2.3 RequestTask函数
+#### RequestTask函数
 
 这部分比较复杂，根据我们之前的分析，处理逻辑如下：
 
@@ -317,7 +317,7 @@ func (c *Coordinator) RequestTask(args *MessageSend, reply *MessageReply) error 
 }
 ```
 
-#### 3.2.4 ReportTask函数
+#### ReportTask函数
 
 这个函数则是根据`Worker`发送的消息任务完成状态来更新任务状态信息即可，&lt;font color=&#34;red&#34;&gt;记住，一把大锁保平安&lt;/font&gt;。
 
@@ -342,9 +342,9 @@ func (c *Coordinator) ReportTask(args *MessageSend, reply *MessageReply) error {
 }
 ```
 
-### 3.3 Worker
+### Worker
 
-#### 3.3.1 Worker轮询
+#### Worker轮询
 
 `Worker`需要通过RPC轮询`Coordinator`请求任务，然后根据返回的任务类型进行处理（即调用相应函数）：
 
@@ -372,7 +372,7 @@ func Worker(mapf func(string, string) []KeyValue,
 }
 ```
 
-#### 3.3.2 处理Map任务
+#### 处理Map任务
 
 跟`mrsequential.go`处理基本一致，处理完成后需要通过RPC告知`Coordinator`结果。但需要注意的是，我们需要通过`os.Rename()`原子重命名来保证最终的文件系统状态仅仅包含一个任务产生的数据。
 
@@ -427,7 +427,7 @@ func HandleMapTask(reply *MessageReply, mapf func(string, string) []KeyValue) {
 }
 ```
 
-#### 3.3.3 处理Reduce任务
+#### 处理Reduce任务
 
 这里利用我们生成的中间文件名特点，对于每个`Reduce`任务，它的输入文件（中间文件）名为`mr-MapID-ReduceID`，所以我们构造出输入文件数组，将其解码得到键值对，再进行处理。
 
@@ -508,7 +508,7 @@ func HandleReduceTask(reply *MessageReply, reducef func(string, []string) string
 }
 ```
 
-## 4 测试和常见问题
+## 测试和常见问题
 
 `test-mr.sh`为测试脚本，也可以通过运行`sh test-mr-many.sh n`来运行$n$次测试。
 

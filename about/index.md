@@ -6,18 +6,19 @@
 {{&lt; style &#34;min-height: 230px;&#34; &gt;}}
 {{&lt; typeit code=javascript &gt;}}
 /**
- * 建站的初衷不是為了炫耀所知，而是記錄無知。
- * 人知道的越多，就會發現無知的越多。有更廣袤的世界可以探索，是莫大的快樂！
- * @since 2018-05-28 20:01:01
+ * 写博客的初衷不是为了炫耀所知，而是记录无知。
+ * 人知道得越多，就会发现自己的无知也越多。有更广阔的世界可以探索，这是一种莫大的快乐！
+ * 在这个信息爆炸的时代，知识的获取变得前所未有的便捷。
+ * 然而，真正有价值的知识并不是浅尝辄止的片段，而是经过深思熟虑和实践验证的结晶。
+ * 写博客的过程，就是一个不断反思和总结的过程，让我们在浩瀚的知识海洋中找到自己的航向。
+ * @since 2020-06-10 15:42:02
  */
-class Blog {
-  constructor(name, author, url) {
-    this.name = name;
-    this.author = author;
-    this.url = url;
-  }
+#include &lt;iostream&gt;
+
+int main() {
+    std::cout &lt;&lt; &#34;Hello, World!\n&#34; &lt;&lt; std::endl;
+    return 0;
 }
-const site = new Blog(&#39;菠菜眾長&#39;, &#39;Lruihao&#39;, &#39;https://lruihao.cn&#39;);
 {{&lt; /typeit &gt;}}
 {{&lt; /style &gt;}}
 
