@@ -1005,6 +1005,958 @@ Go切片比Go数组更灵活，因为数组的大小是其类型的一部分，�
 </ol>
 <p>当你想修改接收器的状态时，必须使用指针接收器。如果结构体非常大，你可能想使用指针接收器，因为值接收器操作的是一个副本。如果两者都不适用，可以使用值接收器。然而，要小心使用值接收器；例如，如果结构体中有一个互斥锁，你不能将其作为值接收器，因为互斥锁会被复制，从而失去其作用。</p>
 </blockquote>
+]]></description></item><item><title>【MIT 6.5840(6.824)】Lab1:MapReduce 设计实现</title><link>https://hezephyr.github.io/posts/05.mit-6.58406.824-lab1mapreduce-%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0/</link><pubDate>Tue, 14 May 2024 19:56:28 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/05.mit-6.58406.824-lab1mapreduce-%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0/</guid><description><![CDATA[<h2 id="1-介绍" class="heading-element"><span>1 1 介绍</span>
+  <a href="#1-%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>本次实验是实现一个简易版本的<code>MapReduce</code>，你需要实现一个工作程序（worker process）和一个调度程序（coordinator process）。工作程序用来调用Map和Reduce函数，并处理文件的读取和写入。调度程序用来协调工作任务并处理失败的任务。你将构建出跟 <a href="http://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf"target="_blank" rel="external nofollow noopener noreferrer">MapReduce论文<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a> 里描述的类似的东西。（注意：本实验中用&quot;coordinator&quot;替代里论文中的&quot;master&quot;。）</p>
+<p>实验先决条件：</p>
+<ul>
+<li>
+<p><a href="https://blog.csdn.net/hzf0701/article/details/138770454?spm=1001.2014.3001.5501"target="_blank" rel="external nofollow noopener noreferrer">阅读MapReduce论文<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+</li>
+<li>
+<p><a href="http://nil.csail.mit.edu/6.5840/2024/labs/lab-mr.html"target="_blank" rel="external nofollow noopener noreferrer">阅读lab文档<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+</li>
+<li>
+<p>理解MapReduce框架</p>
+</li>
+<li>
+<p>理解原框架代码，理清所需完成任务</p>
+</li>
+</ul>
+<p>实验代码实现仓库：https://github.com/unique-pure/MIT6.5840/tree/main/src/mr，实验代码已通过实验测试，并在以下清单中列出了实现的功能及待办事项。</p>
+<ul>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> Complete the basic requirements for MapReduce</li>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> Handling worker failures</li>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> No data competition, a big lock ensures safety</li>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> Pass lab test</li>
+<li><i class="fa-regular fa-square fa-fw" aria-hidden="true"></i> Communicate over TCP/IP and read/write files using a shared file system</li>
+</ul>
+<h2 id="2-原框架解析" class="heading-element"><span>2 2 原框架解析</span>
+  <a href="#2-%e5%8e%9f%e6%a1%86%e6%9e%b6%e8%a7%a3%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>
+<p><code>src/mrapps/wc.go</code></p>
+<p>这是一个用于 MapReduce 的字数统计（Word Count）插件。该插件包含 Map 和 Reduce 函数，用于统计输入文本中的单词频率。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Map</span><span class="p">(</span><span class="nx">filename</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">contents</span> <span class="kt">string</span><span class="p">)</span> <span class="p">[]</span><span class="nx">mr</span><span class="p">.</span><span class="nx">KeyValue</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// function to detect word separators.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">ff</span> <span class="o">:=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">r</span> <span class="kt">rune</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span> <span class="k">return</span> <span class="p">!</span><span class="nx">unicode</span><span class="p">.</span><span class="nf">IsLetter</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// split contents into an array of words.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">words</span> <span class="o">:=</span> <span class="nx">strings</span><span class="p">.</span><span class="nf">FieldsFunc</span><span class="p">(</span><span class="nx">contents</span><span class="p">,</span> <span class="nx">ff</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">kva</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">mr</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">w</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">words</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span> <span class="o">:=</span> <span class="nx">mr</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="nx">w</span><span class="p">,</span> <span class="s">&#34;1&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kva</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">kva</span><span class="p">,</span> <span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">kva</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Reduce</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">values</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// return the number of occurrences of this word.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">return</span> <span class="nx">strconv</span><span class="p">.</span><span class="nf">Itoa</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">values</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>src/main/mrcoordinator.go</code></p>
+<p><code>mrcoordinator.go</code> 定义了调度器（Coordinator）的主要逻辑。调度器通过 <code>MakeCoordinator</code> 启动一个 <code>Coordinator</code> 实例 <code>c</code>，并在 <code>c.server()</code> 中通过协程 <code>go http.Serve(l, nil)</code> 启动一个 HTTP 服务器来接收和处理 RPC 调用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">server</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rpc</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rpc</span><span class="p">.</span><span class="nf">HandleHTTP</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//l, e := net.Listen(&#34;tcp&#34;, &#34;:1234&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">sockname</span> <span class="o">:=</span> <span class="nf">coordinatorSock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">os</span><span class="p">.</span><span class="nf">Remove</span><span class="p">(</span><span class="nx">sockname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">l</span><span class="p">,</span> <span class="nx">e</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nf">Listen</span><span class="p">(</span><span class="s">&#34;unix&#34;</span><span class="p">,</span> <span class="nx">sockname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">e</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;listen error:&#34;</span><span class="p">,</span> <span class="nx">e</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="nx">http</span><span class="p">.</span><span class="nf">Serve</span><span class="p">(</span><span class="nx">l</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">MakeCoordinator</span><span class="p">(</span><span class="nx">files</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">nReduce</span> <span class="kt">int</span><span class="p">)</span> <span class="o">*</span><span class="nx">Coordinator</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span> <span class="o">:=</span> <span class="nx">Coordinator</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nf">server</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">c</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意：在 Go 的 <code>net/http</code> 包中，使用 <code>http.Serve(l, nil)</code> 启动 HTTP 服务器时，服务器会为每个传入的请求自动启动一个新的协程。这意味着每个 RPC 调用都是在独立的协程中处理的，从而允许并发处理多个请求。因此，在设计时可能需要使用锁等同步原语来保护共享资源。此外，Coordinator 不会主动与 Worker 通信（除非额外实现），只能通过 Worker 的 RPC 通信来完成任务。同时，当所有任务完成时，<code>Done</code> 方法将返回 <code>false</code>，从而关闭 Coordinator。</p>
+</li>
+<li>
+<p><code>src/main/mrworker.go</code></p>
+<p><code>mrworker.go</code> 通过 <code>Worker</code> 函数运行。因此，<code>Worker</code> 函数需要完成请求任务、执行任务、报告任务状态等多个任务。可以推测，<code>Worker</code> 需要在这个函数中不断地轮询 Coordinator，并根据 Coordinator 的不同回复来驱动当前 Worker 完成各种任务。</p>
+</li>
+<li>
+<p><code>src/main/mrsequential.go</code></p>
+<p><code>mrsequential.go</code> 实现了一个简单的顺序 MapReduce 应用程序。该程序读取输入文件，执行 Map 和 Reduce 操作，并将结果写入输出文件。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png" alt="img" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=large 2x" data-title="img" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</li>
+</ul>
+<h2 id="3-设计实现" class="heading-element"><span>3 3 设计实现</span>
+  <a href="#3-%e8%ae%be%e8%ae%a1%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="31-任务分析" class="heading-element"><span>3.1 3.1 任务分析</span>
+  <a href="#31-%e4%bb%bb%e5%8a%a1%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>总体而言，<code>Worker</code>通过RPC轮询<code>Coordinator</code>请求任务，例如Map或者Reduce任务，<code>Coordinator</code>将剩余任务分配给<code>Worker</code>处理（先处理完Map任务才能处理Reduce任务）。</p>
+<blockquote>
+<p>其中，在此实验中Map任务数量就是输入文件数量，每个<code>Map Task</code>的任务就是处理一个<code>.txt</code>文件；Reduce任务的数量是<code>nReduce</code>。</p>
+<p>由于Map任务会将文件的内容分割为指定的<code>nReduce</code>份，每一份应当由序号标明，拥有这样的序号的多个Map任务的输出汇总起来就是对应的Reduce任务的输入。</p>
+</blockquote>
+<p>请求完任务后，<code>Worker</code>需要根据任务类型进行处理，这段处理过程跟<code>mrsequential.go</code>基本一致，但需要注意的就是论文中提到的，如果同一个任务被多个<code>Worker</code>执行，针对同一个最终的输出文件将有多个重命名操作执行。我们这就依赖底层文件系统提供的重命名操作的原子性来保证最终的文件系统状态仅仅包含一个任务产生的数据。即通过<code>os.Rename()</code>。</p>
+<p>处理完任务后，<code>Worker</code>通过RPC告知<code>Coordinator</code>任务结果。</p>
+<p><font color="red">所以，我们可以知道<code>Coordinator</code>管理着任务状态和任务分配，而无需记录<code>Worker</code>的信息，<code>Worker</code>实现任务处理。</font></p>
+<p>整个任务流程如下图所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=small" data-sub-html="<h2>image-20240514154125349</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png" alt="image-20240514154125349" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=large 2x" data-title="image-20240514154125349" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>MapReduce处理WordCount程序的流程如下图所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png" alt="img" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=large 2x" data-title="img" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h3 id="32-rpc" class="heading-element"><span>3.2 3.2 RPC</span>
+  <a href="#32-rpc" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>通信时首先需要确定这个消息是什么类型, 通过前述分析可知：</p>
+<ul>
+<li>
+<p>对于<code>Worker</code>发送消息，<code>Worker</code>需要跟<code>Coordinator</code>报告<code>Map</code>或<code>Reduce</code>任务的执行情况(成功或失败)</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskCompletedStatus</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MapTaskCompleted</span> <span class="p">=</span> <span class="kc">iota</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MapTaskFailed</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ReduceTaskCompleted</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ReduceTaskFailed</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<ul>
+<li>
+<p>对于<code>Coordinator</code>回复消息，<code>Coordinator</code>需要分配<code>Reduce</code>或<code>Map</code>任务，告知任务的类型，或者告知<code>Worker</code>休眠（暂时没有任务需要执行）、<code>Worker</code>退出（所有任务执行成功）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskType</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MapTask</span> <span class="p">=</span> <span class="kc">iota</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ReduceTask</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Wait</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Exit</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<p>同时，消息还需要附带额外的信息，我这里的设计是发送消息包含任务ID，以便<code>Coordinator</code>更新任务状态，结构如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">MessageSend</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">TaskID</span>              <span class="kt">int</span>                 <span class="c1">// task id
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskCompletedStatus</span> <span class="nx">TaskCompletedStatus</span> <span class="c1">// task completed status
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>回复消息结构如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">MessageReply</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">TaskID</span>   <span class="kt">int</span>      <span class="c1">// task id
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskType</span> <span class="nx">TaskType</span> <span class="c1">// task type, map or reduce or wait or exit
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskFile</span> <span class="kt">string</span>   <span class="c1">// task file name
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">NReduce</span>  <span class="kt">int</span>      <span class="c1">// reduce number, indicate the number of reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">NMap</span>     <span class="kt">int</span>      <span class="c1">// map number, indicate the number of map tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这些字段都是为了辅助<code>Worker</code>进行任务处理，如<code>NMap</code>是为了提供Map任务的数量，以便生成中间文件名，<code>TaskFile</code>是保存Map任务需要处理的输入文件。</p>
+<p>对于通信，原框架已提供Unix套接字通信，如果有想法，我们可以将 RPC 设置为通过 TCP/IP 而不是 Unix 套接字进行通信（请参阅 <code>Coordinator.server()</code> 中注释掉的行），并使用共享文件系统读/写文件。</p>
+<h3 id="32-coordinator" class="heading-element"><span>3.3 3.2 Coordinator</span>
+  <a href="#32-coordinator" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="321-结构" class="heading-element"><span>3.3.1 3.2.1 结构</span>
+  <a href="#321-%e7%bb%93%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>如前所述，<code>Coordinator</code>需要管理任务的状态信息，对于一个任务而言，我们这里定义它的状态为：未分配、已分配、完成、失败。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskStatus</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Unassigned</span> <span class="p">=</span> <span class="kc">iota</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Assigned</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Completed</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Failed</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>那么，任务结构应该包括任务状态，同时，如论文中提到的，可能有<code>Worker</code>成为落伍者，所以我们还需要考虑一个任务是否执行了很长时间还没结束，故这里需要记录任务分配时的时间戳，以便计算运行时间。另外，我们还需要一个字段来存储需要处理的任务文件名。故任务信息结构如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskInfo</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">TaskStatus</span> <span class="nx">TaskStatus</span> <span class="c1">// task status
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskFile</span>   <span class="kt">string</span>     <span class="c1">// task file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TimeStamp</span>  <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>  <span class="c1">// time stamp, indicating the running time of the task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>对于<code>Coordinator</code>结构，首先肯定是需要两个数据结构来存储所有的Map任务状态和Reduce任务状态，我这里使用的列表；然后由于是并发执行，更新共享任务状态数据，需要一把大锁保平安；最后需要一些额外变量存储任务数量（也可以直接<code>len(list)</code>）以及标志某阶段任务是否完成（如在Reduce任务进行之前Map任务是否已经完成）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Coordinator</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">NMap</span>                   <span class="kt">int</span>        <span class="c1">// number of map tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">NReduce</span>                <span class="kt">int</span>        <span class="c1">// number of reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">MapTasks</span>               <span class="p">[]</span><span class="nx">TaskInfo</span> <span class="c1">// map task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">ReduceTasks</span>            <span class="p">[]</span><span class="nx">TaskInfo</span> <span class="c1">// reduce task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">AllMapTaskCompleted</span>    <span class="kt">bool</span>       <span class="c1">// whether all map tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">AllReduceTaskCompleted</span> <span class="kt">bool</span>       <span class="c1">// whether all reduce tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">Mutex</span>                  <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span> <span class="c1">// mutex, used to protect the shared data
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="322-初始化" class="heading-element"><span>3.3.2 3.2.2 初始化</span>
+  <a href="#322-%e5%88%9d%e5%a7%8b%e5%8c%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>我们需要对<code>Coordinator</code>初始化，其中最重要的是更新任务初始状态，一开始都是未分配，</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">InitTask</span><span class="p">(</span><span class="nx">file</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">idx</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">file</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">]</span> <span class="p">=</span> <span class="nx">TaskInfo</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TaskFile</span><span class="p">:</span>   <span class="nx">file</span><span class="p">[</span><span class="nx">idx</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TaskStatus</span><span class="p">:</span> <span class="nx">Unassigned</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TimeStamp</span><span class="p">:</span>  <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">idx</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">]</span> <span class="p">=</span> <span class="nx">TaskInfo</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TaskStatus</span><span class="p">:</span> <span class="nx">Unassigned</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">MakeCoordinator</span><span class="p">(</span><span class="nx">files</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">nReduce</span> <span class="kt">int</span><span class="p">)</span> <span class="o">*</span><span class="nx">Coordinator</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span> <span class="o">:=</span> <span class="nx">Coordinator</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">NReduce</span><span class="p">:</span>                <span class="nx">nReduce</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">NMap</span><span class="p">:</span>                   <span class="nb">len</span><span class="p">(</span><span class="nx">files</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">MapTasks</span><span class="p">:</span>               <span class="nb">make</span><span class="p">([]</span><span class="nx">TaskInfo</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">files</span><span class="p">)),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ReduceTasks</span><span class="p">:</span>            <span class="nb">make</span><span class="p">([]</span><span class="nx">TaskInfo</span><span class="p">,</span> <span class="nx">nReduce</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">AllMapTaskCompleted</span><span class="p">:</span>    <span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">AllReduceTaskCompleted</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Mutex</span><span class="p">:</span>                  <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">{},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nf">InitTask</span><span class="p">(</span><span class="nx">files</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nf">server</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">c</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="323-requesttask函数" class="heading-element"><span>3.3.3 3.2.3 RequestTask函数</span>
+  <a href="#323-requesttask%e5%87%bd%e6%95%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这部分比较复杂，根据我们之前的分析，处理逻辑如下：</p>
+<ol>
+<li>如果有未分配的任务、之前执行失败、已分配但已经超时（10s）的<code>Map</code>任务，则选择这个任务进行分配；</li>
+<li>如果以上的<code>Map</code>任务均不存在，但<code>Map</code>又没有全部执行完成，告知<code>Worker</code>先等待；</li>
+<li><code>Map</code>任务全部执行完成的情况下，按照<code>1</code>和<code>2</code>相同的逻辑进行<code>Reduce</code>任务的分配；</li>
+<li>所有的任务都执行完成了, 告知<code>Worker</code>退出。</li>
+</ol>
+<p>因此，处理代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">RequestTask</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">MessageSend</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// assign map task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">!</span><span class="nx">c</span><span class="p">.</span><span class="nx">AllMapTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// count the number of completed map tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">NMapTaskCompleted</span> <span class="o">:=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">idx</span><span class="p">,</span> <span class="nx">taskInfo</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Unassigned</span> <span class="o">||</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Failed</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">				<span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Assigned</span> <span class="o">&amp;&amp;</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Since</span><span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TimeStamp</span><span class="p">)</span> <span class="p">&gt;</span> <span class="mi">10</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span> <span class="p">=</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskFile</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span> <span class="p">=</span> <span class="nx">idx</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">MapTask</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NReduce</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NMap</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NMap</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Assigned</span>  <span class="c1">// mark the task as assigned
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TimeStamp</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span> <span class="c1">// update the time stamp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Completed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">NMapTaskCompleted</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// check if all map tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">NMapTaskCompleted</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">c</span><span class="p">.</span><span class="nx">AllMapTaskCompleted</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">Wait</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// assign reduce task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">!</span><span class="nx">c</span><span class="p">.</span><span class="nx">AllReduceTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// count the number of completed reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">NReduceTaskCompleted</span> <span class="o">:=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">idx</span><span class="p">,</span> <span class="nx">taskInfo</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Unassigned</span> <span class="o">||</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Failed</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">				<span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Assigned</span> <span class="o">&amp;&amp;</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Since</span><span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TimeStamp</span><span class="p">)</span> <span class="p">&gt;</span> <span class="mi">10</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span> <span class="p">=</span> <span class="nx">idx</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">ReduceTask</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NReduce</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NMap</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NMap</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Assigned</span>  <span class="c1">// mark the task as assigned
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TimeStamp</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span> <span class="c1">// update the time stamp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Completed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">NReduceTaskCompleted</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// check if all reduce tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">NReduceTaskCompleted</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">c</span><span class="p">.</span><span class="nx">AllReduceTaskCompleted</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">Wait</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// all tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">Exit</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="324-reporttask函数" class="heading-element"><span>3.3.4 3.2.4 ReportTask函数</span>
+  <a href="#324-reporttask%e5%87%bd%e6%95%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这个函数则是根据<code>Worker</code>发送的消息任务完成状态来更新任务状态信息即可，<font color="red">记住，一把大锁保平安</font>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">ReportTask</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">MessageSend</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">MapTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Completed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">MapTaskFailed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Failed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">ReduceTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Completed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">ReduceTaskFailed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Failed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="33-worker" class="heading-element"><span>3.4 3.3 Worker</span>
+  <a href="#33-worker" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="331-worker轮询" class="heading-element"><span>3.4.1 3.3.1 Worker轮询</span>
+  <a href="#331-worker%e8%bd%ae%e8%af%a2" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><code>Worker</code>需要通过RPC轮询<code>Coordinator</code>请求任务，然后根据返回的任务类型进行处理（即调用相应函数）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Worker</span><span class="p">(</span><span class="nx">mapf</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">)</span> <span class="p">[]</span><span class="nx">KeyValue</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reducef</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">args</span> <span class="o">:=</span> <span class="nx">MessageSend</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span> <span class="o">:=</span> <span class="nx">MessageReply</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">call</span><span class="p">(</span><span class="s">&#34;Coordinator.RequestTask&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">reply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="k">switch</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">MapTask</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">HandleMapTask</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">reply</span><span class="p">,</span> <span class="nx">mapf</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">ReduceTask</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">HandleReduceTask</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">reply</span><span class="p">,</span> <span class="nx">reducef</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">Wait</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">Exit</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">os</span><span class="p">.</span><span class="nf">Exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">default</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="332-处理map任务" class="heading-element"><span>3.4.2 3.3.2 处理Map任务</span>
+  <a href="#332-%e5%a4%84%e7%90%86map%e4%bb%bb%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>跟<code>mrsequential.go</code>处理基本一致，处理完成后需要通过RPC告知<code>Coordinator</code>结果。但需要注意的是，我们需要通过<code>os.Rename()</code>原子重命名来保证最终的文件系统状态仅仅包含一个任务产生的数据。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">HandleMapTask</span><span class="p">(</span><span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">,</span> <span class="nx">mapf</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">)</span> <span class="p">[]</span><span class="nx">KeyValue</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// open the file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">file</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Open</span><span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot open %v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// read the file, get the content
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">content</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">io</span><span class="p">.</span><span class="nf">ReadAll</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot read %v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">file</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// call the map function to get the key-value pairs
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">kva</span> <span class="o">:=</span> <span class="nf">mapf</span><span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">,</span> <span class="nb">string</span><span class="p">(</span><span class="nx">content</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// create intermediate files
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">intermediate</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="nx">KeyValue</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">kv</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">kva</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">r</span> <span class="o">:=</span> <span class="nf">ihash</span><span class="p">(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">Key</span><span class="p">)</span> <span class="o">%</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">intermediate</span><span class="p">[</span><span class="nx">r</span><span class="p">]</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">[</span><span class="nx">r</span><span class="p">],</span> <span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// write the intermediate files
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">kva</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">intermediate</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">oname</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;mr-%v-%v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span> <span class="nx">r</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ofile</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">CreateTemp</span><span class="p">(</span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot create tempfile %v&#34;</span><span class="p">,</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">enc</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nf">NewEncoder</span><span class="p">(</span><span class="nx">ofile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">kv</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">kva</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// write the key-value pairs to the intermediate file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="nx">enc</span><span class="p">.</span><span class="nf">Encode</span><span class="p">(</span><span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ofile</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// Atomic file renaming：rename the tempfile to the final intermediate file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">os</span><span class="p">.</span><span class="nf">Rename</span><span class="p">(</span><span class="nx">ofile</span><span class="p">.</span><span class="nf">Name</span><span class="p">(),</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// send the task completion message to the coordinator
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">args</span> <span class="o">:=</span> <span class="nx">MessageSend</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskID</span><span class="p">:</span>              <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskCompletedStatus</span><span class="p">:</span> <span class="nx">MapTaskCompleted</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">call</span><span class="p">(</span><span class="s">&#34;Coordinator.ReportTask&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">MessageReply</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="333-处理reduce任务" class="heading-element"><span>3.4.3 3.3.3 处理Reduce任务</span>
+  <a href="#333-%e5%a4%84%e7%90%86reduce%e4%bb%bb%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这里利用我们生成的中间文件名特点，对于每个<code>Reduce</code>任务，它的输入文件（中间文件）名为<code>mr-MapID-ReduceID</code>，所以我们构造出输入文件数组，将其解码得到键值对，再进行处理。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// generate the intermediate files for reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">generateFileName</span><span class="p">(</span><span class="nx">r</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">NMap</span> <span class="kt">int</span><span class="p">)</span> <span class="p">[]</span><span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">var</span> <span class="nx">fileName</span> <span class="p">[]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">TaskID</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">TaskID</span> <span class="p">&lt;</span> <span class="nx">NMap</span><span class="p">;</span> <span class="nx">TaskID</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">fileName</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">fileName</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;mr-%d-%d&#34;</span><span class="p">,</span> <span class="nx">TaskID</span><span class="p">,</span> <span class="nx">r</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">fileName</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">HandleReduceTask</span><span class="p">(</span><span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">,</span> <span class="nx">reducef</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// load the intermediate files
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kd">var</span> <span class="nx">intermediate</span> <span class="p">[]</span><span class="nx">KeyValue</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// get the intermediate file names
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">intermediateFiles</span> <span class="o">:=</span> <span class="nf">generateFileName</span><span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">NMap</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// fmt.Println(intermediateFiles)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">filename</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">intermediateFiles</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">file</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Open</span><span class="p">(</span><span class="nx">filename</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot open %v&#34;</span><span class="p">,</span> <span class="nx">filename</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// decode the intermediate file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">dec</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nf">NewDecoder</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">kv</span> <span class="o">:=</span> <span class="nx">KeyValue</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">dec</span><span class="p">.</span><span class="nf">Decode</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">kv</span><span class="p">);</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">io</span><span class="p">.</span><span class="nx">EOF</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">break</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">intermediate</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">,</span> <span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">file</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// sort the intermediate key-value pairs by key
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">sort</span><span class="p">.</span><span class="nf">Slice</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span> <span class="p">&lt;</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">j</span><span class="p">].</span><span class="nx">Key</span>
+</span></span><span class="line"><span class="cl">	<span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// write the key-value pairs to the output file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">oname</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;mr-out-%v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ofile</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot create %v&#34;</span><span class="p">,</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">);</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">j</span> <span class="o">:=</span> <span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">j</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">j</span><span class="p">].</span><span class="nx">Key</span> <span class="o">==</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">j</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="kd">var</span> <span class="nx">values</span> <span class="p">[]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">k</span> <span class="o">:=</span> <span class="nx">i</span><span class="p">;</span> <span class="nx">k</span> <span class="p">&lt;</span> <span class="nx">j</span><span class="p">;</span> <span class="nx">k</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">values</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">values</span><span class="p">,</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">k</span><span class="p">].</span><span class="nx">Value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">// call the reduce function to get the output
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">output</span> <span class="o">:=</span> <span class="nf">reducef</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span><span class="p">,</span> <span class="nx">values</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">// write the key-value pairs to the output file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">fmt</span><span class="p">.</span><span class="nf">Fprintf</span><span class="p">(</span><span class="nx">ofile</span><span class="p">,</span> <span class="s">&#34;%v %v\n&#34;</span><span class="p">,</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span><span class="p">,</span> <span class="nx">output</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nx">i</span> <span class="p">=</span> <span class="nx">j</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ofile</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// rename the output file to the final output file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">os</span><span class="p">.</span><span class="nf">Rename</span><span class="p">(</span><span class="nx">ofile</span><span class="p">.</span><span class="nf">Name</span><span class="p">(),</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// send the task completion message to the coordinator
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">args</span> <span class="o">:=</span> <span class="nx">MessageSend</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskID</span><span class="p">:</span>              <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskCompletedStatus</span><span class="p">:</span> <span class="nx">ReduceTaskCompleted</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">call</span><span class="p">(</span><span class="s">&#34;Coordinator.ReportTask&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">MessageReply</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="4-测试和常见问题" class="heading-element"><span>4 4 测试和常见问题</span>
+  <a href="#4-%e6%b5%8b%e8%af%95%e5%92%8c%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><code>test-mr.sh</code>为测试脚本，也可以通过运行<code>sh test-mr-many.sh n</code>来运行$n$次测试。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">❯ bash test-mr.sh
+</span></span><span class="line"><span class="cl">*** Starting wc <span class="nb">test</span>
+</span></span><span class="line"><span class="cl">--- wc test: PASS
+</span></span><span class="line"><span class="cl">*** Starting indexer test.
+</span></span><span class="line"><span class="cl">--- indexer test: PASS
+</span></span><span class="line"><span class="cl">*** Starting map parallelism test.
+</span></span><span class="line"><span class="cl">--- map parallelism test: PASS
+</span></span><span class="line"><span class="cl">*** Starting reduce parallelism test.
+</span></span><span class="line"><span class="cl">--- reduce parallelism test: PASS
+</span></span><span class="line"><span class="cl">*** Starting job count test.
+</span></span><span class="line"><span class="cl">--- job count test: PASS
+</span></span><span class="line"><span class="cl">*** Starting early <span class="nb">exit</span> test.
+</span></span><span class="line"><span class="cl">--- early <span class="nb">exit</span> test: PASS
+</span></span><span class="line"><span class="cl">*** Starting crash test.
+</span></span><span class="line"><span class="cl">--- crash test: PASS
+</span></span><span class="line"><span class="cl">*** PASSED ALL TESTS</span></span></code></pre></td></tr></table>
+</div>
+</div><p>常见的问题如下：</p>
+<ol>
+<li>
+<p>不能通过<code>job-count</code>测试</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-golang" data-lang="golang"><span class="line"><span class="cl"><span class="o">***</span> <span class="nx">Starting</span> <span class="nx">job</span> <span class="nx">count</span> <span class="nx">test</span><span class="p">.</span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span> <span class="kd">map</span> <span class="nx">jobs</span> <span class="nx">ran</span> <span class="nx">incorrect</span> <span class="nx">number</span> <span class="nx">of</span> <span class="nf">times</span> <span class="p">(</span><span class="mi">10</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span> <span class="nx">job</span> <span class="nx">count</span> <span class="nx">test</span><span class="p">:</span> <span class="nx">FAIL</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>因为多次处理同一个任务，且任务没有异常。这是因为在分配任务后没有更新任务的状态，例如标记为已分配和记录当前时间戳。</p>
+</li>
+</ol>
 ]]></description></item><item><title>【MIT 6.5840(6.824)学习笔记】 分布式系统介绍</title><link>https://hezephyr.github.io/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/</link><pubDate>Tue, 14 May 2024 14:12:32 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/</guid><description><![CDATA[<h2 id="概念" class="heading-element"><span>1 概念</span>
   <a href="#%e6%a6%82%e5%bf%b5" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
@@ -1088,4 +2040,263 @@ Go切片比Go数组更灵活，因为数组的大小是其类型的一部分，�
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p><a href="https://blog.csdn.net/hzf0701/article/details/138770454?spm=1001.2014.3001.5501"target="_blank" rel="external nofollow noopener noreferrer">MapReduce论文阅读笔记<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+]]></description></item><item><title>论文阅读笔记 MapReduce: Simplified Data Processing on Large Clusters</title><link>https://hezephyr.github.io/posts/01.mapreduce/</link><pubDate>Sun, 12 May 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.mapreduce/</guid><description><![CDATA[<h2 id="1-概念" class="heading-element"><span>1 1 概念</span>
+  <a href="#1-%e6%a6%82%e5%bf%b5" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><code>MapReduce</code> 是一种用于在大型集群上进行简化数据处理的编程模型和计算框架。它最初由 Google 公司设计用于解决大规模数据处理问题，后来被广泛应用于各种大数据处理场景。</p>
+<p><code>MapReduce</code> 模型的核心思想是将大规模的数据集分解成多个小的数据块，然后分配给集群中的多个计算节点进行并行处理，最终将结果合并成最终的输出。</p>
+<h2 id="2-编程模型" class="heading-element"><span>2 2 编程模型</span>
+  <a href="#2-%e7%bc%96%e7%a8%8b%e6%a8%a1%e5%9e%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>MapReduce 编程模型由两个主要阶段组成：map 阶段和 reduce 阶段。</p>
+<ul>
+<li><strong>map 阶段</strong>：在 map 阶段，输入数据被分割成若干个数据块，并由不同的计算节点进行并行处理。每个计算节点都会执行用户定义的 map 函数，将输入数据转换为键值对的形式，并发出中间结果。</li>
+<li><strong>reduce 阶段</strong>：在 reduce 阶段，会将中间结果按照键进行分组，并由不同的计算节点进行并行处理。每个计算节点都会执行用户定义的 reduce 函数，对相同键的数据进行合并和处理，最终生成最终的输出结果。</li>
+</ul>
+<p>对于用户(MapReduce的使用者)而言：MapReduce是一种抽象化的编程模型，它隐藏了分布式数据处理的细节，仅对外暴露<code>map</code>和<code>reduce</code>的抽象，用户来实现具体的<code>map</code>和<code>reduce</code>功能。MapReduce自身关注的是并行计算、容错、分布式数据、负载均衡等一系列问题，并且保证分布计算的结果和无错误的串形计算的结果一致。</p>
+<p>形式化地说，由用户提供的 <code>map</code> 函数和 <code>reduce</code> 函数应有如下类型：
+$$
+\begin{align*}
+\text{map} &amp;\quad (k_1, v_1)\quad\quad\quad\rightarrow\quad\text{list}(k_2, v_2)\
+\text{reduce} &amp;\quad (k_2,\text{list}(v_2))\quad\rightarrow\quad\text{list}(v_2)
+\end{align*}
+$$
+其中，输入的 <code>key</code> 和 <code>value</code> 值与输出的 <code>key</code> 和 <code>value</code> 值在类型上推导的域不同。此外，中间结果 <code>key</code> 和 <code>value</code> 值与输出 <code>key</code> 和 <code>value</code> 值在类型上推导的域相同。</p>
+<p>例如，计算一个大的文档集合中每个单词出现的次数，下面是伪代码段：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">map(String key, String value):
+</span></span><span class="line"><span class="cl">    // key: document name
+</span></span><span class="line"><span class="cl">    // value: document contents
+</span></span><span class="line"><span class="cl">    for each word w in value:
+</span></span><span class="line"><span class="cl">        EmitIntermediate(w, “1″);
+</span></span><span class="line"><span class="cl">reduce(String key, Iterator values):
+</span></span><span class="line"><span class="cl">    // key: a word
+</span></span><span class="line"><span class="cl">    // values: a list of counts
+</span></span><span class="line"><span class="cl">    int result = 0;
+</span></span><span class="line"><span class="cl">    for each v in values:
+</span></span><span class="line"><span class="cl">        result += ParseInt(v);
+</span></span><span class="line"><span class="cl">    Emit(AsString(result));</span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>map</code> 函数输出文档中的每个词、以及这个词的出现次数(在这个简单的例子里就是 1)。<code>reduce</code> 函数把 <code>map</code> 函数产生的每一个特定的词的计数累加起来。</p>
+<p>值得注意的是，在实际的实现中 <code>MapReduce</code> 框架使用 <code>Iterator</code> 来代表作为输入的集合，主要是为了避免集合过大，无法被完整地放入到内存中。</p>
+<h2 id="3-实现" class="heading-element"><span>3 3 实现</span>
+  <a href="#3-%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="31-mapreduce执行流程" class="heading-element"><span>3.1 3.1 MapReduce执行流程</span>
+  <a href="#31-mapreduce%e6%89%a7%e8%a1%8c%e6%b5%81%e7%a8%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>下图展示了<code>MapReduce</code>操作的全部流程。当用户调用 <code>MapReduce</code> 函数时，将发生下面的一 系列动作（下面的序号和图中的序号一一对应）：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=small" data-sub-html="<h2>image-20240512144947298</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png" alt="image-20240512144947298" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=large 2x" data-title="image-20240512144947298" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<ol>
+<li>用户程序首先调用的 <code>MapReduce</code> 库将输入文件分成 $M$ 个数据片度，每个数据片段的大小一般从 $16\text{ MB}$ 到$64\text{ MB}$(可以通过可选的参数来控制每个数据片段的大小)。然后用户程序在集群中创建大量的程序副本。</li>
+<li>这些程序副本中的有一个特殊的程序—<code>master</code>。副本中其它的程序都是 <code>worker</code> 程序，由 <code>master</code> 分配 任务。有 $M$ 个 <code>map</code> 任务和 $R$ 个 <code>reduce</code> 任务将被分配，<code>master</code> 将一个 <code>map</code> 任务或 <code>reduce</code> 任务分配给一个空闲的 <code>worker</code>。</li>
+<li>被分配了 <code>map</code> 任务的 worker 程序读取相关的输入数据片段，从输入的数据片段中解析出键值对，然后把键值对传递给用户自定义的 Map 函数，由 Map 函数生成并输出的中间结果键值对，并缓存在内存中。</li>
+<li>缓存中的键值对通过分区函数（可由用户指定，默认为<code>hasy(key) mod R</code>）分成 $R$ 个区域，之后周期性的写入到本地磁盘上。缓存的键值对在本地磁盘上的存储位置将被回传给 <code>master</code>，由 <code>master</code> 负责把这些存储位置再传送给 <code>reduce worker</code>。</li>
+<li>当 <code>reduce worker</code> 程序接收到 <code>master</code> 程序发来的数据存储位置信息后，使用 <code>RPC</code> 从 <code>Map worker</code> 所在主机的磁盘上读取这些缓存数据。当 <code>reduce worker</code> 读取了所有的中间数据后，通过对 <code>key</code> 进行排序后使得具有相同 <code>key</code> 值的数据聚合在一起。由于许多不同的 <code>key</code> 值会映射到相同的 <code>reduce</code> 任务上， 因此必须进行排序。如果中间数据太大无法在内存中完成排序，那么就要在外部进行排序。</li>
+<li><code>reduce worker</code> 程序遍历排序后的中间数据，对于每一个唯一的中间 <code>key</code> 值，<code>reduce worker</code> 程序将这 个 <code>key</code> 值和它相关的中间结果<code>value</code> 值的集合传递给用户自定义的 <code>reduce</code> 函数。<code>reduce</code> 函数的输出被追加到所属分区的输出文件。</li>
+<li>当所有的 <code>map</code> 和 <code>reduce</code> 任务都完成之后，<code>master</code> 唤醒用户程序。在这个时候，在用户程序里的对 <code>MapReduce</code> 调用才返回。</li>
+</ol>
+<p>在成功完成任务之后，<code>MapReduce</code> 的输出存放在 $R$ 个输出文件中（对应每个 <code>reduce</code> 任务产生一个输出文件，文件名由用户指定）。一般情况下，用户不需要将这 $R$ 个输出文件合并成一个文件—他们经常把这些文件作为另外一个 <code>MapReduce</code> 的输入，或者在另外一个可以处理多个分割文件的分布式应用中使用。</p>
+<h3 id="32-master数据结构" class="heading-element"><span>3.2 3.2 master数据结构</span>
+  <a href="#32-master%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><code>master</code> 持有一些数据结构，它存储每一个 <code>map</code> 和 <code>reduce</code> 任务的状态（空闲、工作中或完成)，以及 <code>worker</code> 机器(非空闲任务的机器)的标识。</p>
+<p><code>master</code> 就像一个数据管道，中间文件存储区域的位置信息通过这个管道从 <code>map</code> 传递到 <code>reduce</code>。因此， 对于每个已经完成的 <code>map</code> 任务，<code>master</code> 存储了 <code>map</code> 任务产生的 $R$ 个中间文件存储区域的大小和位置。当 <code>map</code> 任务完成时，<code>master</code> 接收到位置和大小的更新信息，这些信息被逐步递增的推送给那些正在工作的 <code>reduce</code> 任务。</p>
+<h3 id="33-容错机制" class="heading-element"><span>3.3 3.3 容错机制</span>
+  <a href="#33-%e5%ae%b9%e9%94%99%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="331-worker故障" class="heading-element"><span>3.3.1 3.3.1 worker故障</span>
+  <a href="#331-worker%e6%95%85%e9%9a%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><ul>
+<li>
+<p>故障判定</p>
+<p><code>master</code> 周期性的 <code>ping</code> 每个 <code>worker</code>。如果在一个约定的时间范围内没有收到 <code>worker</code> 返回的信息，<code>master</code> 将 把这个 <code>worker</code> 标记为失效。</p>
+</li>
+<li>
+<p>故障处理</p>
+<ul>
+<li>正在运行：正在运行的 <code>map</code> 或 <code>reduce</code> 任务将被重新置为空闲状态，等待重新调度。</li>
+<li>已完成：所有由这个故障的<code>worker</code> 完成的 <code>map</code> 任务也会被重设为初始的空闲状态，等待重新调度，因为该 <code>worker</code> 不可用也意味着存储在该 <code>worker</code> 本地磁盘上的中间结果也不可用了；已经完成的 <code>reduce</code> 任务的输出存储在全局文件系统（eg. Google File System）上，因此不需要重新执行。</li>
+</ul>
+</li>
+</ul>
+<p>当一个 <code>map</code> 任务首先被 <code>worker A</code> 执行，之后由于 <code>worker A</code> 故障了又被调度到 <code>worker B</code> 执行，这个“重新执行”的动作会被通知给所有执行 <code>reduce</code> 任务的 <code>worker</code>。任何还没有从 <code>worker A</code> 读取数据的 <code>reduce</code> 任务 将从 <code>worker B</code>读取数据。</p>
+<h4 id="332-master故障" class="heading-element"><span>3.3.2 3.3.2 master故障</span>
+  <a href="#332-master%e6%95%85%e9%9a%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>一个简单的解决办法是让 <code>master</code> 周期性的将上面描述的master数据结构的写入磁盘，<font color="red">即检查点（checkpoint）</font>。如果这个 master 任务失败了，可以从最后一个检查点（checkpoint）开始启动另一个 <code>master</code> 进程。</p>
+<p>然而，由于只有一个 <code>master</code> 进程，<code>master</code> 失效后再恢复是比较麻烦的，因此现在的实现是如果 <code>master</code> 故障，就中止<code>MapReduce</code> 运算。用户可以检查到这个状态，并且可以根据需要重新执行 <code>MapReduce</code> 操作。</p>
+<h4 id="333-出现故障时的语义" class="heading-element"><span>3.3.3 3.3.3 出现故障时的语义</span>
+  <a href="#333-%e5%87%ba%e7%8e%b0%e6%95%85%e9%9a%9c%e6%97%b6%e7%9a%84%e8%af%ad%e4%b9%89" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>当用户提供的 <code>map</code> 和 <code>reduce</code> 操作是输入确定性函数（即相同的输入产生相同的输出）时，MapReduce保证任何情况下的输出都和所有程序没有出现任何错误、顺序的执行产生的输出是一样的。 这依赖对 <code>map</code> 和 <code>reduce</code> 任务的输出是原子提交的来完成这个特性。</p>
+<ul>
+<li>每个工作中的任务把它的输出写到私有的临时文件中。</li>
+<li>每个 <code>reduce</code> 任务生成一个这样的文件，而每个 <code>map</code> 任务则生成 $R$ 个这样的文件（一 个 <code>reduce</code> 任务对应一个文件）。</li>
+<li>当一个 <code>map</code> 任务完成的时，<code>worker</code> 发送一个包含 <code>R</code> 个临时文件名的完成消息给<code>master</code>。如果 <code>master</code> 从一个已经完成的 <code>map</code> 任务再次接收到到一个完成消息，<code>master</code> 将忽略这个消息；否 则，<code>master</code> 将这 $R$ 个文件的名字记录在数据结构里。</li>
+<li>当 <code>reduce</code> 任务完成时，<code>reduce worker</code> 进程以原子的方式把临时文件重命名为最终的输出文件。如果同一个 <code>reduce</code> 任务在多台机器上执行，针对同一个最终的输出文件将有多个重命名操作执行。这就依赖底层文件系统提供的重命名操作的原子性来保证最终的文件系统状态仅仅包含一个 <code>reduce</code>任务产生的数据。</li>
+</ul>
+<p>使用 MapReduce 模型的程序员可以很容易的理解他们程序的行为，因为我们绝大多数的 <code>map</code> 和 <code>reduce</code> 操作是确定性的，而且存在这样的一个事实：我们的语义（也可以理解为处理机制）等价于一个顺序的执行的操作。</p>
+<p>当 <code>map</code> and/or <code>reduce</code> 操作是不确定性的时候，MapReduce提供虽然较弱但是依然合理的语义。当使用非确定操作的时候， 一个 <code>reduce</code> 任务 $R_1$ 的输出等价于一个非确定性程序顺序执行产生时的输出。但是，另一个 <code>reduce</code> 任务 $R_2$的输出也许符合一个不同的非确定程序顺序执行产生的 $R_2$ 的输出。</p>
+<p>考虑 <code>map</code> 任务 $M$ 和 <code>reduce</code> 任务 $R_1$、$R_2$ 的情况。我们设定 $e(R_i)$是 $R_i$ 已经提交的执行过程（有且仅有一个这样的执行过程）。出现较弱语义是因为 $e(R_1)$可能读取了$M$ 一次执行产生的输出，而 $e(R_2)$可能读取了 $M$ 的另一次执行产生的输出。</p>
+<h3 id="34-存储位置" class="heading-element"><span>3.4 3.4 存储位置</span>
+  <a href="#34-%e5%ad%98%e5%82%a8%e4%bd%8d%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><font color="red">核心思想：尽量把输入数据(由 GFS 管理)存储在集群中机器的本地磁盘上来节省网络带宽。</font></p>
+<p>GFS 把每个文件按 64MB 一个 Block 分隔，每个 Block 保存 在多台机器上，环境中就存放了多份拷贝(一般是 3 个拷贝)。MapReduce 的 <code>master</code> 在调度 <code>map</code> 任务时会考虑输入文件的位置信息，尽量将一个 <code>map</code> 任务调度在包含相关输入数据拷贝的机器上执行；</p>
+<p>如果上述努力失败 了，<code>master</code> 将尝试在保存有输入数据拷贝的机器附近的机器上执行 <code>map</code> 任务(例如，分配到一个和包含输入数据的机器在一个 switch 里的 worker 机器上执行)。当在一个足够大的 cluster 集群上运行大型 MapReduce 操作的时候，大部分的输入数据都能从本地机器读取，因此消耗非常少的网络带宽。</p>
+<h3 id="35-任务粒度" class="heading-element"><span>3.5 3.5 任务粒度</span>
+  <a href="#35-%e4%bb%bb%e5%8a%a1%e7%b2%92%e5%ba%a6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>理想情况下，$M$ 和 $R$ 应当比集群中 <code>worker</code> 的机器数量要多得多。在每台 <code>worker</code> 机器都执行大量的不同任务能够<strong>提高集群的动态的负载均衡能力</strong>，并且能够加快故障恢复的速度：失效机器上执行的大量 <code>map</code> 任务都可以分布到所有其他的 <code>worker</code> 机器上去执行。</p>
+<p>但是实际上，在具体实现中对 $M$ 和 $R$ 的取值都有一定的客观限制，因为 <code>master</code> 必须执行 $O(M+R) $次调度，并且在内存中保存 $O(M\times R)$个状态（对影响内存使用的因素还是比较小的：$O(M\times R)$块状态，大概每对 <code>map</code> 任务/<code>reduce</code> 任务 1 个字节就可以了）。</p>
+<p>更进一步，$R$ 值通常是由用户指定的，因为每个 <code>reduce</code> 任务最终都会生成一个独立的输出文件。实际使用时我们也倾向于选择合适的 $M$ 值，<font color="red">以使得每一个独立任务都是处理大约 16M 到 64M 的输入数据</font>（这样， 上面描写的输入数据本地存储优化策略才最有效），另外，我们把 $R$ 值设置为我们想使用的 <code>worker</code> 机器数量的小的倍数。</p>
+<p>所以我们通常会用这样的比例来执行 MapReduce：$M=200000$，$R=5000$，使用 $2000$ 台 <code>worker</code> 机器。</p>
+<h3 id="36-备用任务" class="heading-element"><span>3.6 3.6 备用任务</span>
+  <a href="#36-%e5%a4%87%e7%94%a8%e4%bb%bb%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>如果集群中有某个 <code>worker</code> 花了特别长的时间来完成最后的几个 <code>map</code> 或 <code>reduce</code> 任务，整个 MapReduce 计算任务的耗时就会因此被拖长，这样的 <code>worker</code> 也就成了落后者（Straggler）。</p>
+<p>因此，论文提出一个通用的机制来减少“落伍者”出现的情况。当一个 MapReduce 操作接近完成的时候，<code>master</code> 会调度备用（backup）任务进程来执行剩下的、处于处理中状态（in-progress）的任务。<font color="red">无论是最初的执行、还是备用（backup）任务进程完成了任务，我们都把这个任务标记成为已经完成。</font></p>
+<h2 id="4-扩展技巧" class="heading-element"><span>4 4 扩展技巧</span>
+  <a href="#4-%e6%89%a9%e5%b1%95%e6%8a%80%e5%b7%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="41-分区函数" class="heading-element"><span>4.1 4.1 分区函数</span>
+  <a href="#41-%e5%88%86%e5%8c%ba%e5%87%bd%e6%95%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>MapReduce 的使用者通常会指定 <code>reduce</code> 任务和 <code>reduce</code> 任务输出文件的数量（$R$）。我们在中间结果<code>key</code> 上使用分区函数来对数据进行分区，之后再输入到后续任务执行进程。</p>
+<p>一个缺省的分区函数是使用 <code>hash</code> 方法(比如， <code>hash(key) mod R</code>)进行分区。<code>hash</code> 方法能产生非常平衡的分区。然而，有的时候，其它的一些分区函数对 <code>key</code> 值进行的分区将非常有用。</p>
+<p>比如，输出的 <code>key</code> 值是 URLs，我们希望每个主机的所有条目保持在同一个输出文件中。为了支持类似的情况，MapReduce库的用户需要提供专门的分区函数。例如，使用<code>hash(Hostname(urlkey)) mod R</code>作为分区函数就可以把所有来自同一个主机的 URLs 保存在同一个输出文件中。</p>
+<h3 id="42-顺序保证" class="heading-element"><span>4.2 4.2 顺序保证</span>
+  <a href="#42-%e9%a1%ba%e5%ba%8f%e4%bf%9d%e8%af%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在给定的分区$R$中，MapReduce保证所有中间键值对数据的处理顺序是按照 <code>key</code> 值增量顺序处理的。</p>
+<h3 id="43-combiner函数" class="heading-element"><span>4.3 4.3 Combiner函数</span>
+  <a href="#43-combiner%e5%87%bd%e6%95%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在某些情况下，<code>map</code> 函数产生的中间 <code>key</code> 值的重复数据会占很大的比重，并且，用户自定义的 <code>reduce</code> 函数满足结合律和交换律。词数统计程序是个很好的例子。由于词频率倾向于一个 zipf 分布，每个 <code>map</code> 任务将产生成千上万个这样的记录。所有的这些记录将通过网络被发送到一个单独的 <code>reduce</code> 任务，然后由这个<code>reduce</code> 任务把所有这些记录累加起来产生一个数字。</p>
+<p>MapReduce允许用户指定一个可选的 <code>combiner</code> 函数，<code>combiner</code> 函数首先在本地将这些记录进行一次合并，然后将合并的结果再通过网络发送出 去。 <code>combiner</code> 函数在每台执行 Map 任务的机器上都会被执行一次。一般情况下，<code>combiner</code> 和 <code>reduce</code> 函数是 一样的。<code>combiner</code> 函数和 Reduce 函数之间唯一的区别是 MapReduce 库怎样控制函数的输出。</p>
+<p><code>reduce</code> 函数的输出被保存在最终的输出文件里，而 <code>combiner</code> 函数的输出被写到中间文件里，然后被发送给 <code>reduce</code> 任务。 部分的合并中间结果可以显著的提高一些 MapReduce 操作的速度。</p>
+<h3 id="44-输入和输出的类型" class="heading-element"><span>4.4 4.4 输入和输出的类型</span>
+  <a href="#44-%e8%be%93%e5%85%a5%e5%92%8c%e8%be%93%e5%87%ba%e7%9a%84%e7%b1%bb%e5%9e%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>MapReduce库支持几种不同的格式的输入数据。比如文本模式中，<code>key</code>是文件的偏移量，<code>value</code>是该行内容。</p>
+<p>程序员可以定义<code>Reader</code>接口来适应不同的输入类型，程序员需要保证必须能把输入数据切分成数据片段，且这些数据片段能够由单独的Map任务来处理就行了。<code>Reader</code>的数据源可能是数据库，可能是文本文件，甚至是内存等。</p>
+<p>同样，用户采用类似添加新的输入数据类型的方式增加新的输出类型（定义<code>Writer</code>接口）。</p>
+<h3 id="45-副作用" class="heading-element"><span>4.5 4.5 副作用</span>
+  <a href="#45-%e5%89%af%e4%bd%9c%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>程序员在写<code>map</code>和/或<code>reduce</code>操作的时候，可能会因为方便，定义很多额外功能，比如增加辅助的输出文件等。但应当时刻记住，<code>map</code>和<code>reduce</code>操作应当保证原子性和幂等性。</p>
+<p>比如，一个任务生成了多个输出文件，但是我们没有原子化多段commit的操作。这就需要程序员自己保证生成多个输出的任务是确定性任务。</p>
+<h3 id="46-跳过损坏的记录" class="heading-element"><span>4.6 4.6 跳过损坏的记录</span>
+  <a href="#46-%e8%b7%b3%e8%bf%87%e6%8d%9f%e5%9d%8f%e7%9a%84%e8%ae%b0%e5%bd%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>有时候，用户程序中的 bug 导致 <code>map</code> 或者 <code>reduce</code> 函数在处理某些记录的时候 crash 掉，MapReduce 操作 无法顺利完成。相较于修复无法执行的 Bug，跳过引发 Bug 的记录可能更为明智。因此，我们希望 MapReduce 检测哪些记录导致确定性的crash， 并且跳过这些记录不处理。</p>
+<p>MapReduce 如何自动检测这种情况呢？首先，每个<code>worker</code>进程都设置了信号处理函数捕获内存段异常（segmentation violation）和总线错误（bus error）。 在执行 <code>map</code> 或者 <code>reduce</code> 操作之前，MapReduce 库通过全局变量保存记录序号。如果用户程序触发了一个系统信号，信号处理函数将用“最后一口气”通过 UDP 包向 <code>master</code> 发送处理的最后一条记录的序号。当 <code>master</code> 看到在处理某条特定记录不止失败一次时，<code>master</code> 就标志这条记录需要被跳过，并且在下次重新执行相关的<code>map</code> 或者 <code>reduce</code> 任务的时候跳过这条记录。</p>
+<h3 id="47-本地执行" class="heading-element"><span>4.7 4.7 本地执行</span>
+  <a href="#47-%e6%9c%ac%e5%9c%b0%e6%89%a7%e8%a1%8c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>调试 <code>map</code> 和 <code>reduce</code> 函数的 bug 非常困难，因为它们在分布式系统中执行，并且通常跨多台计算机执行，由 <code>master</code> 动态调度。为了简化调试、性能分析和小规模测试，Google开发了本地版本的 MapReduce 库。这个本地版本可以让 MapReduce 操作在单台计算机上顺序执行。用户可以控制操作的执行，并且可以将其限制在特定的 <code>map</code> 任务上。通过设置特殊标志，用户可以在本地执行他们的程序，并且轻松使用本地调试和测试工具（如 <code>gdb</code>）。</p>
+<h3 id="48-状态信息" class="heading-element"><span>4.8 4.8 状态信息</span>
+  <a href="#48-%e7%8a%b6%e6%80%81%e4%bf%a1%e6%81%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在 <code>master</code> 内部，设有一个内置的 HTTP 服务器，用于展示一系列状态信息页面。这些页面会显示计算进度，例如已完成的任务数量、正在执行的任务数量、输入、中间数据和输出的字节数，以及处理速率等。</p>
+<p>这些页面还包含了指向每个任务的<code>stderr</code>和<code>stdout</code>文件的链接。用户可以利用这些数据来预测计算完成所需的时间，以及是否需要增加更多资源。当计算花费的时间超过预期时，这些页面还可以帮助用户找出执行速度缓慢的原因。</p>
+<p>另外，顶层状态页面还会显示出现故障的<code>worker</code>及其故障时正在执行的 <code>map</code> 和 <code>reduce</code> 任务。这些信息对于调试用户代码中的 bug 非常有帮助。</p>
+<p><strong>很多分布式系统架构都会提供可视化监控界面，这是提升分布式系统的可维护性的重要手段</strong>。</p>
+<h3 id="49-计数器" class="heading-element"><span>4.9 4.9 计数器</span>
+  <a href="#49-%e8%ae%a1%e6%95%b0%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>MapReduce 库提供计数器机制，用来统计不同操作发生次数。比如，用户可能想统计已经处理了多少个单词、已经索引的多少篇 German 文档等等。</p>
+<p>要想使用这个特性，用户需要创建Counter对象，然后在<code>map</code>和<code>reduce</code>函数中以正确的方式增加<code>counter</code>。这些计数器的值周期性的从各个单独的<code>worker</code>机器上传递给<code>master</code>（附加在ping的应答包中传递）。<code>master</code> 把执行成功的 <code>map</code> 和 <code>reduce</code> 任务的计数器值进行累计，当 MapReduce 操作完成之后，返回给用户代码。 计数器当前的值也会显示在 <code>master</code> 的状态页面上，这样用户就可以看到当前计算的进度。</p>
+<p>当累加这些<code>counter</code>的值时，<code>master</code>会去掉那些重复执行的相同<code>map</code>或者<code>reduce</code>操作的次数，以此避免重复计数（之前提到的备用任务和故障后重新执行任务，这两种情况会导致相同的任务被多次执行）。</p>
+<p>有些<code>counter</code>值是由MapReduce库自动维护的，例如已经处理过的输入键值对的数量以及生成的输出键值对的数量等等。</p>
+<h2 id="5-应用场景" class="heading-element"><span>5 5 应用场景</span>
+  <a href="#5-%e5%ba%94%e7%94%a8%e5%9c%ba%e6%99%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="51-论文中提出的应用场景" class="heading-element"><span>5.1 5.1 论文中提出的应用场景</span>
+  <a href="#51-%e8%ae%ba%e6%96%87%e4%b8%ad%e6%8f%90%e5%87%ba%e7%9a%84%e5%ba%94%e7%94%a8%e5%9c%ba%e6%99%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>分布式的 Grep：<code>map</code> 函数输出匹配某个模式的一行，<code>reduce</code> 函数是一个恒等函数，即把中间数据复制到输出。</li>
+<li>计算 URL 访问频率：<code>map</code> 函数处理日志中 web 页面请求的记录，然后输出 (URL,1)。<code>reduce</code> 函数把相同 URL 的 value 值都累加起来，产生 (URL, 记录总数）结果。</li>
+<li>倒转网络链接图：<code>map</code> 函数在源页面（source）中搜索所有的链接目标（target）并输出为(target,source)。 <code>reduce</code> 函数把给定链接目标（target）的链接组合成一个列表，输出(target,list(source))。</li>
+<li>每个主机的检索词向量：检索词向量用一个(词,频率)列表来概述出现在文档或文档集中的最重要的一些词。<code>map</code> 函数为每一个输入文档输出(主机名,检索词向量)，其中主机名来自文档的 URL。<code>reduce</code> 函数接收给定主机的所有文档的检索词向量，并把这些检索词向量加在一起，丢弃掉低频的检索词，输出一个最终的(主机名,检索词向量)。</li>
+<li>倒排索引：<code>map</code> 函数分析每个文档输出一个(词,文档号)的列表，<code>reduce</code> 函数的输入是一个给定词的所有 （词，文档号），排序所有的文档号，输出(词,list(文档号))。所有的输出集合形成一个简单的倒排索引，它以一种简单的算法跟踪词在文档中的位置。</li>
+<li>分布式排序：<code>map</code> 函数从每个记录提取 <code>key</code>，输出(key,record)。<code>reduce</code> 函数不改变任何的值。这个运算依赖<strong>分区机制和排序属性</strong>。</li>
+<li>重建索引系统：重写了 Google 网络搜索服务所使用的索引系统。这个索引系统的输入数据是网络爬虫抓取回来的大量文档，这些文档数据保存在 GFS 文件系统中，其原始内容超过了 20TB。通过一系列的 MapReduce 操作（大约 5 到 10 次），来建立索引。使用 MapReduce（替换上一个特别设计的、分布式处理的索引程序）带来这些好处：
+<ul>
+<li>简化的代码：索引部分的代码变得简单、小巧、易于理解；</li>
+<li>灵活性：MapReduce 库的性能已经足够好，因此可以将概念上不相关的计算步骤分开处理，减少数据传递的额外开销；</li>
+<li>操作管理的简化：因为由机器失效、机器处理速度缓慢、以及网络的瞬间阻塞等引起的绝大部分问题都已经由 MapReduce 库解决了，不再需要操作人员的介入了。另外，我们可以通过在索引系统集群中增加机器的简单方法提高整体处理性能。</li>
+</ul>
+</li>
+</ul>
+<h3 id="52-其他应用场景" class="heading-element"><span>5.2 5.2 其他应用场景</span>
+  <a href="#52-%e5%85%b6%e4%bb%96%e5%ba%94%e7%94%a8%e5%9c%ba%e6%99%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>数据清洗和预处理：MapReduce 可以用于处理大规模数据集的清洗和预处理，包括数据去重、数据过滤、数据格式转换等操作；</li>
+<li>日志分析和异常检测：MapReduce 可以用于分析大规模日志数据，检测异常行为、故障事件和系统性能问题；</li>
+<li>图算法和社交网络分析：MapReduce 可以应用于图算法和社交网络分析，包括图的遍历、最短路径计算、社区发现等操作；</li>
+<li>文本挖掘和信息抽取：MapReduce 可以用于处理文本数据，进行信息抽取、实体识别、主题建模等自然语言处理任务。</li>
+</ul>
+<h2 id="6-faq" class="heading-element"><span>6 6 FAQ</span>
+  <a href="#6-faq" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><blockquote>
+<p>当你调用emit时，数据会发生什么变化？emit函数在哪运行？</p>
+<p>首先看，这些函数在哪运行。这里可以看MapReduce论文的图1。现实中，MapReduce运行在大量的服务器之上，我们称之为worker服务器或者worker。同时，也会有一个Master节点来组织整个计算过程。这里实际发生的是，Master服务器知道有多少输入文件，例如5000个输入文件，之后它将Map函数分发到不同的worker。所以，它会向worker服务器发送一条消息说，请对这个输入文件执行Map函数吧。之后，MapReduce框架中的worker进程会读取文件的内容，调用Map函数并将文件名和文件内容作为参数传给Map函数。worker进程还需要实现emit，这样，每次Map函数调用emit，worker进程就会将数据写入到本地磁盘的文件中。所以，Map函数中调用emit的效果是在worker的本地磁盘上创建文件，这些文件包含了当前worker的Map函数生成的所有的key和value。</p>
+<p>所以，Map阶段结束时，我们看到的就是Map函数在worker上生成的一些文件。之后，MapReduce的worker会将这些数据移动到Reduce所需要的位置。对于一个典型的大型运算，Reduce的入参包含了所有Map函数对于特定key的输出。通常来说，每个Map函数都可能生成大量key。所以通常来说，在运行Reduce函数之前。运行在MapReduce的worker服务器上的进程需要与集群中每一个其他服务器交互来询问说，看，我需要对key=a运行Reduce，请看一下你本地磁盘中存储的Map函数的中间输出，找出所有key=a，并通过网络将它们发给我。所以，Reduce worker需要从每一个worker获取特定key的实例。这是通过由Master通知到Reduce worker的一条指令来触发。一旦worker收集完所有的数据，它会调用Reduce函数，Reduce函数运算完了会调用自己的emit，这个emit与Map函数中的emit不一样，它会将输出写入到一个Google使用的共享文件服务中。</p>
+<p>有关输入和输出文件的存放位置，这是我之前没有提到的，它们都存放在文件中，但是因为我们想要灵活的在任意的worker上读取任意的数据，这意味着我们需要某种网络文件系统（network file system）来存放输入数据。所以实际上，MapReduce论文谈到了GFS（Google File System）。GFS是一个共享文件服务，并且它也运行在MapReduce的worker集群的物理服务器上。GFS会自动拆分你存储的任何大文件，并且以64MB的块存储在多个服务器之上。所以，如果你有了10TB的网页数据，你只需要将它们写入到GFS，甚至你写入的时候是作为一个大文件写入的，GFS会自动将这个大文件拆分成64MB的块，并将这些块平均的分布在所有的GFS服务器之上，而这是极好的，这正是我们所需要的。如果我们接下来想要对刚刚那10TB的网页数据运行MapReduce Job，数据已经均匀的分割存储在所有的服务器上了。如果我们有1000台服务器，我们会启动1000个Map worker，每个Map worker会读取1/1000输入数据。这些Map worker可以并行的从1000个GFS文件服务器读取数据，并获取巨大的读取吞吐量，也就是1000台服务器能提供的吞吐量。</p>
+</blockquote>
+<h2 id="7-参考" class="heading-element"><span>7 7 参考</span>
+  <a href="#7-%e5%8f%82%e8%80%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><a href="https://pdos.csail.mit.edu/6.824/papers/mapreduce.pdf"target="_blank" rel="external nofollow noopener noreferrer">paper:MapReduce<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://pdos.csail.mit.edu/6.824/schedule.html"target="_blank" rel="external nofollow noopener noreferrer">MIT 6.824<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/525032069"target="_blank" rel="external nofollow noopener noreferrer">知乎 【分布式】MapReduce论文笔记<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<p><a href="https://zhuanlan.zhihu.com/p/34849261"target="_blank" rel="external nofollow noopener noreferrer">知乎 Google MapReduce 论文详解<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
 ]]></description></item></channel></rss>
