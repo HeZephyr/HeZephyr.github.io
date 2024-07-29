@@ -1,4 +1,803 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>论文阅读 - 分类 | ZephyrHe</title><link>https://hezephyr.github.io/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/</link><description>论文阅读 - 分类 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 12 May 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/" rel="self" type="application/rss+xml"/><item><title>论文阅读笔记 MapReduce: Simplified Data Processing on Large Clusters</title><link>https://hezephyr.github.io/posts/01.mapreduce/</link><pubDate>Sun, 12 May 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.mapreduce/</guid><description><![CDATA[<h2 id="1-概念" class="heading-element"><span>1 1 概念</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>论文阅读 - 分类 | ZephyrHe</title><link>https://hezephyr.github.io/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/</link><description>论文阅读 - 分类 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 19 Jul 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/categories/%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB/" rel="self" type="application/rss+xml"/><item><title>【论文阅读笔记】 In Search of an Understandable Consensus Algorithm (Extended Version)</title><link>https://hezephyr.github.io/posts/02.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0in-search-of-an-understandable-consensus-algorithm-extended-version/</link><pubDate>Fri, 19 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/02.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0in-search-of-an-understandable-consensus-algorithm-extended-version/</guid><description><![CDATA[<h2 id="1-介绍" class="heading-element"><span>1 1 介绍</span>
+  <a href="#1-%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>分布式一致性共识算法指的是在分布式系统中，使得所有节点对同一份数据的认知能够达成共识的算法。且算法允许所有节点像一个整体一样工作，即使其中一些节点出现故障也能够继续工作。之前的大部分一致性算法实现都是基于Paxos，但Paxos难以理解和实现，为此作者开始寻找一种新的易于理解的一致性算法，Raft则是作者工作的产出。</p>
+<p>在设计Raft的过程中，作者采用了一系列策略来增强其可理解性，包括：</p>
+<ul>
+<li><strong>算法分解</strong>：Raft将核心功能模块化，<font color="red">分离出领导人选举、日志复制和安全性三个关键部分</font>，使每个部分的逻辑更加清晰。</li>
+<li><strong>状态空间缩减</strong>：相比于Paxos，Raft减少了不确定性和服务器间的不一致性状态，简化了状态机模型，从而降低了理解和实现的难度。</li>
+</ul>
+<p>Raft 算法在许多方面和现有的一致性算法都很相似，但是它也有一些特性：</p>
+<ul>
+<li><strong>强领导人机制</strong>：Raft采用了更强的领导人角色，<font color="red">所有日志条目仅由领导人发送给其他服务器</font>，这种集中控制方式简化了日志管理，增强了算法的直观性。</li>
+<li><strong>领导人选举</strong>：<font color="red">Raft使用随机计时器来触发领导人选举</font>，这种机制在心跳机制的基础上增加了少许复杂性，<strong>但有效地解决了选举冲突，实现了快速而简单的决策过程</strong>。</li>
+<li><strong>成员关系调整</strong>：Raft 使用一种<strong>联合共识</strong>的方法来处理集群成员变换的问题，在这种方法下，处于调整过程中的两种不同的配置集群中大多数机器会有重叠，这就使得集群在成员变换的时候依然可以继续工作。</li>
+</ul>
+<h2 id="2-复制状态机" class="heading-element"><span>2 2 复制状态机</span>
+  <a href="#2-%e5%a4%8d%e5%88%b6%e7%8a%b6%e6%80%81%e6%9c%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>复制状态机是共识算法的核心应用背景，它是指一组服务器上的状态机生成相同状态的副本，即使部分服务器宕机也能持续运行。这种架构在大规模分布式系统中尤其重要，因为它能够解决一系列容错问题。例如，大规模的系统中通常都有一个集群领导人，像 GFS、HDFS 和 RAMCloud，典型应用就是<font color="red">一个独立的复制状态机去管理领导人选举和存储配置信息并且在领导人宕机的情况下也要存活下来</font>。比如 Chubby 和 ZooKeeper。</p>
+<p>复制状态机通常都是基于复制日志实现的，如图 1。每个服务器存储一个包含一系列指令的日志，并且按照日志的顺序进行执行。所有日志都包含相同的指令序列，确保状态机一致，因为每个状态机都是确定的，每一次执行操作都产生相同的状态和同样的序列。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be1.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图1.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图1.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be1.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图1.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be1.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be1.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be1.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图1.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p><font color="red">一致性算法的任务是保证复制日志的一致</font>性。服务器上的一致性模块接收客户端发送的指令然后添加到自己的日志中。它和其他服务器上的一致性模块进行通信来保证每一个服务器上的日志最终都以相同的顺序包含相同的请求，即使有些服务器发生故障。一旦指令被正确的复制，每一个服务器的状态机按照日志顺序处理他们，然后输出结果被返回给客户端。因此，服务器集群看起来形成了一个高可靠的状态机。</p>
+<p>实际系统中使用的一致性算法主要有以下特性：</p>
+<ul>
+<li>安全性保证（绝对不会返回一个错误的结果）。</li>
+<li>即使部分服务器失败，只要多数服务器运行，系统依然可用。</li>
+<li>不依赖于时序，能够应对时钟错误和消息延迟。</li>
+<li>大多数情况下，指令可以在一轮远程过程调用后完成，不受少数慢节点影响。</li>
+</ul>
+<h2 id="3-paxos的问题" class="heading-element"><span>3 3 Paxos的问题</span>
+  <a href="#3-paxos%e7%9a%84%e9%97%ae%e9%a2%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ol>
+<li>
+<p>Paxos极其难以理解。</p>
+</li>
+<li>
+<p>没有为构建实际系统实现提供良好的基础。</p>
+</li>
+</ol>
+<h2 id="4-为了可理解性的设计" class="heading-element"><span>4 4 为了可理解性的设计</span>
+  <a href="#4-%e4%b8%ba%e4%ba%86%e5%8f%af%e7%90%86%e8%a7%a3%e6%80%a7%e7%9a%84%e8%ae%be%e8%ae%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>设计Raft算法的初衷：</p>
+<ol>
+<li>
+<p>必须提供一个完整的实际的系统实现基础，减少开发者工作量；</p>
+</li>
+<li>
+<p>必须在任何情况下都是安全的并且在大多数的情况下都是可用的；</p>
+</li>
+<li>
+<p>它的大部分操作必须是高效的；</p>
+</li>
+<li>
+<p>可理解性，它必须保证对于普遍的人群都可以十分容易的去理解；</p>
+</li>
+<li>
+<p>便于系统构建者形成直观理解，便于实际应用和扩展；</p>
+</li>
+</ol>
+<p>Raft设计原则：</p>
+<ol>
+<li>
+<p><strong>问题分解</strong>：将复杂问题拆解为独立、易于理解和解决的子问题。例如，Raft 的领导人选举、日志复制、安全性和成员变更。</p>
+</li>
+<li>
+<p><strong>状态空间简化</strong>：减少状态数量，降低系统复杂性并在可能的时候消除不确定性。确保日志无空洞，限制日志不一致的可能性。</p>
+</li>
+<li>
+<p><strong>随机化应用</strong>：在领导人选举中使用随机化，简化机制，快速解决冲突。</p>
+</li>
+</ol>
+<h2 id="5-raft一致性算法" class="heading-element"><span>5 5 Raft一致性算法</span>
+  <a href="#5-raft%e4%b8%80%e8%87%b4%e6%80%a7%e7%ae%97%e6%b3%95" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Raft 是一种管理复制日志的一致性算法，通过选举领导人并由其管理日志来实现一致性。领导人从客户端接收日志条目，把日志条目复制到其他服务器上，并告诉其他的服务器什么时候可以安全地将日志条目应用到他们的状态机中。这一决策过程无需与其他服务器进行商议，从而简化了整个复制日志的管理流程，并且数据都从领导人流向其他服务器。一个领导人可能会发生故障，或者和其他服务器失去连接，在这种情况下一个新的领导人会被选举出来。</p>
+<p>Raft算法的一致性问题被巧妙地分解为三个关键子问题：</p>
+<ul>
+<li><strong>领导选举</strong>：当领导人发生故障的时候, 一个新的领导人需要被选举出来，确保系统的连续性和稳定性（5.2）</li>
+<li><strong>日志复制</strong>：领导人必须从客户端接收日志条目然后复制到集群中的其他节点，并强制要求其他节点的日志和自己保持一致。</li>
+<li><strong>安全性</strong>：Raft通过特定的机制（5.4）确保一旦日志条目被应用到某个服务器的状态机中，其他服务器不会在同一日志索引位置应用不同的指令，从而保障了系统状态的一致性和安全性。</li>
+</ul>
+<h3 id="51-raft基础" class="heading-element"><span>5.1 5.1 Raft基础</span>
+  <a href="#51-raft%e5%9f%ba%e7%a1%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>一个 Raft 集群由若干个服务器节点构成，如常见的 5 节点配置，能容忍最多 2 个节点失效。节点有以下三种状态：</p>
+<ul>
+<li>
+<p>领导人：唯一决策者，处理所有客户端请求，并且管理复制日志。</p>
+</li>
+<li>
+<p>跟随者：被动角色，仅响应领导人和候选人的请求。</p>
+</li>
+<li>
+<p>候选人：竞选状态，用于选举新领导人</p>
+</li>
+</ul>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be4.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图4.jpeg?size=small" data-sub-html="<h2>server_state</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be4.jpeg" alt="server_state" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be4.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be4.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be4.jpeg?size=large 2x" data-title="server_state" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p><font color="red">跟随者在收不到消息时，升级为候选人，启动选举；获得多数票的候选人成为领导人；领导人宕机或发现任期过期，降级为跟随者。</font></p>
+<p>Raft 通过任期来划分时间，每个任期都始于一次选举。任期用整数标记，每段任期有其选举过程。如果选举成功，选出的领导人将负责管理集群，直到该任期结束。任期在Raft中充当逻辑时钟的作用，帮助节点检测过期信息，如过期的领导人。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be5.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图5.jpeg?size=small" data-sub-html="<h2>Term_Figure</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be5.jpeg" alt="Term_Figure" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be5.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be5.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be5.jpeg?size=large 2x" data-title="Term_Figure" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>每个节点维护一个当前任期号，通信时交换任期号，节点自动更新至较大值，领导人或候选人如果发现任期号过期，会恢复为跟随者；节点拒绝过期任期请求。</p>
+<p>在 Raft 算法中，节点间的通信依赖于RPC。基本的一致性算法主要使用两种类型的 RPCs：</p>
+<ul>
+<li>
+<p><strong>请求投票RPC</strong>：候选人发起，用于选举。</p>
+</li>
+<li>
+<p><strong>附加条目RPC</strong>：领导人发起，复制日志和提供心跳机制。</p>
+</li>
+<li>
+<p><strong>安装快照PRC</strong>：领导人发起，安装快照。为了提高性能，服务器在未及时收到响应时会重试 RPC，并且能够并行发起 RPC。</p>
+</li>
+</ul>
+<h3 id="52-领导人选举" class="heading-element"><span>5.2 5.2 领导人选举</span>
+  <a href="#52-%e9%a2%86%e5%af%bc%e4%ba%ba%e9%80%89%e4%b8%be" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Raft 算法采用心跳机制来触发领导人选举过程。服务器启动时，<strong>默认处于跟随者状态</strong>，仅当接收到来自领导人或候选人的有效 RPC 时才保持这一状态。领导人定期向所有跟随者发送心跳包，即不含日志项的附加条目RPC，以此维护其领导地位。若跟随者<font color="red">在设定的选举超时时间内未收到任何消息</font>，它将假定无有效领导人并发起选举，以选出新的领导人。</p>
+<p>选举流程开始时，跟随者增加自己的当前任期号并转换为候选人状态，然后向集群中其他服务器节点发送请求投票RPC来给自己投票。候选人保持该状态，直至出现以下三种情况之一：</p>
+<ul>
+<li>
+<p>赢得选举。</p>
+</li>
+<li>
+<p>其他服务器成为领导人。</p>
+</li>
+<li>
+<p>在一定时间内无明确获胜者。</p>
+</li>
+</ul>
+<p>赢得选举的条件是获得集群大多数服务器节点的选票，<font color="red">每台服务器对同一任期号的投票遵循先来先服务原则</font>，并有额外限制（5.4）以确保选举安全性，避免了脑裂（同一人气，集群出现两个领导人）。一旦当选，候选人即刻转变为领导人，通过发送心跳消息确立领导地位并阻止发起新选举。</p>
+<p>在等待投票的过程中，候选人可能接收到领导人发送的附加条目RPC，如果该领导人任期号不低于候选人的任期号，候选人将认可其合法性，回归跟随者状态；反之，候选人将拒绝RPC，继续竞选。<font color="red">若多个候选人同时发起选举，选票分散可能导致无人胜出，所有候选人均会因超时而重新开始选举，但任期号会递增。</font></p>
+<p>为防止选票分散，Raft算法引入了<font color="red">随机化选举超时时间策略</font>。各服务器在固定时间范围内（例如$[150,200]$）随机选取超时值，使得通常情况下仅有一台服务器超时，进而顺利赢得选举并在其他服务器超时前发送心跳。即使发生选票分散，随机化的超时机制也降低了下一轮选举中再次分散的可能性。</p>
+<p>作者最初设计考虑过引入排名系统以决定优先级，但发现这可能导致高排名服务器故障时的可用性问题，且算法调整复杂，难以确保没有副作用。经过多次调整，最终确定随机重试方法更为直观易懂，且避免了排名系统带来的复杂性和潜在问题。</p>
+<h3 id="53-日志复制" class="heading-element"><span>5.3 5.3 日志复制</span>
+  <a href="#53-%e6%97%a5%e5%bf%97%e5%a4%8d%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>一旦选举产生领导人，它便开始处理客户端请求，每个请求携带一条被复制状态机执行的指令。领导人将此指令作为新日志条目追加至日志中，并并行发起附加条目RPC给其他服务器复制，日志条目在被安全复制后，领导人将其应用到状态机并将执行结果返回给客户端，即使面对跟随者崩溃、延迟或网络丢包，领导人也会持续重试RPC（<font color="red">尽管已经回复了客户端</font>）直至所有跟随者存储所有日志条目。</p>
+<p>日志结构如图6所示，条目按序编号，包含创建时的任期号及待执行指令。日志条目在满足一定条件时变为可提交状态，即安全地应用到状态机中。<font color="red">领导人决定何时提交日志条目，Raft算法保证所有提交条目持久化并最终被执行</font>。日志条目在被复制到多数服务器时即被提交，包括前任领导人创建的条目。领导人追踪最大已提交条目索引，并在附加条目RPC中包含该索引，使跟随者同步应用已提交条目。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be6-20240719213332262.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图6-20240719213332262.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图6-20240719213332262.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be6-20240719213332262.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图6-20240719213332262.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be6-20240719213332262.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be6-20240719213332262.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be6-20240719213332262.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图6-20240719213332262.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>Raft的日志机制维持不同服务器日志之间的高层次一致性，简化系统行为并增强可预测性，是安全性的重要组成部分。关键特性是<font color="red">若两日志条目索引和任期号相同，则它们存储相同指令，并且前序条目也相同。</font>。这是因为日志匹配特性，领导人最多在一个任期内特定索引创建日志条目，且日志条目位置固定不变。<font color="red">附加条目RPC包含前一条目的索引和任期号，若跟随者找不到匹配条目则拒绝，确保日志匹配特性</font>。</p>
+<p>正常运行时，领导人与跟随者日志一致，但在领导人崩溃后可能出现不一致，如图7所示。领导人通过强制跟随者复制自己的日志解决不一致，覆盖冲突条目。领导人维护<code>nextIndex</code>记录每个跟随者下一个待发送条目索引，初始化为自身最后条目索引+1。<font color="red">当一致性检查失败，领导人就会减小<code>nextIndex</code>直至找到共同点，删除跟随者冲突条目并发送自身条目</font>。成功后，跟随者日志与领导人保持一直。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be7.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图7.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图7.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be7.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图7.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be7.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be7.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be7.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图7.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<blockquote>
+<p>算法可优化减少拒绝次数，跟随者可返回冲突条目任期号及对应最小索引，领导人据此一次性跳过冲突任期所有条目。但实践中，这种优化可能非必需，因不一致性罕见且涉及条目不多。</p>
+</blockquote>
+<p>通过日志复制机制，领导人无需特殊操作即可恢复一致性，只需执行常规流程，日志在响应一致性检查失败时自动对齐。领导人从不覆盖或删除自身日志，确保一致性。日志复制机制体现了高可用性、快速复制及对慢跟随者的容忍度。</p>
+<h3 id="54-安全性" class="heading-element"><span>5.4 5.4 安全性</span>
+  <a href="#54-%e5%ae%89%e5%85%a8%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在 Raft 算法中，尽管已经描述了领导人的选举和日志的复制过程，但这些机制本身并不足以保证所有状态机按照相同的顺序执行相同的指令。存在一种情况，即一个跟随者在领导人提交了若干日志条目后变得不可用，之后这个跟随者可能被选举为新的领导人，并可能覆盖这些已提交的日志条目，导致不同状态机可能执行不同的指令序列。</p>
+<p>为了解决这个问题，Raft 算法在领导选举时增加了限制，确保任何给定任期的领导人都拥有之前任期的所有已提交的日志条目（即<strong>领导人完整特性</strong>）。这一限制简化了提交规则，并为复制状态机的正确行为提供了证明。</p>
+<h4 id="541-选举限制" class="heading-element"><span>5.4.1 5.4.1 选举限制</span>
+  <a href="#541-%e9%80%89%e4%b8%be%e9%99%90%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>在基于领导人的一致性算法中，领导人都必须存储所有已提交的日志条目。Raft 算法通过简单的方法确保新选举的领导人拥有之前任期中所有已提交的日志条目，避免了额外的日志传输机制和复杂性。</p>
+<p>Raft 使用投票机制来阻止未包含所有已提交日志条目的候选人赢得选举。<font color="red">候选人必须获得集群中大多数节点的同意，这确保了所有已提交的日志条目至少存在于一个节点上</font>。如果候选人的日志至少和大多数的服务器节点一样新，那么他一定持有了所有已经提交的日志条目。请求投票RPC 实现了这样的限制：<font color="red">RPC 中包含了候选人的日志信息，然后投票人会拒绝掉那些日志没有自己新的投票请求</font>。</p>
+<p>Raft通过比较日志中最后一条条目的任期号和索引来判断哪个日志更“新”。</p>
+<ul>
+<li>如果任期号不同，任期号更大的日志更“新”。</li>
+<li>如果任期号相同，则条目更多（索引值更大）的日志更“新”。</li>
+</ul>
+<h4 id="542-提交之前任期内的日志条目" class="heading-element"><span>5.4.2 5.4.2 提交之前任期内的日志条目</span>
+  <a href="#542-%e6%8f%90%e4%ba%a4%e4%b9%8b%e5%89%8d%e4%bb%bb%e6%9c%9f%e5%86%85%e7%9a%84%e6%97%a5%e5%bf%97%e6%9d%a1%e7%9b%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>领导人在当前任期内创建的日志条目，当被复制到大多数服务器上时，则可认为是可提交的。如果一个领导人在提交日志条目之前崩溃了，未来后续的领导人会继续尝试复制这条日志记录。然而，<font color="red">对于之前任期中的日志条目，即使它们已经被复制到大多数服务器上，也不能简单地通过副本数量来确定它们是否已提交</font>，如图8所示。这是因为在领导人崩溃和重新选举的过程中，可能会出现新的领导人并不包含所有之前任期的日志条目，这可能导致已复制的日志被覆盖。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be8.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图8.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图8.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be8.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图8.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be8.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be8.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be8.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图8.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>为了避免这种情况，<font color="red">Raft不会通过副本数目去提交一个之前任期内的日志条目，只有当前任期的日志条目才能通过复制到大多数服务器来提交</font>。一旦当前任期的日志条目被提交，根据日志匹配特性，之前任期的日志条目也会被间接的提交。</p>
+<p><font color="red">Raft 在处理日志时保留了原始的任期号</font>，这虽然增加了提交规则的复杂性，但简化了日志的识别和管理。与其它算法不同，Raft 在复制之前任期日志不需要使用新的任期号，在提交前不用发送冗余的日志条目来重新编号，</p>
+<h4 id="543-安全性论证" class="heading-element"><span>5.4.3 5.4.3 安全性论证</span>
+  <a href="#543-%e5%ae%89%e5%85%a8%e6%80%a7%e8%ae%ba%e8%af%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>在 Raft 算法中，领导人完整性特性是确保一致性的关键。这一特性保证了在任期 T 的领导人提交的日志条目，必须被存储在未来任期的领导人日志中。</p>
+<p>设任期U（&gt;T）的领导人U缺失该条目，如下图所示，在U的选举中，至少存在一个节点（如S3）同时持有T任期的日志并投票给U。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be9.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图9.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图9.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be9.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图9.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be9.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be9.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be9.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图9.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<ul>
+<li><strong>关键点</strong>：此节点在投票前接受T任期已提交日志，且在投票时仍保存该条目。</li>
+<li><strong>矛盾一</strong>：此节点把自己选票投给领导人 U 时，<strong>说明领导人 U 的日志必须和投票者自己一样新</strong>。但假设U不包含T任期提交的日志。</li>
+<li><strong>矛盾二</strong>：若U最后日志任期大于此节点，<strong>则前领导人必含提交日志，由日志匹配特性知U亦应含该日志</strong>，产生矛盾。</li>
+</ul>
+<p>故所有大于T任期的领导人必定包含T任期中所有已提交日志条目。<strong>日志匹配原则</strong>确保未来领导人同样包含间接提交的条目。<font color="red">领导人完整性特性支撑状态机安全特性，防止不同日志在相同索引值上被应用</font>。</p>
+<h3 id="55-追随者和候选人崩溃" class="heading-element"><span>5.5 5.5 追随者和候选人崩溃</span>
+  <a href="#55-%e8%bf%bd%e9%9a%8f%e8%80%85%e5%92%8c%e5%80%99%e9%80%89%e4%ba%ba%e5%b4%a9%e6%ba%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li><strong>崩溃影响</strong>：崩溃导致后续RPC失败，影响通信和一致性。</li>
+<li><strong>处理机制</strong>：
+<ul>
+<li><strong>无限重试</strong>：系统通过持续重试RPC来处理这类失败。</li>
+<li><strong>重启恢复</strong>：当崩溃服务器重启，未完成的RPC能够继续执行至成功。</li>
+</ul>
+</li>
+<li><strong>RPC幂等性保障</strong>：<font color="red">指多次执行相同操作产生的效果等同于一次执行</font>，故重复执行RPC也不会引起不一致或错误状态。</li>
+</ul>
+<h3 id="56-时间和可用性" class="heading-element"><span>5.6 5.6 时间和可用性</span>
+  <a href="#56-%e6%97%b6%e9%97%b4%e5%92%8c%e5%8f%af%e7%94%a8%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Raft 算法的一个核心要求是安全性不应依赖于时间，即系统不应因为事件的快慢而产生错误的结果。然而，系统的可用性，即及时响应客户端的能力，不可避免地依赖于时间因素。特别是在领导人选举过程中，时间要求尤为关键。</p>
+<p>关键的时间因素有：</p>
+<ul>
+<li><strong>广播时间 (Broadcast Time)</strong>：服务器向集群成员并行发送RPC并接收响应的平均时间。</li>
+<li><strong>选举超时时间 (Election Timeout)</strong>：跟随者等待领导人心跳的最长时限，过期则发起选举。</li>
+<li><strong>平均故障间隔时间 (Mean Time Between Failures, MTBF)</strong>：服务器两次故障之间的平均时间。</li>
+</ul>
+<p>Raft 要求满足以下时间不等式以保证系统正常运行：</p>
+<p>$\text{Broadcast Time}\ll\text{Election Timeout}\ll\text{MTBF}$</p>
+<p><font color="red">广播时间和平均故障间隔时间是由系统决定的，但是选举超时时间是我们自己选择的</font>。广播时间受存储技术影响，范围约为$[0.5,20]\text{ ms}$，选举超时时间基于广播时间设置，要比广播时间大几个数量级，一般在$[10,500]\text{ ms}$，而MTBF通常数月以上，远大于选举超时时间，满足系统稳定运行需求。</p>
+<h2 id="6-集群成员变化" class="heading-element"><span>6 6 集群成员变化</span>
+  <a href="#6-%e9%9b%86%e7%be%a4%e6%88%90%e5%91%98%e5%8f%98%e5%8c%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Raft 算法在设计时假设集群配置是固定的，但在实际应用中，集群配置需要动态调整，如替换宕机的机器或改变复制级别。直接更改集群配置存在风险，可能导致同一任期内两个领导人同时存在，因此需要一种安全的配置变更机制。为了确保配置变更的安全性，必须采用两阶段方法。在Raft中，集群切换到一个过渡配置，称为联合共识，结合了新旧配置：</p>
+<ul>
+<li>日志条目被复制给新旧配置的所有服务器。</li>
+<li>新旧配置的服务器都可以成为领导人。</li>
+<li>达成一致（选举和提交）需要分别在新旧配置上获得大多数支持。</li>
+</ul>
+<p><font color="red">联合共识允许独立的服务器在不影响安全性的前提下，在不同的时间进行配置转换过程</font>。此外，联合共识可以让集群在配置转换的过程中依然响应客户端的请求。配置变更过程如下图所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be11.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图11.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图11.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be11.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图11.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be11.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be11.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be11.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图11.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<ol>
+<li><strong>请求接收</strong>：领导人接收到从 $C_\text{old}$ 到 $C_\text{new}$ 的配置变更请求。</li>
+<li><strong>联合共识日志条目</strong>：领导人创建 $C_\text{old,new}$ 配置条目并将其作为日志条目存储和复制。</li>
+<li><strong>提交联合共识</strong>：一旦 $C_\text{old,new}$ 被提交，<font color="red">新旧配置都不能单方面做出决定</font>，只有拥有 $C_\text{old,new}$ 日志条目的服务器才能成为领导人。</li>
+<li><strong>新配置日志条目</strong>：这个时候，领导人创建 $C_\text{new}$ 配置条目并复制给集群，最终在 $C_\text{new}$ 规则下提交，旧的配置变得无关紧要。</li>
+</ol>
+<h2 id="7-日志压缩" class="heading-element"><span>7 7 日志压缩</span>
+  <a href="#7-%e6%97%a5%e5%bf%97%e5%8e%8b%e7%bc%a9" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Raft 算法通过复制日志来维护一致性，但随着时间的推移，日志会不断增长，占用大量空间并影响性能。为了解决这个问题，Raft 使用<strong>快照技术</strong>压缩日志，通过存储系统状态至持久化存储，随后丢弃先前日志。</p>
+<p>下图展示了快照的基本思想，<strong>每个服务器独立创建快照，只包含已提交的日志条目，主要的工作包括将状态机的状态写入快照中</strong>。Raft也包含一些少量元数据到快照中：最后索引和任期号。保留这些数据是为了支持一致性检查，允许服务器清除过期日志。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be12.jpeg?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图12.jpeg?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图12.jpeg</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be12.jpeg" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图12.jpeg" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be12.jpeg?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be12.jpeg?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-%e5%9b%be12.jpeg?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/raft-图12.jpeg" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>领导人偶尔也需要通过安装快照RPC将快照分块发送给一些落后的追随者，追随者收到快照后，他必须自己决定对于已经存在的日志该如何处理，一般来说是覆盖冲突日志，保留后续未冲突日志。</p>
+<p>在快照时，有两个性能相关的因素需要考虑：</p>
+<ul>
+<li><strong>创建时机</strong>：服务器需要决定何时创建快照，以避免频繁写入或存储空间耗尽。Raft 的策略是当日志大小达到一个阈值之后，就开始快照。</li>
+<li><strong>写入时间</strong>：写入快照可能需要显著时间，为了不影响正常的操作，应通过写时复制技术避免影响正常操作。</li>
+</ul>
+<h2 id="8-客户端交互" class="heading-element"><span>8 8 客户端交互</span>
+  <a href="#8-%e5%ae%a2%e6%88%b7%e7%ab%af%e4%ba%a4%e4%ba%92" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Raft中的客户端发送所有请求给领导人。客户端初始化时随机选择服务器，非领导人服务器会拒绝客户端请求并提供最近接收到的领导人信息。如果领导人崩溃后，客户端请求超时，重启随机选择过程直至找到新领导人。</p>
+<p>Raft目标是要实现线性化语义，由于Raft是可能同时执行同一条命令多次的，为了解决这个问题，<strong>客户端为每条指令分配唯一序列号，状态机跟踪每个客户端的最新序列号和相应响应。如果接收到的指令序列号已经被执行，状态机直接返回结果而不重新执行</strong>。</p>
+<p>只读操作可以不写入日志直接处理。但不记录日志可能导致返回脏数据，即领导人在不知情的情况下被新领导人取代。线性化的读操作必须不能返回脏数据，Raft 需要使用两个额外的措施在不使用日志的情况下保证这一点。</p>
+<ol>
+<li>
+<p><strong>最新提交日志信息</strong>：<font color="red">领导人需要知道任期内所有被提交的日志条目</font>。Raft 通过让领导人在任期开始时提交一个空白日志条目来实现。</p>
+</li>
+<li>
+<p><strong>领导人状态检查</strong>：在处理只读请求前，领导人必须检查自己是否已被废黜。Raft 通过让领导人在响应只读请求前与集群大多数节点交换心跳信息来处理这个问题。</p>
+</li>
+</ol>
+<h2 id="9-总结" class="heading-element"><span>9 9 总结</span>
+  <a href="#9-%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Raft 是一种用于管理复制日志的一致性算法，旨在解决分布式系统中的一致性问题。它通过领导人选举、日志复制和安全性保证来实现系统的高可用性和一致性。</p>
+<p><strong>Raft 的五大保证</strong>：</p>
+<ol>
+<li>
+<p><strong>选举安全性</strong>：在任一给定任期内，最多只能有一个领导人被选举出来。</p>
+</li>
+<li>
+<p><strong>领导人只追加</strong>：领导人不会覆盖或删除其日志中的条目；它只追加新的条目。</p>
+</li>
+<li>
+<p><strong>日志匹配</strong>：如果两个日志在相同索引和任期号处含有相同的条目，则在该索引之前的所有条目都是相同的。</p>
+</li>
+<li>
+<p><strong>领导人完整性</strong>：如果一个日志条目在给定任期被提交，那么该条目将出现在所有更高编号任期的领导人的日志中。</p>
+</li>
+<li>
+<p><strong>状态机安全性</strong>：如果一个服务器将某个索引的日志条目应用到其状态机中，其他服务器不会对该索引应用不同的日志条目。</p>
+</li>
+</ol>
+]]></description></item><item><title>【论文阅读笔记】 Attention Is All You Need</title><link>https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/</link><pubDate>Wed, 17 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/</guid><description><![CDATA[<h2 id="1-引言" class="heading-element"><span>1 1 引言</span>
+  <a href="#1-%e5%bc%95%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>循环神经网络(RNN)，特别是长短期记忆和门控循环神经网络（<strong>编码器-解码器</strong>架构），已成为序列建模和转换问题（如语言建模和机器翻译）的先进方法，众多研究在不断推动其发展。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=small" data-sub-html="<h2>RNN做机器翻译</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN" alt="RNN做机器翻译" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/RNN?size=large 2x" data-title="RNN做机器翻译" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>但RNN通常<font color="red">沿输入和输出序列的符号位置</font>进行计算，其固有的顺序性导致训练示例内难以并行化，在序列长度较长时，由于内存限制跨示例的批处理，这一问题更加突出。尽管近期通过一些技术改进了计算效率，<font color="red">但顺序计算的基本限制仍未改变</font>。</p>
+<p>且RNN使用共享权值矩阵，在面临较长序列时，会有梯度消失的问题(也可以说是后面词的梯度会覆盖前面的梯度)。即使后序的LSTM和GRU对这一部分做了改进，但也无法完全解决该问题。</p>
+<p><font color="red">注意力机制</font>已成为各种序列建模和转换模型的重要组成部分，能在不考虑输入或输出序列距离的情况下对依赖关系进行建模，但在大多数情况下与循环网络结合使用。</p>
+<p>作者提出了 Transformer 模型，该模型摒弃了循环单元和卷积单元，完全依赖注意力机制来建立输入和输出之间的全局依赖关系，允许更多的并行化。</p>
+<h2 id="2-背景" class="heading-element"><span>2 2 背景</span>
+  <a href="#2-%e8%83%8c%e6%99%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><font color="red">减少序列计算量和加速计算</font>是序列处理模型中的基本思想。ByteNet和ConvS2S通过使用卷积神经网络并行计算，计算量和序列中位置的距离相关。ConvS2S是线性关系，而ByteNet是对数关系，使得长距离关系学习困难。Transformer将这个过程减少到常数规模，尽管降低了有效分辨率，但<strong>多头注意力机制</strong>弥补了这一点。</p>
+<p>自注意力机制（内部注意力机制）为<font color="red">序列的不同位置分配权重，并学习表示向量</font>，已在阅读理解、文本摘要等任务中表现出色。</p>
+<p>端到端记忆网络通常基于循环注意力机制，已用于简单语言翻译等任务。而Transformer 是<font color="red">第一个完全依赖自注意力</font>来计算其输入和输出表示的转换模型。</p>
+<h2 id="3-模型架构" class="heading-element"><span>3 3 模型架构</span>
+  <a href="#3-%e6%a8%a1%e5%9e%8b%e6%9e%b6%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Transformer中沿用了非常经典的编码器-解码器架构，编码器将输入的序列$(x_1,\dots,x_n)$转化成一个表示向量$\boldsymbol{z}=(z_1,\dots,z_n)$，而编码器依据向量$\boldsymbol{z}$逐步生成输出序列$(y_1,\dots,y_m)$，并且模型在每个步骤中都是<strong>自回归</strong>的，会将先前生成的符号作为生成下一个的额外输入，例如这一步要生成$y_t$，要将$(y_1,\dots,y_{t-1})$都拿到也作为输入。</p>
+<p>同时Transformer模型在编码器和解码器中都使用堆叠自注意力机制和逐点全连接层，如下图的左半部分和右半部分所示。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Transformer_Architecture" alt="image-20240707194838925" style="zoom: 33%;" />
+<h3 id="31-编码器堆叠和解码器堆叠" class="heading-element"><span>3.1 3.1 编码器堆叠和解码器堆叠</span>
+  <a href="#31-%e7%bc%96%e7%a0%81%e5%99%a8%e5%a0%86%e5%8f%a0%e5%92%8c%e8%a7%a3%e7%a0%81%e5%99%a8%e5%a0%86%e5%8f%a0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>编码器由 $6$ 个相同的层堆叠而成。每个层包含两个子层：<font color="red">多头自注意力机制和逐位置全连接前馈神经网络</font>。每个子层都使用了残差连接，然后进行层规范化（<strong>防止模型过拟合</strong>）。假设每一层的输入是$x$，那么每一层的输出结果可以表示为：
+$$
+\text{LayerNorm}(x+\text{Sublayer(x)})
+$$
+其中</p>
+<ul>
+<li>$\text{SubLayer}$是当前子层本身实现的运算函数，比如注意力运算和全连接运算；</li>
+<li>模型中的所有子层以及嵌入层的输出维度均为 $d_{\text{model}} = 512$（便于残差连接）。</li>
+</ul>
+<p>解码器同样由 6 个层组成。其结构与编码器类似，但多了一个<strong>对编码器输出进行关注的多头注意力子层</strong>。并且在<strong>自注意力子层中进行了修改</strong>，以防止信息左向流动。这种掩码机制，结合输出嵌入向量向后偏移一个位置，确保位置 $i$ 的预测仅依赖于位置小于 $i$ 的已知输出。</p>
+<h3 id="32-注意力机制" class="heading-element"><span>3.2 3.2 注意力机制</span>
+  <a href="#32-%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>注意力机制就是对一系列的query和一系列的key-value对，我们需要确定对于每个query而言不同 value 的重要程度，而这个权重是根据 query 和key 的相关度计算得到的。</p>
+<h4 id="321-缩放的点积注意力机制" class="heading-element"><span>3.2.1 3.2.1 缩放的点积注意力机制</span>
+  <a href="#321-%e7%bc%a9%e6%94%be%e7%9a%84%e7%82%b9%e7%a7%af%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>Transformer模型中使用的是缩放的点积注意力机制。在这种机制中，注意力计算涉及query和key的维度为  $d_k$ )，以及value的维度为 $d_v$ 。通过引入一个<strong>缩放因子</strong>$\sqrt{d_k}$，可以控制注意力分布的稳定性和计算效率。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Scaled_Dot_Product_Attention" alt="image-20240707205349089" style="zoom:33%;" />
+<p>我们用向量化的方式可以将这种注意力机制的计算过程表示成：
+$$
+\text{Attention}(Q,K,V)=\text{softmax}(\frac{QK^T}{\sqrt{d_k}})V
+$$
+与传统的注意力机制相比，缩放的点积注意力计算速度更快。缩放参数用于调节注意力计算的规模，以确保对于不同大小的输入，注意力权重的计算结果都能保持在合理的范围内。特别是在$\text{softmax}$函数的应用中，由于指数函数的快速增长特性，<font color="red">缩放可以有效防止某些权重过大</font>，而其他权重接近零的情况，确保了计算结果的平稳性和有效性。</p>
+<h4 id="322-多头注意力机制" class="heading-element"><span>3.2.2 3.2.2 多头注意力机制</span>
+  <a href="#322-%e5%a4%9a%e5%a4%b4%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><h4 id="heading" class="heading-element"><span>3.2.3 </span>
+  <a href="#heading" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>Transformer采用了多头注意力机制，将query、key和value进行$h$次投影，然后对$h$个投影并行计算注意力，再将这些结果组合并线性投影生成最终的多头注意力输出。多头注意力使模型能够共同关注不同表示子空间和不同位置的信息。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Multi_Head_Attention" alt="image-20240707214205509" style="zoom:50%;" />
+<p>多头注意力机制的计算公式为：
+$$
+\operatorname{MultiHead}(Q, K, V) = \text{Concat}(\text{head}_1, \ldots, \text{head}_h) W^O
+$$
+其中每个头的计算方式为：</p>
+<p>$$
+\text{head}_i = \text{Attention}(QW_i^Q, KW_i^K, VW_i^V)
+$$
+参数的维度如下：</p>
+<ul>
+<li>$( Q, K, V)$ 的输入维度为 $( d_{model} )$（通常为$512$）</li>
+<li>$W_i^Q \in \mathbb{R}^{d_{model} \times d_k},  W_i^K \in \mathbb{R}^{d_{model} \times d_k}, W_i^V \in \mathbb{R}^{d_{model} \times d_v}, W^O \in \mathbb{R}^{hd_v \times d_{model}}$</li>
+</ul>
+<p>作者在Transformer中设置 $h = 8$  个头，每个头的维度为 $d_k = d_v = \frac{d_{model}}{h} = 64$。</p>
+<h4 id="323-transformer中注意力机制的应用" class="heading-element"><span>3.2.4 3.2.3 Transformer中注意力机制的应用</span>
+  <a href="#323-transformer%e4%b8%ad%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6%e7%9a%84%e5%ba%94%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><ul>
+<li>在解码器的“编码器-解码器注意力层”中，query 来自上一个解码器层，而 key 和值 value 来自编码器的输出。这使得解码器中的每个位置都可以参与到输入序列所有位置的注意力计算中。</li>
+</ul>
+<ol>
+<li><strong>编码器-解码器注意力层</strong>： 在这一层中，query 来自上一个解码器，而记忆 key 和 value 来自编码器的输出。这使得解码器中的每个位置都可以关注输入序列中的所有位置。</li>
+<li><strong>编码器中的自注意力层</strong>： 编码器包含自注意力层。在这种自注意力机制中，<font color="red">query, key 和 value 都来自同一位置，即编码器前一层的输出</font>。这样，编码器中的每个位置都可以关注编码器前一层中的所有位置，从而捕捉输入序列中不同位置之间的全局依赖关系。</li>
+<li><strong>解码器中的自注意力层</strong>： 解码器中的自注意力层的key，value和query也是同源的。但为了保持自回归属性，防止序列中前面的内容被后面的内容所影响，解码器在自注意力计算中加入了掩码机制。具体来说，通过在缩放的点积注意力中，将$\operatorname{softmax}$输入中对应非法连接的值设置为$-\infin$，来屏蔽这些连接。</li>
+</ol>
+<h3 id="33-逐位置全连接前馈神经网络" class="heading-element"><span>3.3 3.3 逐位置全连接前馈神经网络</span>
+  <a href="#33-%e9%80%90%e4%bd%8d%e7%bd%ae%e5%85%a8%e8%bf%9e%e6%8e%a5%e5%89%8d%e9%a6%88%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h3 id="transformer中的逐位置全连接前馈神经网络" class="heading-element"><span>3.4 Transformer中的逐位置全连接前馈神经网络</span>
+  <a href="#transformer%e4%b8%ad%e7%9a%84%e9%80%90%e4%bd%8d%e7%bd%ae%e5%85%a8%e8%bf%9e%e6%8e%a5%e5%89%8d%e9%a6%88%e7%a5%9e%e7%bb%8f%e7%bd%91%e7%bb%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在Transformer中，逐位置全连接前馈神经网络用于增强模型对序列中每个位置信息的处理能力，这种网络结构包含两个线性变换层和$\operatorname{ReLU}$激活函数，用于每个位置独立地进行相同的操作。其数学表示如下：</p>
+<p>$$
+\text{FFN}(x) = \max(0, x W_1 + b_1) W_2 + b_2
+$$</p>
+<p>虽然不同位置的线性变换相同，但各层使用的参数不同。其中，$x$ 是输入向量，维度为 $d_{\text{model}} = 512$ ，而内层的维度为$d_{ff}=2048$，$W_1$ 和 $W_2$ 是两个线性变换的权重矩阵，$b_1$ 和 $b_2$ 是相应的偏置向量。这个结构类似于<code>kernel size</code>为1的卷积操作。</p>
+<h3 id="34-嵌入和softmax" class="heading-element"><span>3.5 3.4 嵌入和Softmax</span>
+  <a href="#34-%e5%b5%8c%e5%85%a5%e5%92%8csoftmax" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>和其他序列转换模型类似，Transformer 使用学习得到的嵌入将输入的token和输出的token转换为维度为 $ d_{\text{model}} $ 的向量。Transformer 还使用学习得到的线性变换和$\text{softmax}$函数将解码器的输出转换为预测的下一个token的概率。在Transformer中两个嵌入层和$\text{softmax}$之前的线性变换层之间共享相同的权重矩阵（<strong>减少模型的参数数量，降低过拟合的风险</strong>），同时在嵌入层中，我们将这些权重乘以  $\sqrt{d_{\text{model}}}$（<strong>缩放嵌入权重，防止梯度消失</strong>）。</p>
+<h3 id="35-位置编码" class="heading-element"><span>3.6 3.5 位置编码</span>
+  <a href="#35-%e4%bd%8d%e7%bd%ae%e7%bc%96%e7%a0%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在Transformer模型中，由于没有循环和卷积单元，为了处理序列数据的位置信息，引入了位置编码。位置编码是为序列中的每个位置添加特定的向量表示，以便模型能够区分不同位置的token。在Transformer中的位置编码使用了sin函数和cos函数，这种方法不同于传统的学习得到的位置嵌入，而是采用固定的函数形式，即</p>
+<p>$$
+\text{PE}<em>{\text{pos}, 2i} = \sin\left(\frac{\text{pos}}{10000^{\frac{2i}{ d</em>{\text{model}}}}}\right)\
+\text{PE}<em>{\text{pos}, 2i+1} = \cos\left(\frac{\text{pos}}{10000^{\frac{2i}{ d</em>{\text{model}}}}}\right)
+$$</p>
+<p>这里的$\text{pos}$表示位置而$i$表示维度，也就是对于位于$\text{pos}$位置的token的嵌入向量第$i$维加上这样一个值。</p>
+<h2 id="4-为什么使用自注意力机制" class="heading-element"><span>4 4 为什么使用自注意力机制</span>
+  <a href="#4-%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8%e8%87%aa%e6%b3%a8%e6%84%8f%e5%8a%9b%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在处理序列数据时，长距离依赖关系的学习是一个关键挑战。论文中对比了使用自注意力、循环单元和卷积单元等不同模型结构时的计算量、时间复杂度和最大依赖路径长度。其中，最大依赖路径长度指的是任意两个输入输出位置之间信息传递的最长路径。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=small" data-sub-html="<h2>image-20240707224337637</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths" alt="image-20240707224337637" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Maximum_Path_Lengths?size=large 2x" data-title="image-20240707224337637" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>在传统的循环神经网络（RNN）中，信息是逐步传递的，因此全局视角下，任意两个位置之间的最长信息传递路径往往是以序列长度 $n$ 为量级的。这种逐步传递导致了RNN在捕捉长距离依赖时可能面临的挑战，尤其是在处理长序列时效果不佳。</p>
+<p>相比之下，<font color="red">Transformer利用自注意力机制直接将每个位置与所有其他位置进行关联，避免了逐步传递的过程</font>，使得任意两个位置之间的信息传递路径变得极为直接和高效。这种直接的路径传递方式使得Transformer能够更有效地捕捉到长距离的依赖关系，而不受序列长度的限制。</p>
+<p>因此，Transformer凭借其独特的注意力机制，实现了“Attention is all you need”的理念，强调了在序列建模中注意力机制的重要性和效果。它不仅仅是一种模型结构的创新，更是在解决长距离依赖问题上的一次重大突破。Transformer的成功不仅在于其高效的信息传递路径，还在于其能够在更大范围内捕捉和利用序列中的关联信息，从而提升了序列建模任务的性能和效果。</p>
+<h2 id="5-训练" class="heading-element"><span>5 5 训练</span>
+  <a href="#5-%e8%ae%ad%e7%bb%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在论文中，训练Transformer模型涉及到几个关键的优化和正则化策略。</p>
+<h3 id="51-优化器" class="heading-element"><span>5.1 5.1 优化器</span>
+  <a href="#51-%e4%bc%98%e5%8c%96%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>模型的训练使用了Adam优化器，并采用了一种自适应的学习率。学习率 $\text{lr}$ 的计算方式如下所示：
+$$
+\text{lr} = d_{\text{model}}^{-0.5} \times \min(\text{step_num}^{-0.5}, \text{step_num} \times \text{warm_up_steps}^{-1.5})
+$$
+这种自适应学习率的设计有助于在训练初期快速提升学习率，以加速模型收敛，而在训练后期逐渐降低学习率，以更细致地调整模型参数，提升训练的稳定性和效果。</p>
+<h3 id="52-正则化" class="heading-element"><span>5.2 5.2 正则化</span>
+  <a href="#52-%e6%ad%a3%e5%88%99%e5%8c%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Transformer模型采用了多种正则化方法，以提升泛化能力和训练稳定性：</p>
+<ol>
+<li>
+<p><strong>残差连接</strong>：在每个子层之间都使用了残差连接，这种连接方式有助于减少梯度消失问题，并简化了模型的训练和优化过程。</p>
+</li>
+<li>
+<p><strong>Dropout</strong>：在输入嵌入向量和位置编码相加后的层中使用了Dropout，选择的Dropout概率为0.1。Dropout通过随机地将部分神经元的输出置为零，有助于防止模型过拟合，并增强泛化能力。</p>
+</li>
+<li>
+<p><strong>标签平滑处理</strong>：这是一种用于改善模型训练和提高评价指标（如BLEU分数）的技术。标签平滑处理通过将真实标签替换为一个分布更平滑的目标分布，从而减少模型对训练数据中特定标签的过度自信，提升泛化能力和性能评估的一致性。</p>
+</li>
+</ol>
+]]></description></item><item><title>【论文阅读笔记】 SkexGen: Autoregressive Generation of CAD Construction Sequences with Disentangled Codebooks</title><link>https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/</link><pubDate>Wed, 17 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/</guid><description><![CDATA[<h2 id="摘要" class="heading-element"><span>1 摘要</span>
+  <a href="#%e6%91%98%e8%a6%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>SkexGen是一种新颖的<font color="red">自回归生成模型</font>，用于创建CAD构造序列，其中包含<font color="red">草图和拉伸建模操作</font>。这个模型利用不同的Transformer架构将构造序列中的<strong>拓扑、几何和拉伸变化</strong>编码到<strong>解耦的码本</strong>中。<strong>自回归</strong>Transformer解码器根据码本向量生成具有特定属性的CAD构造序列。广泛的实验表明，我们的解耦码本表示可以生成多样且高质量的CAD模型，增强了用户的控制能力，并能够有效探索设计空间。</p>
+<p><a href="https://github.com/samxuxiang/SkexGen"target="_blank" rel="external nofollow noopener noreferrer">【code】<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h2 id="1-引言" class="heading-element"><span>2 1 引言</span>
+  <a href="#1-%e5%bc%95%e8%a8%80" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>SkexGen是一种新颖的自回归生成模型，使用离散码本进行CAD模型生成。作者采用草图和拉伸建模语言来描述CAD构造序列，其中草图操作创建二维原语，拉伸操作将它们提升并组合成三维。<font color="red">Transformer编码器学习到解耦的潜在表示，作为三个码本，分别捕捉构造序列的拓扑、几何和拉伸变化</font>。给定码本向量，自回归Transformer解码器生成草图和拉伸构造序列，进而处理成CAD模型。</p>
+<p>作者在一个大规模草图和拉伸数据集（<a href="https://drive.google.com/drive/folders/1mSJBZjKC-Z5I7pLPTgb4b5ZP-Y6itvGG"target="_blank" rel="external nofollow noopener noreferrer">DeepCAD数据集，需要将其转换为SkexGen格式<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>）上评估了SkexGen。与多个baseline和最先进方法进行的定性和定量评估表明，SkexGen生成了更真实和多样的CAD模型，同时实现了有效的控制和高效的设计空间探索，这是以往方法无法实现的。作者做出了以下贡献：</p>
+<ul>
+<li><strong>SkexGen架构</strong>，自回归生成高质量和多样化的CAD构造序列。</li>
+<li><strong>解耦的码本</strong>，编码构造序列的拓扑、几何和拉伸变化，实现了设计的有效控制和探索。</li>
+<li>在<strong>公共基准</strong>上的广泛定性和定量评估，展示了最先进的性能。</li>
+</ul>
+<h2 id="2-相关工作" class="heading-element"><span>3 2 相关工作</span>
+  <a href="#2-%e7%9b%b8%e5%85%b3%e5%b7%a5%e4%bd%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>
+<p><strong>构造性实体几何（CSG）</strong></p>
+<p>3D形状由参数化基元通过布尔运算组成的CSG树表达。这种轻量级表示已广泛用于与程序合成、神经引导程序合成、无监督学习和专用参数化基元结合的重建任务中。<font color="red">但参数化CAD仍主导机械设计，并且广泛使用草图和拉伸建模操作</font>。</p>
+</li>
+<li>
+<p><strong>构造序列生成</strong></p>
+<ul>
+<li>PolyGen开创：使用Transformer和指针网络预测n-gon网格顶点和面。</li>
+<li>数据集推动：大规模CAD建模操作数据集促进直接学习用户建模操作。</li>
+<li>拉伸操作预测：预测拉伸操作序列以部分恢复构造序列，但没有底层草图信息。<font color="red">预测线、弧、圆等草图基元的序列是形成CAD二维基础的关键构造块，可通过添加拉伸操作轻松扩展到3D</font>。</li>
+<li>Transformer架构的应用：应用于草图和拉伸序列生成，<font color="red">但在用户控制方面存在局限</font>。</li>
+</ul>
+<p>现有的方法通常将<font color="red">网络条件设置为用户提供的图像、点云或手绘草图</font>，只是将现有设计转换为CAD构造序列表示，<font color="red">而没有提供对拓扑和几何的单独控制</font>来探索相关设计的空间。作者的方法则提供对拓扑和几何的单独控制。</p>
+</li>
+<li>
+<p><strong>码本架构</strong></p>
+<p>自引入以来，码本已在许多图像和音频生成任务中证明有效，提高了生成图像的多样性并提供了额外的用户控制。由于其高结构规律性，它们特别适合于编码CAD建模序列。</p>
+</li>
+</ul>
+<h2 id="3-草图和拉伸构造序列" class="heading-element"><span>4 3 草图和拉伸构造序列</span>
+  <a href="#3-%e8%8d%89%e5%9b%be%e5%92%8c%e6%8b%89%e4%bc%b8%e6%9e%84%e9%80%a0%e5%ba%8f%e5%88%97" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>作者定义了一个草图和拉伸构造序列表示法，作为基元的层次结构，这一构造基于TurtleGen和DeepCAD的基础，并进行了若干修改，使表示法更具表现力和学习适应性，如下图所示，该示例模型由两个草图组成，这些草图由面、环和曲线构成。序列以拓扑token（$T_1$）开始，表示曲线的起点（类型为弧线），接着两个几何token（$G_1,G_2$），每个token存储一个二维点坐标，。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/SkexGen_Construction_Seq_Example.png" alt="image-20240709221547861" style="zoom: 50%;" />
+<p><strong>基元层次结构：</strong></p>
+<ul>
+<li><strong>曲线</strong>：最低级别的基元，包括直线、弧线或圆。</li>
+<li><strong>环</strong>：一个闭合路径，由一个（例如圆）或多个曲线（例如直线-弧线-直线）组成。</li>
+<li><strong>面</strong>：<font color="red">一个由环限定的二维区域</font>，这是我们的表示法中新增加的。具体来说，<font color="red">一个面由一个外环和若干内环（洞）构成</font>，这在许多CAD系统中是一个惯例。</li>
+<li><strong>草图</strong>：由一个或多个面组成。</li>
+<li><strong>拉伸草图</strong>：通过拉伸草图形成的三维体积。</li>
+<li><strong>草图和拉伸模型</strong>：通过布尔操作（例如交集、并集和差集）由多个拉伸草图组成。<font color="red">注意，DeepCAD的表示法没有面基元，无法表示具有多个面的草图（例如Figure 1中的ES1）</font>。</li>
+</ul>
+<h2 id="4-skexgen架构" class="heading-element"><span>5 4 SkexGen架构</span>
+  <a href="#4-skexgen%e6%9e%b6%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>SkexGen 是一种自回归生成模型，通过两个网络分支中的三个解耦码本学习草图和拉伸模型的变体。图2展示了SkexGen的架构。“草图”分支学习二维草图的拓扑和几何变体，“拉伸”分支学习三维拉伸的变体（如方向）。两个分支架构类似，本节重点介绍草图分支，包含两个编码器和一个解码器。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/SkexGen_Architecture.png" alt="image-20240709221648006" style="zoom:50%;" />
+<h3 id="41-拓扑编码器" class="heading-element"><span>5.1 4.1 拓扑编码器</span>
+  <a href="#41-%e6%8b%93%e6%89%91%e7%bc%96%e7%a0%81%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>拓扑编码器接收输入的子序列，token为：</p>
+<ol>
+<li>
+<p><strong>拓扑token（T）</strong>：表示三种曲线类型之一（直线/弧线/圆）。</p>
+</li>
+<li>
+<p><strong>结束基元token（E）</strong>：表示三种基元类型之一（环/面/草图）的结束。</p>
+</li>
+<li>
+<p><strong>结束序列token（End）</strong>：表示序列的结束。</p>
+</li>
+</ol>
+<p>因此，token初始化为一个7维（= 3+3+1）的独热向量</p>
+<ul>
+<li>
+<p><strong>嵌入</strong></p>
+<p>独热向量转换为256维嵌入。作者考虑拓扑token $T$，其中$h_{T} ^{tp}$是7维独热向量，$i_T$表示其在输入子序列中的索引，其嵌入向量计算公式为：</p>
+<p>$$
+T \leftarrow \mathbf{W}^\text{tp} h_{T} ^{tp} + \mathbf{p}^{(i_T)}
+$$</p>
+<p>其中$\mathbf{W}^\text{tp}\in \mathbb{R}^{d_E\times 7}$表示可学习矩阵，$\mathbf{p}^{(i_T)}$表示拓扑子序列索引$i_T$处的可学习位置编码。</p>
+</li>
+<li>
+<p><strong>架构</strong></p>
+<p>编码器基于Transformer（<font color="red">四层，每层包含八头自注意层、层规范化和前馈层</font>）。根据Vision Transformer，<strong>输入的拓扑信息编码为一个“码token”</strong>，预先加入到输入中，并初始化为一个可学习的嵌入$Z_{tp}$。令$Z_{tp}^e$为编码器输出的码token嵌入。嵌入$Z_{tp}^e$被量化为大小为$N({\mathbf{b}_{tp}\text{ | }i=1,2\cdots N})$的<strong>码本最近码</strong>。</p>
+<p>编码和量化后的最终码token $Z_{tp}^Q$被传递给解码器。</p>
+<p>$$
+Z^Q_{tp} \leftarrow \mathbf{b}^{(k)}<em>{tp}, \text{where }
+k = \text{argmin}</em>{j} | Z^e_{<em>{tp}} - b^{(j)}</em>{tp} |^2
+$$</p>
+<p>f这里为了简单起见，只假设了一个码token，拓扑编码器实际上由四个码token，并产生四个输出码token（$Z^{Q_{(1)}}<em>{tp},Z^{Q</em>{(2)}}<em>{tp},Z^{Q</em>{(3)}}<em>{tp},Z^{Q</em>{(4)}}_{tp}$）。作者尝试了不同的码本大小，发现 $N = 500$ 可以取得良好效果。</p>
+</li>
+</ul>
+<h3 id="42-几何编码器" class="heading-element"><span>5.2 4.2 几何编码器</span>
+  <a href="#42-%e5%87%a0%e4%bd%95%e7%bc%96%e7%a0%81%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>输入token</strong></p>
+<ul>
+<li>
+<p>几何token（G）：包含一个二维点坐标</p>
+</li>
+<li>
+<p>结束基元token（E）：表示四种基元类型之一（曲线/面/环/草图）的结束</p>
+</li>
+<li>
+<p>结束序列token（End）</p>
+</li>
+</ul>
+<p>几何token G 指定沿曲线的一个二维点坐标。由于坐标是数值型的，作者将<font color="red">草图离散化</font>为$64\times 64$（6位）像素，并考虑$64^2$个可能的像素位置。因此，一个$4101(=64^2+4+1)$维的独热向量唯一确定了token信息。</p>
+</li>
+<li>
+<p><strong>嵌入</strong></p>
+<p>我们按照4.1中的嵌入公式并使用$\mathbf{W^{ge}}\in\mathbb{R}^{d_E\times 4101}$和位置编码来初始化输入token嵌入。token E和End类似于拓扑Token的初始化，通过将它们的独热向量$h^{ge}_G\in \mathbb{R}^{4101}$乘以$\mathbf{W^{ge}}$并加上位置编码。几何Token G的初始化不同：</p>
+<p>$$
+G \leftarrow \mathbf{W^{ge}} h^{ge}_G + \mathbf{W}^xh^x_G +
+\mathbf{W}^y h^y_G + \mathbf{p}^{(i_G)}.
+$$</p>
+<p>几何token $G$具有附加的坐标嵌入，$h^x_G,h^y_G\in \mathbb{R}^{64}$是指示像素的$x,y$坐标的独热向量。坐标嵌入是可选的，但可以进一步提高实验结果。</p>
+</li>
+<li>
+<p><strong>架构</strong></p>
+<ul>
+<li>类似于拓扑编码器，基于Transformer。</li>
+<li>生成嵌入 $Z^{{e_{(i)}}}<em>{ge}$ 和量化后的码token $Z^{Q</em>{(i)}}_{ge}$ 。</li>
+<li>使用两个码token，码本大小 $N = 1000$。</li>
+</ul>
+</li>
+</ul>
+<h3 id="43-草图解码器" class="heading-element"><span>5.3 4.3 草图解码器</span>
+  <a href="#43-%e8%8d%89%e5%9b%be%e8%a7%a3%e7%a0%81%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>草图解码器以拓扑和几何码本为输入，生成几何token $G$和结束基元token $E$（用于曲线/环/面/草图），以恢复草图子序列。</p>
+<blockquote>
+<p>注意，不生成拓扑标记T，因为它们可以根据每条曲线内的几何标记数量推断出来（即，直线/弧线/圆分别有1/2/4个G标记）。这意味着几何编码器和草图解码器有相似的子序列（Figure 2）。</p>
+</blockquote>
+<ul>
+<li>
+<p><strong>输入</strong></p>
+<p>给定前$k-1$个token，自回归解码器预测第$k$个token的条件概率。训练输入序列向右移一位，前面添加“start”符号（由位置编码初始化）。由于解码器中可能的token类型与几何编码器相同，我们使用相同的$4101$维独热编码方案，并使用带有位置编码的可学习矩阵（大小为 $d_E \times 4101$）初始化嵌入向量。</p>
+</li>
+<li>
+<p><strong>输出</strong></p>
+<p>解码器生成“向左移一位”的子序列，即预测输入中的原始$k$个标记（见Figure 2）。令$K$为草图解码器输出中的一个标记，其具有 $d_E$ 维嵌入。我们使用可学习矩阵 $\mathbf{W^{out}} \in \mathbb{R}^{4101 \times d_E}$ 来预测4101个类别的概率：$h^\text{out}_K \leftarrow \text{softmax} (\mathbf{W^\text{out}} K)$</p>
+</li>
+<li>
+<p><strong>交叉注意力</strong></p>
+<p><font color="red">Transformer架构通过交叉注意力从拓扑和几何码本中分别取四个和两个量化码本向量</font>。为了区分两个不同的码本，我们借鉴位置编码的思想，分别向拓扑码 ${ Z^{Q_{(i)}}<em>{tp} }$ 和几何码 ${ Z^{Q</em>{(i)}}<em>{ge} }$ 添加可学习嵌入向量 $\mathbf{p}^{(q</em>{tp})} \in \mathbb{R}^{4 \times d_E}$和 $\mathbf{p}^{(q_{ge})} \in \mathbb{R}^{2 \times d_E}$ ：</p>
+<p>$$
+Z^{{Q_{(i)}}}<em>{tp} + p^{(q</em>{tp})} \quad \text{or} \quad
+Z^{Q_{(i)}}<em>{ge}+ p^{(q</em>{ge})}.
+$$</p>
+<p>基础网络设置与编码器相同（即四层，每层八头），<font color="red">但它是带掩码的自回归（仅关注先前的标记）</font>。</p>
+</li>
+</ul>
+<h3 id="44-训练" class="heading-element"><span>5.4 4.4 训练</span>
+  <a href="#44-%e8%ae%ad%e7%bb%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>拓扑编码器、几何编码器和草图解码器通过三种损失函数联合训练：</p>
+<p>$$
+\sum_K \text{CrossEntropy}(h^\text{out}<em>K, h^\text{gt}<em>K) + \
+| \text{sg} (Z^{e}</em>{tp}) - \mathbf{b}</em>{tp} |<em>2^2 + \beta
+| Z^{e}</em>{tp} - \text{sg} (\mathbf{b}<em>{tp}) |<em>2^2 + \
+| \text{sg} (Z^{e}</em>{ge}) - \mathbf{b}</em>{ge}
+|<em>2^2 + \beta | Z^{e}</em>{ge} - \text{sg} (b_{ge}) |_2^2.
+$$</p>
+<ul>
+<li>
+<p>第一行计算序列重建损失，其中 $h^\text{out}_K$ 是草图解码器预测的概率， $h^\text{gt}_K$ 是真实的独热向量，<font color="red">利用交叉熵损失衡量准确度</font>。</p>
+</li>
+<li>
+<p>第二行和第三行是VQ-VAE使用的标准码本和承诺损失。 $\text{sg}$ 表示<strong>停止梯度操作</strong>，在前向传播中是恒等函数，但在后向传播中阻止梯度。 $\beta$ <strong>缩放承诺损失</strong>，设为$0.25$，用于调整承诺损失的权重，这确保编码器输出绑定一个码向量。</p>
+</li>
+</ul>
+<p>为了简化，我们省略了每个编码器中多个码本标记的明确写出。<font color="red">给定一个真实子序列，我们运行两个编码器并自回归地运行解码器，直到生成相同数量的标记</font>。训练采用教师强制的方式，即将真实token而非预测token输入解码器，保证每次迭代解码器仅专注于单步训练，从而简化训练流程并提升效率</p>
+<h3 id="45-生成" class="heading-element"><span>5.5 4.5 生成</span>
+  <a href="#45-%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>SkexGen 生成 CAD 模型分两步：</p>
+<ol>
+<li>从三个码本生成码。
+<ul>
+<li>
+<p>采用训练完成的编码器（拓扑、几何、拉伸）从样本中提取码。</p>
+</li>
+<li>
+<p>Transformer解码器被训练来生成这些<font color="red">非正态分布的量化码，即从码本中挑选码索引</font>。</p>
+</li>
+<li>
+<p>允许架构微小修改以支持条件码生成，如“拓扑条件码选择器”，它基于给定拓扑码来挑选相应的几何和拉伸码。</p>
+</li>
+</ul>
+</li>
+<li>给定码生成草图和拉伸构造序列。
+<ul>
+<li>
+<p>给定码，草图和拉伸解码器便通过核采样，自回归方式生成构造子序列。</p>
+</li>
+<li>
+<p>这些子序列整合成完整的草图和拉伸序列，最终由CAD软件解析为边界表示。</p>
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="5-实验" class="heading-element"><span>6 5 实验</span>
+  <a href="#5-%e5%ae%9e%e9%aa%8c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>实验验证目标：</p>
+<ul>
+<li>
+<p>SkexGen生成高质量和多样化结果的能力</p>
+</li>
+<li>
+<p>码本对生成过程控制的程度</p>
+</li>
+<li>
+<p>SkexGen在设计探索和插值应用中的表现</p>
+</li>
+</ul>
+<h3 id="51-实验设置" class="heading-element"><span>6.1 5.1 实验设置</span>
+  <a href="#51-%e5%ae%9e%e9%aa%8c%e8%ae%be%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>数据集</strong>：使用DeepCAD数据集，包含178,238个序列，经去重和无效操作剔除，最终训练集含<strong>74,584个草图子序列</strong>与<strong>86,417个拉伸子序列</strong>。针对单一草图实验，经过从构造序列的步骤中提取草图并去重后，<strong>最终收集到114,985个训练样本</strong>。</p>
+</li>
+<li>
+<p><strong>实现细节</strong>：SkexGen基于PyTorch开发，在RTX A5000上训练。采用与DeepCAD一致的设置，四层Transformer结构，每层含八个注意力头，层规范化，前馈维度512，输入嵌入256维，Dropout率0.1。使用Adam优化器，学习率0.001。线性预热和梯度裁剪与 DeepCAD 一致。<font color="red">我们在前25个epoch中跳过代码量化，发现这有助于稳定码本训练。对于数据增强，我们向几何标记的坐标添加小的随机噪声</font>。训练300个epoch，批量大小128。草图与拉伸子序列最大长度分别为200与100。在测试时，我们使用核采样方法以自回归方式采样码选择器和解码器。</p>
+</li>
+<li>
+<p><strong>指标</strong>：</p>
+<ul>
+<li>
+<p><strong>Fréchet Inception Distance (FID)</strong>：比较真实和生成数据分布的均值和协方差来衡量生成的保真度。</p>
+</li>
+<li>
+<p><strong>覆盖率（COV）</strong>：基于表面上2,000个均匀采样点的最小 Chamfer 距离来衡量真实数据与生成数据的匹配百分比。</p>
+</li>
+<li>
+<p><strong>最小匹配距离 (MMD)</strong>：生成样本与其在真实数据集中最近邻的平均最小匹配距离。</p>
+</li>
+<li>
+<p><strong>Jensen-Shannon散度 (JSD)</strong>：基于边缘点分布衡量真实和生成分布的相似性。</p>
+</li>
+<li>
+<p><strong>Novel Score</strong>：生成数据中未出现在训练集中的百分比。</p>
+</li>
+<li>
+<p><strong>Unique Score</strong>：生成样本中仅出现一次的数据百分比，如果序列中的所有token在6位量化后相同，我们认为两个数据样本是相同的。</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="52-随机生成" class="heading-element"><span>6.2 5.2 随机生成</span>
+  <a href="#52-%e9%9a%8f%e6%9c%ba%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>为了评估 SkexGen 生成高质量和多样化结果的能力，我们随机生成每种类型的20,000个样本，并将 SkexGen 与四个其他基线进行比较：</p>
+<ul>
+<li>
+<p>CurveGen</p>
+</li>
+<li>
+<p>DeepCAD</p>
+</li>
+<li>
+<p>单一码本的 SkexGen</p>
+</li>
+<li>
+<p>带 VAE 的 SkexGen。</p>
+</li>
+</ul>
+<blockquote>
+<p>由于其他来自同时研究的草图生成模型依赖于草图约束标签，并且理想情况下需要草图约束求解器，这使得它们无法直接比较。</p>
+</blockquote>
+<p><strong>草图生成评估</strong>：结果如下表所示。SkexGen<strong>FID分数</strong>表现最优，证明其生成的草图质量最高。SkexGen在<strong>Novel</strong>上虽不及DeepCAD，但在<strong>Unique</strong>上与CurveGen相当或更优。且定性分析显示，DeepCAD虽然<strong>Novel</strong>得分高，但存在大量无效结果，如自相交曲线和未闭合几何，影响了FID评分。总体而言：</p>
+<ul>
+<li>
+<p>SkexGen 生成的草图在<strong>质量上更好，形状更复杂，自相交更少，对称性更强</strong>。</p>
+</li>
+<li>
+<p>CurveGen 也生成了质量不错的结果，<strong>但矩形和圆的复杂排列较少</strong>。</p>
+</li>
+<li>
+<p>DeepCAD 可以生成比 CurveGen 更复杂的形状，<strong>但噪音很多</strong>。</p>
+</li>
+</ul>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222143401.png" alt="image-20240709222143401" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222229350.png" alt="image-20240709222229350" style="zoom:33%;" />
+<p><strong>CAD模型生成评估</strong>：结果如下表所示，SkexGen在所有评估指标上领先，尤其在形状复杂度、对称性以及频繁使用弧线方面表现出色。<font color="red">SkexGen能生成涉及多步骤草图和拉伸序列的CAD模型，而DeepCAD则主要生成单步模型</font>。表中间两行展示了多个解耦码本的有效性。减少到单个码本后，生成质量下降，SkexGen 类似于 VQ-VAE。当不使用码本时，结果最差，SkexGen 实际上变成了 VAE。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222201905.png" alt="image-20240709222201905" style="zoom:50%;" />
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222300874.png" alt="image-20240709222300874" style="zoom: 33%;" />
+<p><strong>运行时间评估</strong>：尽管SkexGen的自回归采样过程使其比DeepCAD慢，但比CurveGen（具有两个依赖的自回归解码器）快，显示出采样效率的优化空间。</p>
+<h3 id="53-可控生成" class="heading-element"><span>6.3 5.3 可控生成</span>
+  <a href="#53-%e5%8f%af%e6%8e%a7%e7%94%9f%e6%88%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>解耦码本实现了设计控制与探索，如下图所示：左侧“拓扑条件”：固定拓扑码，其他码通过核采样获得，展示相同结构的不同变体。右侧“几何条件”：固定几何码，改变其他码，体现一致几何下的多样形态。</p>
+<img src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240709222419490.png" alt="image-20240709222419490" style="zoom: 33%;" />
+<p>为了定量衡量三个码本之间的解耦程度，作者参考了$\beta\text{-VAE}$的评估方法。通过保持一个拓扑、几何或拉伸标记相同，并对其他部分进行采样，生成一对草图和拉伸序列。然后训练一个小型基于Transformer的分类器，通过编码潜在空间中所有数据对的平均成对差异来识别固定的码。SkexGen的分类准确率为99.8 ± 0.1%，证实码本间解耦效果显著。</p>
+<h3 id="54-应用" class="heading-element"><span>6.4 5.4 应用</span>
+  <a href="#54-%e5%ba%94%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ul>
+<li>
+<p><strong>插值应用</strong></p>
+<p>利用线性插值技术在模型的码之间探索，生成过渡模型。过程包括：编码模型提取关键码、线性插值这些码，再量化及生成插值模型。插值结果示例如Figure所示，线条演化为圆，矩形实体转为圆形空心盘，显示拓扑和几何动态变化。插值效果可能不平滑，因涉及复杂的离散拓扑变换。</p>
+</li>
+<li>
+<p><strong>码混合应用</strong></p>
+<p>通过混合不同数据的拓扑、几何和拉伸码，创造新颖设计组合。图8示例：保持拓扑形状，调整几何位置，如多个圆柱按方形布局排列。这些混合结果体现了系统的创新设计能力，超越了传统方法的局限。</p>
+</li>
+</ul>
+<h2 id="6-总结" class="heading-element"><span>7 6 总结</span>
+  <a href="#6-%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>SkexGen是一种新颖的自回归生成模型，专为CAD构造序列设计。它利用不同的Transformer架构将CAD构造序列中的拓扑、几何和拉伸变化编码为解耦码本。这些解码器可以生成具有特定属性的CAD构造序列。SkexGen的优势在于其能够生成多样且高质量的CAD模型，同时提高用户的控制能力和设计空间的探索效率。</p>
+<p>模型的评估在一个大规模的CAD数据集上进行，结果表明，SkexGen相比多个基准和最新方法，生成的CAD模型更为真实和多样。此外，SkexGen的架构也增强了用户在设计过程中的控制能力，使其能够更有效地探索不同设计空间。</p>
+<h4 id="61-限制" class="heading-element"><span>7.0.1 6.1 限制</span>
+  <a href="#61-%e9%99%90%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><ol>
+<li><strong>数据依赖</strong>：SkexGen依赖于大量的已标注CAD数据集，这些数据集的质量和多样性直接影响模型的表现。</li>
+<li><strong>模型复杂性</strong>：该模型使用多个Transformer编码器和解码器来处理复杂的CAD构建序列，这增加了模型的复杂性和计算成本。</li>
+<li><strong>拓扑和几何的分离</strong>：虽然这种分离有助于提高控制和生成多样性，但在实际应用中可能会导致模型难以学习到拓扑和几何之间的复杂关系。</li>
+<li><strong>有限的建模操作</strong>：SkexGen主要关注草图和拉伸操作，未涉及其他的CAD建模操作，如旋转、扫掠、布尔运算等，限制了其应用范围（<font color="red">但可以通过导入CAD工具后编辑实现其他CAD建模操作</font>）。</li>
+</ol>
+<h4 id="62-创新点" class="heading-element"><span>7.0.2 6.2 创新点</span>
+  <a href="#62-%e5%88%9b%e6%96%b0%e7%82%b9" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><ol>
+<li><strong>自回归生成模型</strong>：SkexGen是一个自回归生成模型，能够生成高质量和多样化的CAD构建序列。</li>
+<li><strong>解耦码本</strong>：使用了解耦码本架构，分别编码CAD构建序列中的拓扑、几何和拉伸变化，提高了用户控制和设计空间的探索效率。</li>
+</ol>
+]]></description></item><item><title>【论文阅读笔记】Hierarchical Neural Coding for Controllable CAD Model Generation</title><link>https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/</link><pubDate>Wed, 17 Jul 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/</guid><description></description></item><item><title>【论文阅读笔记】 MapReduce: Simplified Data Processing on Large Clusters</title><link>https://hezephyr.github.io/posts/01.mapreduce/</link><pubDate>Sun, 12 May 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.mapreduce/</guid><description><![CDATA[<h2 id="1-概念" class="heading-element"><span>1 1 概念</span>
   <a href="#1-%e6%a6%82%e5%bf%b5" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>

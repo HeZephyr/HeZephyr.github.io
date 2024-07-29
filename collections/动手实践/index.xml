@@ -1,0 +1,1368 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>动手实践 - 合集 | ZephyrHe</title><link>https://hezephyr.github.io/collections/%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5/</link><description>动手实践 - 合集 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Wed, 15 May 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/collections/%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5/" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824) 】Lab2:Key/Value Server 设计实现</title><link>https://hezephyr.github.io/posts/06.mit-6.58406.824-lab2-kv-server/</link><pubDate>Wed, 15 May 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/06.mit-6.58406.824-lab2-kv-server/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
+  <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>在本次 Lab 中，你将在单机上构建一个键/值服务器，以确保即使网络出现故障，每个操作也只能执行一次，并且操作是可线性化的。</p>
+<p>客户端可以向键/值服务器发送三个不同的 RPC： <code>Put(key, value)</code> 、 <code>Append(key, arg)</code> 和 <code>Get(key)</code> 。服务器在内存中维护键/值对的<code>map</code>。键和值是字符串。 <code>Put(key, value)</code> 设置或替换<code>map</code>中给定键的值， <code>Append(key, arg)</code> 将 arg 附加到键的值并返回旧值， <code>Get(key)</code> 获取键的当前值。不存在的键的 <code>Get</code>请求应返回空字符串；对于不存在的键的 <code>Append</code> 请求应该表现为现有值是零长度字符串。每个客户端都通过<code>Clerk</code>的 <code>Put/Append/Get</code> 方法与服务器进行通信。 <code>Clerk</code> 管理与服务器的 RPC 交互。</p>
+<p>你的服务器必须保证应用程序对<code>Clerk Get/Put/Append</code> 方法的调用是线性一致的。 如果客户端请求不是并发的，每个客户端 Get/Put/Append 调用时能够看到之前调用序列导致的状态变更。 对于并发的请求来说，返回的结果和最终状态都必须和这些操作顺序执行的结果一致。如果一些请求在时间上重叠，则它们是并发的：例如，如果客户端 X 调用 <code>Clerk.Put()</code> ，并且客户端 Y 调用 <code>Clerk.Append()</code> ，然后客户端 X 的调用 返回。 一个请求必须能够看到已完成的所有调用导致的状态变更。</p>
+<p>一个应用实现线性一致性就像一台单机服务器一次处理一个请求的行为一样简单。 例如，如果一个客户端发起一个更新请求并从服务器获取了响应，随后从其他客户端发起的读操作可以保证能看到改更新的结果。在单台服务器上提供线性一致性是相对比较容易的。</p>
+<p>Lab 在 <code>src/kvsrv</code> 中提供了框架代码和单元测试。你需要更改 <code>kvsrv/client.go</code>、<code>kvsrv/server.go</code> 和 <code>kvsrv/common.go</code> 文件。</p>
+<h2 id="2-无网络故障的kv-server" class="heading-element"><span>2 2 无网络故障的KV Server</span>
+  <a href="#2-%e6%97%a0%e7%bd%91%e7%bb%9c%e6%95%85%e9%9a%9c%e7%9a%84kv-server" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="21-任务要求" class="heading-element"><span>2.1 2.1 任务要求</span>
+  <a href="#21-%e4%bb%bb%e5%8a%a1%e8%a6%81%e6%b1%82" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>此任务需要实现一个在没有丢失消息的情况下有效的解决方案。你需要在 <code>client.go</code> 中，在 Clerk 的 Put/Append/Get 方法中添加 RPC 的发送代码；并且实现 <code>server.go</code> 中 Put、Append、Get 三个 RPC handler。</p>
+<p>当你通过了前两个测试 case：one client、many clients 时表示完成该任务。</p>
+<h3 id="22-设计实现" class="heading-element"><span>2.2 2.2 设计实现</span>
+  <a href="#22-%e8%ae%be%e8%ae%a1%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>这个任务比较简单，我们只需要根据实验要求的逻辑进行实现即可。</p>
+<ul>
+<li>
+<p><code>server.go</code></p>
+<p>使用<code>map</code>保存键值信息，三种操作都需要通过锁来保证互斥访问共享<code>map</code>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">GetArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">GetReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">PutAppendArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">PutAppendReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">Append</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">PutAppendArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">PutAppendReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">oldValue</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">oldValue</span> <span class="o">+</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">oldValue</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>client.go</code></p>
+<p>只需要添加RPC的发送代码。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">args</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">GetArgs</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">GetReply</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ck</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KVServer.Get&#34;</span><span class="p">,</span> <span class="nx">args</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">PutAppend</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">op</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">arg</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">PutAppendArgs</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Key</span><span class="p">:</span>   <span class="nx">key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Value</span><span class="p">:</span> <span class="nx">value</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">PutAppendReply</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ck</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KVServer.&#34;</span><span class="o">+</span><span class="nx">op</span><span class="p">,</span> <span class="nx">arg</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ck</span><span class="p">.</span><span class="nf">PutAppend</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">,</span> <span class="s">&#34;Put&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h2 id="3-可能丢弃消息的kv-server" class="heading-element"><span>3 3 可能丢弃消息的KV Server</span>
+  <a href="#3-%e5%8f%af%e8%83%bd%e4%b8%a2%e5%bc%83%e6%b6%88%e6%81%af%e7%9a%84kv-server" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="31-任务要求" class="heading-element"><span>3.1 3.1 任务要求</span>
+  <a href="#31-%e4%bb%bb%e5%8a%a1%e8%a6%81%e6%b1%82" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>现在，您应该修改您的解决方案，以便在遇到丢失的消息（例如 RPC 请求和 RPC 回复）时继续工作。如果消息丢失，则客户端的 <code>ck.server.Call()</code> 将返回 <code>false</code> （更准确地说， <code>Call()</code> 等待响应直至超市，如果在此时间内没有响应就返回<code>false</code>）。您将面临的一个问题是 <code>Clerk</code> 可能需要多次发送 RPC，直到成功为止。但是，每次调用 <code>Clerk.Put()</code> 或 <code>Clerk.Append()</code> 应该只会导致一次执行，因此您必须确保重新发送不会导致服务器执行请求两次。</p>
+<p>你的任务是在 <code>Clerk</code> 中添加重试逻辑，并且在 <code>server.go</code> 中来过滤重复请求。</p>
+<blockquote>
+<center>Hint
+</center>
+<ol>
+<li>您需要唯一地标识<code>client</code>操作，以确保KV Server仅执行每个操作一次。</li>
+<li>您必须仔细考虑<code>server</code>必须维持什么状态来处理重复的 <code>Get()</code> 、 <code>Put()</code> 和 <code>Append()</code> 请求（如果有的话）。</li>
+<li>您的重复检测方案应该快速释放服务器内存，例如让每个 RPC 暗示<code>client</code>已看到其前一个 RPC 的回复。可以假设<code>client</code>一次只向<code>Clerk</code>发起一次调用。</li>
+</ol>
+</blockquote>
+<h3 id="32-方案设计" class="heading-element"><span>3.2 3.2 方案设计</span>
+  <a href="#32-%e6%96%b9%e6%a1%88%e8%ae%be%e8%ae%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>根据提示，我们可以为<code>Put</code>和<code>Append</code>消息添加标识ID（<code>Get</code>消息只需不断重试，不会有影响），这里我们还需要用到<code>sync.Map</code>用于在键/值服务器中跟踪处理过的请求ID，以防止重复处理请求。每当服务器接收到一个新的RPC请求时，它会检查请求ID是否已存在于<code>sync.Map</code>中。如果存在，则表明该请求已经处理过，服务器可以跳过重复的处理，直接返回之前处理过的值。否则，服务器会记录该请求ID处理请求，并将回复结果记录。这种机制确保了操作的幂等性，避免了由于网络故障或重试机制导致的重复执行。</p>
+<p>当然，还需要考虑一个问题，就是服务器会不断积压处理过的请求ID信息，所以我们需要快速释放服务器内存，即让<code>Client</code>通知<code>Server</code>这个任务操作已经完成，删除相关的记录信息。故我们还需要给消息结构添加一个<code>Type</code>字段标识为<code>Modify</code>还是<code>Report</code>。</p>
+<p>整个流程图如下所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/KV_Server_Example_2.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/KV_Server_Example_2.png?size=small" data-sub-html="<h2>image-20240515111905159</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/KV_Server_Example_2.png" alt="image-20240515111905159" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/KV_Server_Example_2.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/KV_Server_Example_2.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/KV_Server_Example_2.png?size=large 2x" data-title="image-20240515111905159" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h3 id="33-代码实现" class="heading-element"><span>3.3 3.3 代码实现</span>
+  <a href="#33-%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>实验代码实现仓库：https://github.com/unique-pure/MIT6.5840/tree/main/src/kvsrv，实验代码已通过实验测试。</p>
+<ul>
+<li>
+<p><code>common.go</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">MessageType</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Modify</span> <span class="p">=</span> <span class="kc">iota</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Report</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Put or Append
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">type</span> <span class="nx">PutAppendArgs</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Key</span>   <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Value</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MessageType</span> <span class="nx">MessageType</span> <span class="c1">// Modify or Report
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">MessageID</span>   <span class="kt">int64</span>       <span class="c1">// Unique ID for each message
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>server.go</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">KVServer</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">data</span>   <span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">record</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">Map</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">GetArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">GetReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">PutAppendArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">PutAppendReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">MessageType</span> <span class="o">==</span> <span class="nx">Report</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">record</span><span class="p">.</span><span class="nf">Delete</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">MessageID</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">res</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">record</span><span class="p">.</span><span class="nf">Load</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">MessageID</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">res</span><span class="p">.(</span><span class="kt">string</span><span class="p">)</span> <span class="c1">// 重复请求，返回之前的结果
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">old</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">old</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">record</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">MessageID</span><span class="p">,</span> <span class="nx">old</span><span class="p">)</span> <span class="c1">// 记录请求
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">Append</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">PutAppendArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">PutAppendReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">MessageType</span> <span class="o">==</span> <span class="nx">Report</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">record</span><span class="p">.</span><span class="nf">Delete</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">MessageID</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">res</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">record</span><span class="p">.</span><span class="nf">Load</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">MessageID</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">res</span><span class="p">.(</span><span class="kt">string</span><span class="p">)</span> <span class="c1">// 重复请求，返回之前的结果
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">old</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">data</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">old</span> <span class="o">+</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span> <span class="p">=</span> <span class="nx">old</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">record</span><span class="p">.</span><span class="nf">Store</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">MessageID</span><span class="p">,</span> <span class="nx">old</span><span class="p">)</span> <span class="c1">// 记录请求
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>client.go</code></p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">args</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">GetArgs</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">GetReply</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">!</span><span class="nx">ck</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KVServer.Get&#34;</span><span class="p">,</span> <span class="nx">args</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="c1">// keep trying forever
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">PutAppend</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">op</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MessageID</span> <span class="o">:=</span> <span class="nf">nrand</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">arg</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">PutAppendArgs</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Key</span><span class="p">:</span>         <span class="nx">key</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Value</span><span class="p">:</span>       <span class="nx">value</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">MessageID</span><span class="p">:</span>   <span class="nx">MessageID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">MessageType</span><span class="p">:</span> <span class="nx">Modify</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">PutAppendReply</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">!</span><span class="nx">ck</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KVServer.&#34;</span><span class="o">+</span><span class="nx">op</span><span class="p">,</span> <span class="nx">arg</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">arg</span> <span class="p">=</span> <span class="o">&amp;</span><span class="nx">PutAppendArgs</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">MessageType</span><span class="p">:</span> <span class="nx">Report</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">MessageID</span><span class="p">:</span>   <span class="nx">MessageID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">!</span><span class="nx">ck</span><span class="p">.</span><span class="nx">server</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KVServer.&#34;</span><span class="o">+</span><span class="nx">op</span><span class="p">,</span> <span class="nx">arg</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">❯ go <span class="nb">test</span>
+</span></span><span class="line"><span class="cl">Test: one client
+</span></span><span class="line"><span class="cl">  ... Passed -- t  3.3 nrpc <span class="m">20037</span> ops <span class="m">13359</span>
+</span></span><span class="line"><span class="cl">Test: many clients ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t  3.7 nrpc <span class="m">85009</span> ops <span class="m">56718</span>
+</span></span><span class="line"><span class="cl">Test: unreliable net, many clients ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t  3.3 nrpc  <span class="m">1161</span> ops  <span class="m">632</span>
+</span></span><span class="line"><span class="cl">Test: concurrent append to same key, unreliable ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t  0.4 nrpc   <span class="m">131</span> ops   <span class="m">52</span>
+</span></span><span class="line"><span class="cl">Test: memory use get ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t  0.6 nrpc     <span class="m">8</span> ops    <span class="m">0</span>
+</span></span><span class="line"><span class="cl">Test: memory use put ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t  0.3 nrpc     <span class="m">4</span> ops    <span class="m">0</span>
+</span></span><span class="line"><span class="cl">Test: memory use append ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t  0.5 nrpc     <span class="m">4</span> ops    <span class="m">0</span>
+</span></span><span class="line"><span class="cl">Test: memory use many put clients ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t 36.7 nrpc <span class="m">200000</span> ops    <span class="m">0</span>
+</span></span><span class="line"><span class="cl">Test: memory use many get client ...
+</span></span><span class="line"><span class="cl">  ... Passed -- t 22.6 nrpc <span class="m">100002</span> ops    <span class="m">0</span>
+</span></span><span class="line"><span class="cl">Test: memory use many appends ...
+</span></span><span class="line"><span class="cl">2024/05/15 12:48:26 m0 <span class="m">411000</span> m1 <span class="m">1550088</span>
+</span></span><span class="line"><span class="cl">  ... Passed -- t  2.6 nrpc  <span class="m">2000</span> ops    <span class="m">0</span>
+</span></span><span class="line"><span class="cl">PASS
+</span></span><span class="line"><span class="cl">ok      6.5840/kvsrv    75.329s</span></span></code></pre></td></tr></table>
+</div>
+</div>]]></description></item><item><title>【MIT 6.5840(6.824)】Lab1:MapReduce 设计实现</title><link>https://hezephyr.github.io/posts/05.mit-6.58406.824-lab1mapreduce-%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0/</link><pubDate>Tue, 14 May 2024 19:56:28 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/05.mit-6.58406.824-lab1mapreduce-%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0/</guid><description><![CDATA[<h2 id="1-介绍" class="heading-element"><span>1 1 介绍</span>
+  <a href="#1-%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>本次实验是实现一个简易版本的<code>MapReduce</code>，你需要实现一个工作程序（worker process）和一个调度程序（coordinator process）。工作程序用来调用Map和Reduce函数，并处理文件的读取和写入。调度程序用来协调工作任务并处理失败的任务。你将构建出跟 <a href="http://static.googleusercontent.com/media/research.google.com/zh-CN//archive/mapreduce-osdi04.pdf"target="_blank" rel="external nofollow noopener noreferrer">MapReduce论文<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a> 里描述的类似的东西。（注意：本实验中用&quot;coordinator&quot;替代里论文中的&quot;master&quot;。）</p>
+<p>实验先决条件：</p>
+<ul>
+<li>
+<p><a href="https://blog.csdn.net/hzf0701/article/details/138770454?spm=1001.2014.3001.5501"target="_blank" rel="external nofollow noopener noreferrer">阅读MapReduce论文<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+</li>
+<li>
+<p><a href="http://nil.csail.mit.edu/6.5840/2024/labs/lab-mr.html"target="_blank" rel="external nofollow noopener noreferrer">阅读lab文档<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+</li>
+<li>
+<p>理解MapReduce框架</p>
+</li>
+<li>
+<p>理解原框架代码，理清所需完成任务</p>
+</li>
+</ul>
+<p>实验代码实现仓库：https://github.com/unique-pure/MIT6.5840/tree/main/src/mr，实验代码已通过实验测试，并在以下清单中列出了实现的功能及待办事项。</p>
+<ul>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> Complete the basic requirements for MapReduce</li>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> Handling worker failures</li>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> No data competition, a big lock ensures safety</li>
+<li><i class="fa-regular fa-check-square fa-fw" aria-hidden="true"></i> Pass lab test</li>
+<li><i class="fa-regular fa-square fa-fw" aria-hidden="true"></i> Communicate over TCP/IP and read/write files using a shared file system</li>
+</ul>
+<h2 id="2-原框架解析" class="heading-element"><span>2 2 原框架解析</span>
+  <a href="#2-%e5%8e%9f%e6%a1%86%e6%9e%b6%e8%a7%a3%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li>
+<p><code>src/mrapps/wc.go</code></p>
+<p>这是一个用于 MapReduce 的字数统计（Word Count）插件。该插件包含 Map 和 Reduce 函数，用于统计输入文本中的单词频率。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Map</span><span class="p">(</span><span class="nx">filename</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">contents</span> <span class="kt">string</span><span class="p">)</span> <span class="p">[]</span><span class="nx">mr</span><span class="p">.</span><span class="nx">KeyValue</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// function to detect word separators.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">ff</span> <span class="o">:=</span> <span class="kd">func</span><span class="p">(</span><span class="nx">r</span> <span class="kt">rune</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span> <span class="k">return</span> <span class="p">!</span><span class="nx">unicode</span><span class="p">.</span><span class="nf">IsLetter</span><span class="p">(</span><span class="nx">r</span><span class="p">)</span> <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// split contents into an array of words.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">words</span> <span class="o">:=</span> <span class="nx">strings</span><span class="p">.</span><span class="nf">FieldsFunc</span><span class="p">(</span><span class="nx">contents</span><span class="p">,</span> <span class="nx">ff</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">kva</span> <span class="o">:=</span> <span class="p">[]</span><span class="nx">mr</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">w</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">words</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span> <span class="o">:=</span> <span class="nx">mr</span><span class="p">.</span><span class="nx">KeyValue</span><span class="p">{</span><span class="nx">w</span><span class="p">,</span> <span class="s">&#34;1&#34;</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kva</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">kva</span><span class="p">,</span> <span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">kva</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Reduce</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">values</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// return the number of occurrences of this word.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">return</span> <span class="nx">strconv</span><span class="p">.</span><span class="nf">Itoa</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="nx">values</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>src/main/mrcoordinator.go</code></p>
+<p><code>mrcoordinator.go</code> 定义了调度器（Coordinator）的主要逻辑。调度器通过 <code>MakeCoordinator</code> 启动一个 <code>Coordinator</code> 实例 <code>c</code>，并在 <code>c.server()</code> 中通过协程 <code>go http.Serve(l, nil)</code> 启动一个 HTTP 服务器来接收和处理 RPC 调用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">server</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rpc</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">c</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rpc</span><span class="p">.</span><span class="nf">HandleHTTP</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">//l, e := net.Listen(&#34;tcp&#34;, &#34;:1234&#34;)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">sockname</span> <span class="o">:=</span> <span class="nf">coordinatorSock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">os</span><span class="p">.</span><span class="nf">Remove</span><span class="p">(</span><span class="nx">sockname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">l</span><span class="p">,</span> <span class="nx">e</span> <span class="o">:=</span> <span class="nx">net</span><span class="p">.</span><span class="nf">Listen</span><span class="p">(</span><span class="s">&#34;unix&#34;</span><span class="p">,</span> <span class="nx">sockname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">e</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatal</span><span class="p">(</span><span class="s">&#34;listen error:&#34;</span><span class="p">,</span> <span class="nx">e</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="nx">http</span><span class="p">.</span><span class="nf">Serve</span><span class="p">(</span><span class="nx">l</span><span class="p">,</span> <span class="kc">nil</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">MakeCoordinator</span><span class="p">(</span><span class="nx">files</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">nReduce</span> <span class="kt">int</span><span class="p">)</span> <span class="o">*</span><span class="nx">Coordinator</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span> <span class="o">:=</span> <span class="nx">Coordinator</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nf">server</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">c</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>注意：在 Go 的 <code>net/http</code> 包中，使用 <code>http.Serve(l, nil)</code> 启动 HTTP 服务器时，服务器会为每个传入的请求自动启动一个新的协程。这意味着每个 RPC 调用都是在独立的协程中处理的，从而允许并发处理多个请求。因此，在设计时可能需要使用锁等同步原语来保护共享资源。此外，Coordinator 不会主动与 Worker 通信（除非额外实现），只能通过 Worker 的 RPC 通信来完成任务。同时，当所有任务完成时，<code>Done</code> 方法将返回 <code>false</code>，从而关闭 Coordinator。</p>
+</li>
+<li>
+<p><code>src/main/mrworker.go</code></p>
+<p><code>mrworker.go</code> 通过 <code>Worker</code> 函数运行。因此，<code>Worker</code> 函数需要完成请求任务、执行任务、报告任务状态等多个任务。可以推测，<code>Worker</code> 需要在这个函数中不断地轮询 Coordinator，并根据 Coordinator 的不同回复来驱动当前 Worker 完成各种任务。</p>
+</li>
+<li>
+<p><code>src/main/mrsequential.go</code></p>
+<p><code>mrsequential.go</code> 实现了一个简单的顺序 MapReduce 应用程序。该程序读取输入文件，执行 Map 和 Reduce 操作，并将结果写入输出文件。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png" alt="img" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/mrsequential_example.png?size=large 2x" data-title="img" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</li>
+</ul>
+<h2 id="3-设计实现" class="heading-element"><span>3 3 设计实现</span>
+  <a href="#3-%e8%ae%be%e8%ae%a1%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="31-任务分析" class="heading-element"><span>3.1 3.1 任务分析</span>
+  <a href="#31-%e4%bb%bb%e5%8a%a1%e5%88%86%e6%9e%90" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>总体而言，<code>Worker</code>通过RPC轮询<code>Coordinator</code>请求任务，例如Map或者Reduce任务，<code>Coordinator</code>将剩余任务分配给<code>Worker</code>处理（先处理完Map任务才能处理Reduce任务）。</p>
+<blockquote>
+<p>其中，在此实验中Map任务数量就是输入文件数量，每个<code>Map Task</code>的任务就是处理一个<code>.txt</code>文件；Reduce任务的数量是<code>nReduce</code>。</p>
+<p>由于Map任务会将文件的内容分割为指定的<code>nReduce</code>份，每一份应当由序号标明，拥有这样的序号的多个Map任务的输出汇总起来就是对应的Reduce任务的输入。</p>
+</blockquote>
+<p>请求完任务后，<code>Worker</code>需要根据任务类型进行处理，这段处理过程跟<code>mrsequential.go</code>基本一致，但需要注意的就是论文中提到的，如果同一个任务被多个<code>Worker</code>执行，针对同一个最终的输出文件将有多个重命名操作执行。我们这就依赖底层文件系统提供的重命名操作的原子性来保证最终的文件系统状态仅仅包含一个任务产生的数据。即通过<code>os.Rename()</code>。</p>
+<p>处理完任务后，<code>Worker</code>通过RPC告知<code>Coordinator</code>任务结果。</p>
+<p><font color="red">所以，我们可以知道<code>Coordinator</code>管理着任务状态和任务分配，而无需记录<code>Worker</code>的信息，<code>Worker</code>实现任务处理。</font></p>
+<p>整个任务流程如下图所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=small" data-sub-html="<h2>image-20240514154125349</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png" alt="image-20240514154125349" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_processs_Example.png?size=large 2x" data-title="image-20240514154125349" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>MapReduce处理WordCount程序的流程如下图所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=small" data-sub-html="<h2>img</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png" alt="img" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Word_Count_MapReduce_Example.png?size=large 2x" data-title="img" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h3 id="32-rpc" class="heading-element"><span>3.2 3.2 RPC</span>
+  <a href="#32-rpc" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>通信时首先需要确定这个消息是什么类型, 通过前述分析可知：</p>
+<ul>
+<li>
+<p>对于<code>Worker</code>发送消息，<code>Worker</code>需要跟<code>Coordinator</code>报告<code>Map</code>或<code>Reduce</code>任务的执行情况(成功或失败)</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskCompletedStatus</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MapTaskCompleted</span> <span class="p">=</span> <span class="kc">iota</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MapTaskFailed</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ReduceTaskCompleted</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ReduceTaskFailed</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<ul>
+<li>
+<p>对于<code>Coordinator</code>回复消息，<code>Coordinator</code>需要分配<code>Reduce</code>或<code>Map</code>任务，告知任务的类型，或者告知<code>Worker</code>休眠（暂时没有任务需要执行）、<code>Worker</code>退出（所有任务执行成功）</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskType</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MapTask</span> <span class="p">=</span> <span class="kc">iota</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ReduceTask</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Wait</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Exit</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<p>同时，消息还需要附带额外的信息，我这里的设计是发送消息包含任务ID，以便<code>Coordinator</code>更新任务状态，结构如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">MessageSend</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">TaskID</span>              <span class="kt">int</span>                 <span class="c1">// task id
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskCompletedStatus</span> <span class="nx">TaskCompletedStatus</span> <span class="c1">// task completed status
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>回复消息结构如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">MessageReply</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">TaskID</span>   <span class="kt">int</span>      <span class="c1">// task id
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskType</span> <span class="nx">TaskType</span> <span class="c1">// task type, map or reduce or wait or exit
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskFile</span> <span class="kt">string</span>   <span class="c1">// task file name
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">NReduce</span>  <span class="kt">int</span>      <span class="c1">// reduce number, indicate the number of reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">NMap</span>     <span class="kt">int</span>      <span class="c1">// map number, indicate the number of map tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这些字段都是为了辅助<code>Worker</code>进行任务处理，如<code>NMap</code>是为了提供Map任务的数量，以便生成中间文件名，<code>TaskFile</code>是保存Map任务需要处理的输入文件。</p>
+<p>对于通信，原框架已提供Unix套接字通信，如果有想法，我们可以将 RPC 设置为通过 TCP/IP 而不是 Unix 套接字进行通信（请参阅 <code>Coordinator.server()</code> 中注释掉的行），并使用共享文件系统读/写文件。</p>
+<h3 id="32-coordinator" class="heading-element"><span>3.3 3.2 Coordinator</span>
+  <a href="#32-coordinator" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="321-结构" class="heading-element"><span>3.3.1 3.2.1 结构</span>
+  <a href="#321-%e7%bb%93%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>如前所述，<code>Coordinator</code>需要管理任务的状态信息，对于一个任务而言，我们这里定义它的状态为：未分配、已分配、完成、失败。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskStatus</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Unassigned</span> <span class="p">=</span> <span class="kc">iota</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Assigned</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Completed</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Failed</span>
+</span></span><span class="line"><span class="cl"><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>那么，任务结构应该包括任务状态，同时，如论文中提到的，可能有<code>Worker</code>成为落伍者，所以我们还需要考虑一个任务是否执行了很长时间还没结束，故这里需要记录任务分配时的时间戳，以便计算运行时间。另外，我们还需要一个字段来存储需要处理的任务文件名。故任务信息结构如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">TaskInfo</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">TaskStatus</span> <span class="nx">TaskStatus</span> <span class="c1">// task status
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TaskFile</span>   <span class="kt">string</span>     <span class="c1">// task file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">TimeStamp</span>  <span class="nx">time</span><span class="p">.</span><span class="nx">Time</span>  <span class="c1">// time stamp, indicating the running time of the task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>对于<code>Coordinator</code>结构，首先肯定是需要两个数据结构来存储所有的Map任务状态和Reduce任务状态，我这里使用的列表；然后由于是并发执行，更新共享任务状态数据，需要一把大锁保平安；最后需要一些额外变量存储任务数量（也可以直接<code>len(list)</code>）以及标志某阶段任务是否完成（如在Reduce任务进行之前Map任务是否已经完成）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Coordinator</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">NMap</span>                   <span class="kt">int</span>        <span class="c1">// number of map tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">NReduce</span>                <span class="kt">int</span>        <span class="c1">// number of reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">MapTasks</span>               <span class="p">[]</span><span class="nx">TaskInfo</span> <span class="c1">// map task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">ReduceTasks</span>            <span class="p">[]</span><span class="nx">TaskInfo</span> <span class="c1">// reduce task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">AllMapTaskCompleted</span>    <span class="kt">bool</span>       <span class="c1">// whether all map tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">AllReduceTaskCompleted</span> <span class="kt">bool</span>       <span class="c1">// whether all reduce tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">Mutex</span>                  <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span> <span class="c1">// mutex, used to protect the shared data
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="322-初始化" class="heading-element"><span>3.3.2 3.2.2 初始化</span>
+  <a href="#322-%e5%88%9d%e5%a7%8b%e5%8c%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>我们需要对<code>Coordinator</code>初始化，其中最重要的是更新任务初始状态，一开始都是未分配，</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">InitTask</span><span class="p">(</span><span class="nx">file</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">idx</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">file</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">]</span> <span class="p">=</span> <span class="nx">TaskInfo</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TaskFile</span><span class="p">:</span>   <span class="nx">file</span><span class="p">[</span><span class="nx">idx</span><span class="p">],</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TaskStatus</span><span class="p">:</span> <span class="nx">Unassigned</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TimeStamp</span><span class="p">:</span>  <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">idx</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">]</span> <span class="p">=</span> <span class="nx">TaskInfo</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">TaskStatus</span><span class="p">:</span> <span class="nx">Unassigned</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">MakeCoordinator</span><span class="p">(</span><span class="nx">files</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">nReduce</span> <span class="kt">int</span><span class="p">)</span> <span class="o">*</span><span class="nx">Coordinator</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span> <span class="o">:=</span> <span class="nx">Coordinator</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">NReduce</span><span class="p">:</span>                <span class="nx">nReduce</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">NMap</span><span class="p">:</span>                   <span class="nb">len</span><span class="p">(</span><span class="nx">files</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">MapTasks</span><span class="p">:</span>               <span class="nb">make</span><span class="p">([]</span><span class="nx">TaskInfo</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">files</span><span class="p">)),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ReduceTasks</span><span class="p">:</span>            <span class="nb">make</span><span class="p">([]</span><span class="nx">TaskInfo</span><span class="p">,</span> <span class="nx">nReduce</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">AllMapTaskCompleted</span><span class="p">:</span>    <span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">AllReduceTaskCompleted</span><span class="p">:</span> <span class="kc">false</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">Mutex</span><span class="p">:</span>                  <span class="nx">sync</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">{},</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nf">InitTask</span><span class="p">(</span><span class="nx">files</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nf">server</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">c</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="323-requesttask函数" class="heading-element"><span>3.3.3 3.2.3 RequestTask函数</span>
+  <a href="#323-requesttask%e5%87%bd%e6%95%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这部分比较复杂，根据我们之前的分析，处理逻辑如下：</p>
+<ol>
+<li>如果有未分配的任务、之前执行失败、已分配但已经超时（10s）的<code>Map</code>任务，则选择这个任务进行分配；</li>
+<li>如果以上的<code>Map</code>任务均不存在，但<code>Map</code>又没有全部执行完成，告知<code>Worker</code>先等待；</li>
+<li><code>Map</code>任务全部执行完成的情况下，按照<code>1</code>和<code>2</code>相同的逻辑进行<code>Reduce</code>任务的分配；</li>
+<li>所有的任务都执行完成了, 告知<code>Worker</code>退出。</li>
+</ol>
+<p>因此，处理代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">RequestTask</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">MessageSend</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// lock
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// assign map task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">!</span><span class="nx">c</span><span class="p">.</span><span class="nx">AllMapTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// count the number of completed map tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">NMapTaskCompleted</span> <span class="o">:=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">idx</span><span class="p">,</span> <span class="nx">taskInfo</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Unassigned</span> <span class="o">||</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Failed</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">				<span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Assigned</span> <span class="o">&amp;&amp;</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Since</span><span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TimeStamp</span><span class="p">)</span> <span class="p">&gt;</span> <span class="mi">10</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span> <span class="p">=</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskFile</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span> <span class="p">=</span> <span class="nx">idx</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">MapTask</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NReduce</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NMap</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NMap</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Assigned</span>  <span class="c1">// mark the task as assigned
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TimeStamp</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span> <span class="c1">// update the time stamp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Completed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">NMapTaskCompleted</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// check if all map tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">NMapTaskCompleted</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">c</span><span class="p">.</span><span class="nx">AllMapTaskCompleted</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">Wait</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// assign reduce task
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">!</span><span class="nx">c</span><span class="p">.</span><span class="nx">AllReduceTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// count the number of completed reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">NReduceTaskCompleted</span> <span class="o">:=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">idx</span><span class="p">,</span> <span class="nx">taskInfo</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Unassigned</span> <span class="o">||</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Failed</span> <span class="o">||</span>
+</span></span><span class="line"><span class="cl">				<span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Assigned</span> <span class="o">&amp;&amp;</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Since</span><span class="p">(</span><span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TimeStamp</span><span class="p">)</span> <span class="p">&gt;</span> <span class="mi">10</span><span class="o">*</span><span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span> <span class="p">=</span> <span class="nx">idx</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">ReduceTask</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NReduce</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span><span class="p">.</span><span class="nx">NMap</span> <span class="p">=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">NMap</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Assigned</span>  <span class="c1">// mark the task as assigned
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">idx</span><span class="p">].</span><span class="nx">TimeStamp</span> <span class="p">=</span> <span class="nx">time</span><span class="p">.</span><span class="nf">Now</span><span class="p">()</span> <span class="c1">// update the time stamp
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">taskInfo</span><span class="p">.</span><span class="nx">TaskStatus</span> <span class="o">==</span> <span class="nx">Completed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">NReduceTaskCompleted</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// check if all reduce tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">NReduceTaskCompleted</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">c</span><span class="p">.</span><span class="nx">AllReduceTaskCompleted</span> <span class="p">=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">Wait</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// all tasks have been completed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">=</span> <span class="nx">Exit</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="324-reporttask函数" class="heading-element"><span>3.3.4 3.2.4 ReportTask函数</span>
+  <a href="#324-reporttask%e5%87%bd%e6%95%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这个函数则是根据<code>Worker</code>发送的消息任务完成状态来更新任务状态信息即可，<font color="red">记住，一把大锁保平安</font>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">Coordinator</span><span class="p">)</span> <span class="nf">ReportTask</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">MessageSend</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">)</span> <span class="kt">error</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">defer</span> <span class="nx">c</span><span class="p">.</span><span class="nx">Mutex</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">MapTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Completed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">MapTaskFailed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">MapTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Failed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">ReduceTaskCompleted</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Completed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">TaskCompletedStatus</span> <span class="o">==</span> <span class="nx">ReduceTaskFailed</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">c</span><span class="p">.</span><span class="nx">ReduceTasks</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">].</span><span class="nx">TaskStatus</span> <span class="p">=</span> <span class="nx">Failed</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="kc">nil</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="33-worker" class="heading-element"><span>3.4 3.3 Worker</span>
+  <a href="#33-worker" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="331-worker轮询" class="heading-element"><span>3.4.1 3.3.1 Worker轮询</span>
+  <a href="#331-worker%e8%bd%ae%e8%af%a2" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><code>Worker</code>需要通过RPC轮询<code>Coordinator</code>请求任务，然后根据返回的任务类型进行处理（即调用相应函数）：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Worker</span><span class="p">(</span><span class="nx">mapf</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">)</span> <span class="p">[]</span><span class="nx">KeyValue</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reducef</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">args</span> <span class="o">:=</span> <span class="nx">MessageSend</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span> <span class="o">:=</span> <span class="nx">MessageReply</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">call</span><span class="p">(</span><span class="s">&#34;Coordinator.RequestTask&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">reply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="k">switch</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskType</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">MapTask</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">HandleMapTask</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">reply</span><span class="p">,</span> <span class="nx">mapf</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">ReduceTask</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">HandleReduceTask</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">reply</span><span class="p">,</span> <span class="nx">reducef</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">Wait</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">Exit</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">os</span><span class="p">.</span><span class="nf">Exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">default</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">1</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Second</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="332-处理map任务" class="heading-element"><span>3.4.2 3.3.2 处理Map任务</span>
+  <a href="#332-%e5%a4%84%e7%90%86map%e4%bb%bb%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>跟<code>mrsequential.go</code>处理基本一致，处理完成后需要通过RPC告知<code>Coordinator</code>结果。但需要注意的是，我们需要通过<code>os.Rename()</code>原子重命名来保证最终的文件系统状态仅仅包含一个任务产生的数据。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">HandleMapTask</span><span class="p">(</span><span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">,</span> <span class="nx">mapf</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="kt">string</span><span class="p">)</span> <span class="p">[]</span><span class="nx">KeyValue</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// open the file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">file</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Open</span><span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot open %v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// read the file, get the content
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">content</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">io</span><span class="p">.</span><span class="nf">ReadAll</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot read %v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">file</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// call the map function to get the key-value pairs
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">kva</span> <span class="o">:=</span> <span class="nf">mapf</span><span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">TaskFile</span><span class="p">,</span> <span class="nb">string</span><span class="p">(</span><span class="nx">content</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// create intermediate files
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">intermediate</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([][]</span><span class="nx">KeyValue</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">kv</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">kva</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">r</span> <span class="o">:=</span> <span class="nf">ihash</span><span class="p">(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">Key</span><span class="p">)</span> <span class="o">%</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">NReduce</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">intermediate</span><span class="p">[</span><span class="nx">r</span><span class="p">]</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">[</span><span class="nx">r</span><span class="p">],</span> <span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// write the intermediate files
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">r</span><span class="p">,</span> <span class="nx">kva</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">intermediate</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">oname</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;mr-%v-%v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span> <span class="nx">r</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ofile</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">CreateTemp</span><span class="p">(</span><span class="s">&#34;&#34;</span><span class="p">,</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot create tempfile %v&#34;</span><span class="p">,</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">enc</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nf">NewEncoder</span><span class="p">(</span><span class="nx">ofile</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">kv</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">kva</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// write the key-value pairs to the intermediate file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="nx">enc</span><span class="p">.</span><span class="nf">Encode</span><span class="p">(</span><span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ofile</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// Atomic file renaming：rename the tempfile to the final intermediate file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">os</span><span class="p">.</span><span class="nf">Rename</span><span class="p">(</span><span class="nx">ofile</span><span class="p">.</span><span class="nf">Name</span><span class="p">(),</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// send the task completion message to the coordinator
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">args</span> <span class="o">:=</span> <span class="nx">MessageSend</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskID</span><span class="p">:</span>              <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskCompletedStatus</span><span class="p">:</span> <span class="nx">MapTaskCompleted</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">call</span><span class="p">(</span><span class="s">&#34;Coordinator.ReportTask&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">MessageReply</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="333-处理reduce任务" class="heading-element"><span>3.4.3 3.3.3 处理Reduce任务</span>
+  <a href="#333-%e5%a4%84%e7%90%86reduce%e4%bb%bb%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这里利用我们生成的中间文件名特点，对于每个<code>Reduce</code>任务，它的输入文件（中间文件）名为<code>mr-MapID-ReduceID</code>，所以我们构造出输入文件数组，将其解码得到键值对，再进行处理。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// generate the intermediate files for reduce tasks
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">generateFileName</span><span class="p">(</span><span class="nx">r</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">NMap</span> <span class="kt">int</span><span class="p">)</span> <span class="p">[]</span><span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">var</span> <span class="nx">fileName</span> <span class="p">[]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">TaskID</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">TaskID</span> <span class="p">&lt;</span> <span class="nx">NMap</span><span class="p">;</span> <span class="nx">TaskID</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">fileName</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">fileName</span><span class="p">,</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;mr-%d-%d&#34;</span><span class="p">,</span> <span class="nx">TaskID</span><span class="p">,</span> <span class="nx">r</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">fileName</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">HandleReduceTask</span><span class="p">(</span><span class="nx">reply</span> <span class="o">*</span><span class="nx">MessageReply</span><span class="p">,</span> <span class="nx">reducef</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="p">[]</span><span class="kt">string</span><span class="p">)</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// load the intermediate files
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kd">var</span> <span class="nx">intermediate</span> <span class="p">[]</span><span class="nx">KeyValue</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// get the intermediate file names
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">intermediateFiles</span> <span class="o">:=</span> <span class="nf">generateFileName</span><span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">NMap</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// fmt.Println(intermediateFiles)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">filename</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">intermediateFiles</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">file</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Open</span><span class="p">(</span><span class="nx">filename</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot open %v&#34;</span><span class="p">,</span> <span class="nx">filename</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">return</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// decode the intermediate file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">dec</span> <span class="o">:=</span> <span class="nx">json</span><span class="p">.</span><span class="nf">NewDecoder</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">kv</span> <span class="o">:=</span> <span class="nx">KeyValue</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">dec</span><span class="p">.</span><span class="nf">Decode</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">kv</span><span class="p">);</span> <span class="nx">err</span> <span class="o">==</span> <span class="nx">io</span><span class="p">.</span><span class="nx">EOF</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">break</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">intermediate</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">,</span> <span class="nx">kv</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">file</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// sort the intermediate key-value pairs by key
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">sort</span><span class="p">.</span><span class="nf">Slice</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">,</span> <span class="kd">func</span><span class="p">(</span><span class="nx">i</span><span class="p">,</span> <span class="nx">j</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span> <span class="p">&lt;</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">j</span><span class="p">].</span><span class="nx">Key</span>
+</span></span><span class="line"><span class="cl">	<span class="p">})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// write the key-value pairs to the output file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">oname</span> <span class="o">:=</span> <span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;mr-out-%v&#34;</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ofile</span><span class="p">,</span> <span class="nx">err</span> <span class="o">:=</span> <span class="nx">os</span><span class="p">.</span><span class="nf">Create</span><span class="p">(</span><span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">log</span><span class="p">.</span><span class="nf">Fatalf</span><span class="p">(</span><span class="s">&#34;cannot create %v&#34;</span><span class="p">,</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">);</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">j</span> <span class="o">:=</span> <span class="nx">i</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">j</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">j</span><span class="p">].</span><span class="nx">Key</span> <span class="o">==</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">j</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="kd">var</span> <span class="nx">values</span> <span class="p">[]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">k</span> <span class="o">:=</span> <span class="nx">i</span><span class="p">;</span> <span class="nx">k</span> <span class="p">&lt;</span> <span class="nx">j</span><span class="p">;</span> <span class="nx">k</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">values</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">values</span><span class="p">,</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">k</span><span class="p">].</span><span class="nx">Value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">// call the reduce function to get the output
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">output</span> <span class="o">:=</span> <span class="nf">reducef</span><span class="p">(</span><span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span><span class="p">,</span> <span class="nx">values</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">// write the key-value pairs to the output file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">fmt</span><span class="p">.</span><span class="nf">Fprintf</span><span class="p">(</span><span class="nx">ofile</span><span class="p">,</span> <span class="s">&#34;%v %v\n&#34;</span><span class="p">,</span> <span class="nx">intermediate</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nx">Key</span><span class="p">,</span> <span class="nx">output</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="nx">i</span> <span class="p">=</span> <span class="nx">j</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ofile</span><span class="p">.</span><span class="nf">Close</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// rename the output file to the final output file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">os</span><span class="p">.</span><span class="nf">Rename</span><span class="p">(</span><span class="nx">ofile</span><span class="p">.</span><span class="nf">Name</span><span class="p">(),</span> <span class="nx">oname</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// send the task completion message to the coordinator
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">args</span> <span class="o">:=</span> <span class="nx">MessageSend</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskID</span><span class="p">:</span>              <span class="nx">reply</span><span class="p">.</span><span class="nx">TaskID</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">TaskCompletedStatus</span><span class="p">:</span> <span class="nx">ReduceTaskCompleted</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">call</span><span class="p">(</span><span class="s">&#34;Coordinator.ReportTask&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">args</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">MessageReply</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="4-测试和常见问题" class="heading-element"><span>4 4 测试和常见问题</span>
+  <a href="#4-%e6%b5%8b%e8%af%95%e5%92%8c%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><code>test-mr.sh</code>为测试脚本，也可以通过运行<code>sh test-mr-many.sh n</code>来运行$n$次测试。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-sh" data-lang="sh"><span class="line"><span class="cl">❯ bash test-mr.sh
+</span></span><span class="line"><span class="cl">*** Starting wc <span class="nb">test</span>
+</span></span><span class="line"><span class="cl">--- wc test: PASS
+</span></span><span class="line"><span class="cl">*** Starting indexer test.
+</span></span><span class="line"><span class="cl">--- indexer test: PASS
+</span></span><span class="line"><span class="cl">*** Starting map parallelism test.
+</span></span><span class="line"><span class="cl">--- map parallelism test: PASS
+</span></span><span class="line"><span class="cl">*** Starting reduce parallelism test.
+</span></span><span class="line"><span class="cl">--- reduce parallelism test: PASS
+</span></span><span class="line"><span class="cl">*** Starting job count test.
+</span></span><span class="line"><span class="cl">--- job count test: PASS
+</span></span><span class="line"><span class="cl">*** Starting early <span class="nb">exit</span> test.
+</span></span><span class="line"><span class="cl">--- early <span class="nb">exit</span> test: PASS
+</span></span><span class="line"><span class="cl">*** Starting crash test.
+</span></span><span class="line"><span class="cl">--- crash test: PASS
+</span></span><span class="line"><span class="cl">*** PASSED ALL TESTS</span></span></code></pre></td></tr></table>
+</div>
+</div><p>常见的问题如下：</p>
+<ol>
+<li>
+<p>不能通过<code>job-count</code>测试</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-golang" data-lang="golang"><span class="line"><span class="cl"><span class="o">***</span> <span class="nx">Starting</span> <span class="nx">job</span> <span class="nx">count</span> <span class="nx">test</span><span class="p">.</span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span> <span class="kd">map</span> <span class="nx">jobs</span> <span class="nx">ran</span> <span class="nx">incorrect</span> <span class="nx">number</span> <span class="nx">of</span> <span class="nf">times</span> <span class="p">(</span><span class="mi">10</span> <span class="o">!=</span> <span class="mi">8</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="o">---</span> <span class="nx">job</span> <span class="nx">count</span> <span class="nx">test</span><span class="p">:</span> <span class="nx">FAIL</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>因为多次处理同一个任务，且任务没有异常。这是因为在分配任务后没有更新任务的状态，例如标记为已分配和记录当前时间戳。</p>
+</li>
+</ol>
+]]></description></item></channel></rss>

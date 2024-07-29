@@ -1,11 +1,16 @@
 # ZephyrHe
 
-共计 115 篇文章
+共计 121 篇文章
 
 ## 2024
 
-共计 56 篇文章
+共计 62 篇文章
 
+- 07-25 [【MIT 6.5840(6.824)学习笔记】Raft](https://hezephyr.github.io/posts/07.raft/ "2024-07-25 00:00:00")
+- 07-19 [【论文阅读笔记】 In Search of an Understandable Consensus Algorithm (Extended Version)](https://hezephyr.github.io/posts/02.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0in-search-of-an-understandable-consensus-algorithm-extended-version/ "2024-07-19 00:00:00")
+- 07-17 [【论文阅读笔记】Hierarchical Neural Coding for Controllable CAD Model Generation](https://hezephyr.github.io/posts/05.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/ "2024-07-17 00:00:00")
+- 07-17 [【论文阅读笔记】 SkexGen: Autoregressive Generation of CAD Construction Sequences with Disentangled Codebooks](https://hezephyr.github.io/posts/04.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/ "2024-07-17 00:00:00")
+- 07-17 [【论文阅读笔记】 Attention Is All You Need](https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0transformer/ "2024-07-17 00:00:00")
 - 06-09 [Shell 23道例题实战](https://hezephyr.github.io/posts/07.shell%E5%AE%9E%E6%88%98/ "2024-06-09 09:39:47")
 - 06-02 [计算机网络 面试题目总结](https://hezephyr.github.io/posts/03.%E8%AE%A1%E7%AE%97%E6%9C%BA%E7%BD%91%E7%BB%9C%E9%9D%A2%E7%BB%8F/ "2024-06-02 19:45:50")
 - 06-01 [数据结构与算法 面试题目总结](https://hezephyr.github.io/posts/02.%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E4%B8%8E%E7%AE%97%E6%B3%95%E9%9D%A2%E7%BB%8F/ "2024-06-01 20:13:44")
@@ -13,9 +18,10 @@
 - 05-28 [【MIT 6.5840(6.824)学习笔记】GFS](https://hezephyr.github.io/posts/04.gfs/ "2024-05-28 16:24:28")
 - 05-22 [【MIT 6.5840(6.824)学习笔记】 测试分布式系统的线性一致性](https://hezephyr.github.io/posts/03.%E6%B5%8B%E8%AF%95%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%9A%84%E7%BA%BF%E6%80%A7%E4%B8%80%E8%87%B4%E6%80%A7/ "2024-05-22 09:33:17")
 - 05-15 [【MIT 6.5840(6.824)学习笔记】使用Go进行线程和RPC编程](https://hezephyr.github.io/posts/02.%E4%BD%BF%E7%94%A8go%E8%BF%9B%E8%A1%8C%E7%BA%BF%E7%A8%8B%E5%92%8Crpc%E7%BC%96%E7%A8%8B/ "2024-05-15 09:55:12")
+- 05-15 [【MIT 6.5840(6.824) 】Lab2:Key/Value Server 设计实现](https://hezephyr.github.io/posts/06.mit-6.58406.824-lab2-kv-server/ "2024-05-15 00:00:00")
 - 05-14 [【MIT 6.5840(6.824)】Lab1:MapReduce 设计实现](https://hezephyr.github.io/posts/05.mit-6.58406.824-lab1mapreduce-%E8%AE%BE%E8%AE%A1%E5%AE%9E%E7%8E%B0/ "2024-05-14 19:56:28")
 - 05-14 [【MIT 6.5840(6.824)学习笔记】 分布式系统介绍](https://hezephyr.github.io/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/ "2024-05-14 14:12:32")
-- 05-12 [论文阅读笔记 MapReduce: Simplified Data Processing on Large Clusters](https://hezephyr.github.io/posts/01.mapreduce/ "2024-05-12 00:00:00")
+- 05-12 [【论文阅读笔记】 MapReduce: Simplified Data Processing on Large Clusters](https://hezephyr.github.io/posts/01.mapreduce/ "2024-05-12 00:00:00")
 - 05-11 [优秀的CS学习网站](https://hezephyr.github.io/posts/01.%E8%AF%BE%E7%A8%8B%E7%BD%91%E7%AB%99/ "2024-05-11 21:46:26")
 - 05-11 [Andrew文件系统](https://hezephyr.github.io/posts/39.andrew%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ "2024-05-11 21:38:23")
 - 05-11 [网络文件系统](https://hezephyr.github.io/posts/38.%E7%BD%91%E7%BB%9C%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/ "2024-05-11 21:37:27")
