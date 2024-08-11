@@ -1,11 +1,14 @@
 # ZephyrHe
 
-共计 125 篇文章
+共计 128 篇文章
 
 ## 2024
 
-共计 65 篇文章
+共计 68 篇文章
 
+- 08-11 [【论文阅读笔记】ZooKeeper: Wait-free coordination for Internet-scale systems](https://hezephyr.github.io/posts/08.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0zookeeper-wait-free-coordination-for-internet-scale-systems/ "2024-08-11 00:00:00")
+- 08-11 [【MIT 6.5840(6.824) 】Lab3:Raft 设计实现](https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/ "2024-08-11 00:00:00")
+- 08-02 [好用的工具](https://hezephyr.github.io/posts/03.%E7%BD%91%E7%BB%9C%E5%B7%A5%E5%85%B7/ "2024-08-02 00:00:00")
 - 07-25 [【MIT 6.5840(6.824)学习笔记】Raft](https://hezephyr.github.io/posts/07.raft/ "2024-07-25 00:00:00")
 - 07-19 [【论文阅读笔记】In Search of an Understandable Consensus Algorithm (Extended Version)](https://hezephyr.github.io/posts/03.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0in-search-of-an-understandable-consensus-algorithm-extended-version/ "2024-07-19 00:00:00")
 - 07-19 [【论文阅读笔记】Hierarchical Neural Coding for Controllable CAD Model Generation](https://hezephyr.github.io/posts/07.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/ "2024-07-19 00:00:00")

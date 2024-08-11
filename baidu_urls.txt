@@ -1,3 +1,6 @@
+https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/
+https://hezephyr.github.io/posts/08.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0zookeeper-wait-free-coordination-for-internet-scale-systems/
+https://hezephyr.github.io/posts/03.%E7%BD%91%E7%BB%9C%E5%B7%A5%E5%85%B7/
 https://hezephyr.github.io/posts/07.raft/
 https://hezephyr.github.io/posts/06.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0skexgen/
 https://hezephyr.github.io/posts/07.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0hierarchical-neural-coding-for-controllable-cad-model-generation/

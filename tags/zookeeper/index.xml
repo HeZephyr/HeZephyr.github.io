@@ -1,0 +1,283 @@
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>ZooKeeper - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/zookeeper/</link><description>ZooKeeper - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 11 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/zookeeper/" rel="self" type="application/rss+xml"/><item><title>【论文阅读笔记】ZooKeeper: Wait-free coordination for Internet-scale systems</title><link>https://hezephyr.github.io/posts/08.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0zookeeper-wait-free-coordination-for-internet-scale-systems/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0zookeeper-wait-free-coordination-for-internet-scale-systems/</guid><description><![CDATA[<h2 id="摘要" class="heading-element"><span>1 摘要</span>
+  <a href="#%e6%91%98%e8%a6%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>这篇论文介绍了ZooKeeper，一个用于协调分布式应用进程的服务。<font color="red">ZooKeeper旨在提供一个简单且高性能的内核，用于构建更复杂的客户端协调原语。</font>它整合了组消息传递、共享寄存器和分布式锁服务的元素，形成了一个复制的、集中式的服务。Zookeeper提供了一个接口，具有共享寄存器的无等待特性和类似分布式文件系统缓存失效的事件驱动机制，以提供简单而强大的协调服务。ZooKeeper还保证了每个客户端请求的FIFO执行和所有更改ZooKeeper状态的请求的线性化。</p>
+<h2 id="1-介绍" class="heading-element"><span>2 1 介绍</span>
+  <a href="#1-%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><strong>分布式系统中的基本协调机制</strong>：</p>
+<ul>
+<li><strong>配置</strong>：最基本的形式，可能是静态或动态的操作参数列表。</li>
+<li><strong>组成员资格和领导者选举</strong>：进程需要了解其他进程的状态及职责。</li>
+<li><strong>锁</strong>：实现对临界区的互斥访问的强大协调原语。</li>
+</ul>
+<p>一种协调方法是为每种不同的协调需求（如队列服务、领导者选举服务）开发服务。也可以使用更强大的服务来实现其他原语（如Chubby是一种具有强同步保证的锁服务，它可以用于实现领导者选举、组成员资格等）。</p>
+<p><strong>ZooKeeper的设计原则</strong>：</p>
+<ol>
+<li><font color="red">API暴露</font>。使开发人员能够实现自己的原语，而不是在服务器端实现特定原语。</li>
+<li><font color="red">无等待数据对象</font>。避免使用阻塞原语（如锁），使系统性能更高、容错性更好。</li>
+<li><font color="red">操作顺序保证</font>。实现FIFO客户端排序和可线性化写入。</li>
+</ol>
+<p>Zookeeper实现了一个API，用于操作<strong>像文件系统那样层次化组织</strong>的简单无等待数据对象。ZooKeeper服务由一组使用复制来实现高可用性和高性能的服务器组成，并且使用流水线架构实现，该架构支持大量未完成请求，保持低延迟。这样的流水线自然地支持了单个客户端按FIFO顺序执行操作。保证FIFO客户端顺序使得客户端可以异步提交操作。通过异步操作，客户端可以同时有多个未完成的操作。</p>
+<p>为了保证更新操作满足可线性化，作者实现了一个基于领导者的原子广播协议，称为Zab。<font color="red">然而，Zookeeper应用程序的典型工作负载主要是读操作，因此需要进行读操作优化，即不使用Zab对它们进行全序排序，而是本地处理读操作，利用客户端缓存和监视机制（只缓存不直接管理）提高性能。</font>Chubby直接管理客户端缓存，其使用租约来防止故障客户端无限期地阻塞系统。然而，租约只能限制慢或故障客户端的影响，而ZooKeeper的监视机制则完全避免了这个问题。</p>
+<h2 id="2-zookeeper服务" class="heading-element"><span>3 2 Zookeeper服务</span>
+  <a href="#2-zookeeper%e6%9c%8d%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>客户端通过ZooKeeper客户端库的API向ZooKeeper服务提交请求，该库不仅提供了服务接口，还负责管理客户端与服务器之间的网络连接。客户端在连接ZooKeeper时建立<strong>会话</strong>，并通过会话句柄发送请求。</p>
+<p>相关术语：</p>
+<ul>
+<li><strong>客户端</strong>：ZooKeeper服务的用户</li>
+<li><strong>服务器</strong>：提供ZooKeeper服务的进程</li>
+<li><strong>znode</strong>：ZooKeeper数据中的内存数据节点，该数据节点组织在称为<strong>数据树</strong>的分层命名空间中</li>
+<li><strong>&ldquo;update&quot;和&quot;write&rdquo;</strong>：来指代任何修改数据树状态的操作。</li>
+</ul>
+<h3 id="21-服务概述" class="heading-element"><span>3.1 2.1 服务概述</span>
+  <a href="#21-%e6%9c%8d%e5%8a%a1%e6%a6%82%e8%bf%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>ZooKeeper服务为客户端提供了数据节点（znodes）的抽象概念，这些节点在层次命名空间中组织，类似于文件系统（如/A/B/C表示znode C的路径，其中C父节点是B），便于用户理解和组织数据。每个znode都存储数据，除了临时znode外，都可以有子节点。客户端可以创建两种类型znode：</p>
+<ul>
+<li><strong>常规znode</strong>：客户端显示创建和删除</li>
+<li><strong>临时znode</strong>：客户端显示创建和删除，或者在创建它们的会话终止后由系统自动删除。、</li>
+</ul>
+<p>创建znode时，可以设置顺序标志，使用顺序标志创建的znode在其名称后附加一个单调递增的计数器值，确保节点名称的唯一性。</p>
+<p><font color="red">ZooKeeper的监视机制允许客户端在变更发生时接收通知，无需轮询</font>。这种机制是一次性的，与会话关联，触发后或会话关闭时取消。<font color="red">客户端通过监视事件得知数据变化，但不会获得变化的具体内容</font>。</p>
+<p>ZooKeeper的数据模型本质是一个简化API的文件系统或具有层次键的键值表，<font color="red">层次化命名空间对于不同应用程序的命名空间分配子树和设置这些子树的访问权限非常有用</font>。znode不是为一般数据存储设计，而是作为客户端应用协调的抽象。</p>
+<p>例如，在下图中，有两个子树，一个用于app1（<code>/app1</code>），另一个用于app2（<code>/app2</code>）。app1的子树实现了一个简单的组成员协议：每个客户端进程<code>p_i</code>在<code>/app1</code>下创建一个znode <code>p_i</code>，该znode在进程运行期间持续存在。ZooKeeper允许客户端用znode存储一些可以用于分布式计算的元数据或配置的信息（例如当前领导者信息）。znode还包含时间戳和版本计数器，使客户端能够追踪变更并执行条件更新。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=small" data-sub-html="<h2>image-20240811214958210</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png" alt="image-20240811214958210" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=large 2x" data-title="image-20240811214958210" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>客户端与ZooKeeper的会话具有超时机制，超时未收到信息即认为客户端故障。当客户端显式关闭会话句柄或ZooKeeper检测到客户端故障时，会话结束。<font color="red">会话期间，客户端可以跨服务器透明迁移，保持状态连续性</font>。</p>
+<h3 id="22-客户端api" class="heading-element"><span>3.2 2.2 客户端API</span>
+  <a href="#22-%e5%ae%a2%e6%88%b7%e7%ab%afapi" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>以下是ZooKeeper API的相关子集：</p>
+<ul>
+<li><code>create(path, data, flags)</code>：创建一个具有路径名<code>path</code>的znode，存储<code>data[]</code>，并返回新znode的名称。<code>flags</code>使客户端可以选择znode的类型：常规、临时，并设置顺序标志。</li>
+<li><code>delete(path, version)</code>：如果znode的版本与预期版本匹配，则删除路径为<code>path</code>的znode。</li>
+<li><code>exists(path, watch)</code>：如果路径为<code>path</code>的znode存在，则返回true，否则返回false。<code>watch</code>标志允许客户端在znode上设置监视。</li>
+<li><code>getData(path, watch)</code>：返回与znode关联的数据和元数据（如版本信息）。<code>watch</code>标志的工作方式与<code>exists()</code>相同，只是如果znode不存在，ZooKeeper不会设置监视。</li>
+<li><code>setData(path, data, version)</code>：如果znode的版本号是当前版本，则将<code>data[]</code>写入路径为<code>path</code>的znode。</li>
+<li><code>getChildren(path, watch)</code>：返回znode的子节点名称集合。</li>
+<li><code>sync(path)</code>：等待在操作开始时挂起的所有更新传播到客户端连接的服务器。当前忽略路径。</li>
+</ul>
+<p>所有方法在API中都有同步和异步版本。当应用程序需要执行单个ZooKeeper操作且没有并发任务时，使用同步API，使其阻塞直到完成。而异步API允许应用程序执行多个ZooKeeper操作和其他任务，ZooKeeper客户端保证按顺序调用每个操作的相应回调。</p>
+<blockquote>
+<p>ZooKeeper不使用句柄访问znode。每个请求都包括被操作的znode的完整路径。这不仅简化了API（没有<code>open()</code>或<code>close()</code>方法），还消除了服务器需要维护的额外状态。每个更新方法都接受一个预期版本号，如果znode的实际版本号与预期版本号不匹配，更新将失败并返回版本错误。<font color="red">如果版本号为-1，则不进行版本检查。</font></p>
+</blockquote>
+<h3 id="23-zookeeper保证" class="heading-element"><span>3.3 2.3 Zookeeper保证</span>
+  <a href="#23-zookeeper%e4%bf%9d%e8%af%81" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>ZooKeeper通过两项基本的顺序保证来确保操作的一致性和可预测性：</p>
+<ul>
+<li><strong>线性化写入</strong>：所有更新ZooKeeper状态的请求都是可序列化的，并且遵循优先级。</li>
+<li><strong>FIFO客户端顺序</strong>：来自同一客户端的所有请求按照它们被发送的顺序执行。</li>
+</ul>
+<p>ZooKeeper的线性化定义扩展了Herlihy的原始定义，称为异步线性化，允许客户端有多个未完成的操作，并保证这些操作的FIFO顺序。</p>
+<p>这种顺序保证对于分布式系统中的领导者选举和配置更新至关重要。例如，当新领导者需要更新大量配置参数时，可以利用ZooKeeper的顺序保证来确保配置的一致性和完整性。新领导者通过创建一个<code>ready</code> znode来控制配置的更新，其他进程只有在该znode存在时才会采用新的配置。新领导者通过删除<code>ready</code>、更新各种配置znode和创建<code>ready</code>来进行配置更改。<font color="red">所有这些更改可以流水线处理，并异步发布，以快速更新配置状态</font>。</p>
+<p>此外，ZooKeeper的通知机制确保了客户端能够及时接收到变更通知，而sync操作则允许客户端在需要时强制更新读取，以获取最新的系统状态。</p>
+<p>ZooKeeper的设计允许它在保持高吞吐量的同时，也保证了系统的<strong>活性和持久性</strong>。只要大多数服务器处于活动状态并能够通信，服务就能保持可用。<font color="red">而且，一旦服务成功响应了更改请求，那么只要法定数量的服务器能够恢复，这些更改能在任何数量的故障中持久化</font>。</p>
+<h3 id="24-原语示例" class="heading-element"><span>3.4 2.4 原语示例</span>
+  <a href="#24-%e5%8e%9f%e8%af%ad%e7%a4%ba%e4%be%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>ZooKeeper API提供了实现复杂原语的能力，这些原语完全在客户端实现，服务端并不感知。无论是配置管理、汇合点、组成员关系还是锁机制，ZooKeeper都能通过其API提供支持。ZooKeeper的顺序保证允许高效地推理系统状态，而监视则允许高效地等待。</p>
+<ul>
+<li>
+<p><strong>配置管理</strong>：最简单的形式是将配置存储在一个 znode（$z_c$）中。进程启动时获取 $z_c$ 的完整路径名。启动的进程通过读取 $z_c$ 并将监视标志设置为 true 来获得其配置。如果 $z_c$ 中的配置被更新，进程会收到通知并读取新配置，重新设置监视标志为 true。</p>
+<blockquote>
+<p>在这种方案中，尽管有很多次变化，但通常进程只会收到一次，这并不会影响进程的行为，因为监视是用来通知进程它已经知道的信息：它所拥有的 $z_c$ 信息是过时的。</p>
+</blockquote>
+</li>
+<li>
+<p><strong>汇合点</strong>：在分布式系统中，有时并不总是能事先明确最终的系统配置。可以使用 ZooKeeper 处理这种情况，通过一个称为汇合点的 znode（$z_r$），这是由客户端创建的节点。客户端将 $z_r$ 的完整路径名作为启动参数传递给主进程和工作进程。当主进程启动时，它会将其使用的地址和端口信息填充到 $z_r$ 中。当工作进程启动时，它们会读取 $z_r$ 并将监视设置为 true。如果 $z_r$ 尚未填充，工作进程将等待被通知 $z_r$ 更新。如果 $z_r$ 是一个临时节点，主进程和工作进程可以监视 $z_r$ 的删除，并在客户端结束时进行清理。</p>
+</li>
+<li>
+<p><strong>组成员关系</strong>：我们利用临时节点允许查看创建该节点的会话状态。首先指定一个 znode（$z_g$）来代表组。当组中的一个进程成员启动时，它会在 $z_g$ 下创建一个临时子 znode。如果每个进程都有唯一的名称或标识符，则该名称用于子 znode 的名称；否则，进程将使用 <code>SEQUENTIAL</code> 标志创建 znode 以获得唯一的名称分配。</p>
+<p><font color="red">进程可以将进程信息放入子 znode 的数据中，例如进程使用的地址和端口</font>。在 $z_g$ 下创建子 znode 后，进程正常启动，不需要做其他任何事情。如果进程失败或结束，代表它的 znode 在 $z_g$ 下自动移除。进程可以通过列出 $z_g$ 的子节点来获取组信息。如果进程想监视组成员变动，可以将监视标志设置为 true，并在收到变动通知时刷新组信息（始终将监视标志设置为 true）。</p>
+</li>
+<li>
+<p><strong>简单锁</strong>：尽管 ZooKeeper 不是一个锁服务，但它可以用来实现锁，以实现各种通用同步原语。最简单的锁实现使用“锁文件”。锁由一个 znode 表示。</p>
+<ul>
+<li>要获取锁，客户端尝试创建带有 <code>EPHEMERAL</code> 标志的指定 znode。如果创建成功，客户端持有锁。否则，客户端可以读取 znode 并设置监视标志，以便在当前持有锁的客户端死亡时收到通知。</li>
+<li>客户端在死亡或显式删除 znode 时释放锁。等待锁的其他客户端在观察到 znode 被删除后再次尝试获取锁。</li>
+</ul>
+<p>虽然这种简单的锁协议有效，但它确实存在一些问题。</p>
+<ul>
+<li><font color="red">它遭受群体效应</font>。如果有许多客户端等待获取锁，当锁被释放时，它们都会争夺锁，尽管只有一个客户端可以获取锁。</li>
+<li><font color="red">它只实现了独占锁</font>。</li>
+</ul>
+<p>以下两个原语展示了如何克服这两个问题。</p>
+</li>
+<li>
+<p><strong>无群体效应的简单锁</strong>：我们定义一个锁 znode（$l$）来实现这样的锁。直观上，我们将所有请求锁的客户端排队，每个客户端按请求到达的顺序获取锁。因此，客户端希望获取锁时执行以下操作：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Lock</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># 使用 SEQUENTIAL 标志将客户端获取锁的尝试按与其他所有尝试的顺序排列。n代表Zookeeper自动分配的唯一序列号</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="n">n</span> <span class="o">=</span> <span class="n">create</span><span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="err">“</span><span class="o">/</span><span class="n">lock</span><span class="o">-</span><span class="err">”</span><span class="p">,</span> <span class="n">EPHEMERAL</span><span class="o">|</span><span class="n">SEQUENTIAL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 获取锁路径下所有子节点的列表。</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="n">C</span> <span class="o">=</span> <span class="n">getChildren</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 如果当前创建的节点 n 是子节点列表 C 中最小的一个，即没有其他节点有更小的序号，那么这个客户端获得了锁，退出。</span>
+</span></span><span class="line"><span class="cl"><span class="mi">3</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="n">lowest</span> <span class="n">znode</span> <span class="ow">in</span> <span class="n">C</span><span class="p">,</span> <span class="n">exit</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 果当前节点 n 不是最小的，找到列表中直接排在 n 前面的节点 p。（即每个都等待前一个，这样避免了群体效应，因为只有一个进程在锁被释放或锁请求被放弃时被唤醒）</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span> <span class="n">p</span> <span class="o">=</span> <span class="n">znode</span> <span class="ow">in</span> <span class="n">C</span> <span class="n">ordered</span> <span class="n">just</span> <span class="n">before</span> <span class="n">n</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 检查节点 p 是否仍然存在。由于节点是临时的，如果持有锁的客户端断开了连接，节点 p 将被自动删除。</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span> <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span> 
+</span></span><span class="line"><span class="cl">	<span class="c1"># 设置一个监视器，等待节点 p 的状态变化事件</span>
+</span></span><span class="line"><span class="cl">	<span class="n">wait</span> <span class="k">for</span> <span class="n">watch</span> <span class="n">event</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># 如果 p 不存在，说明那个客户端已经释放了锁，仍然有一个更低序列号的 znode 正在等待或持有锁，所以当前客户端应该再次检查自己是否是最小的节点。</span>
+</span></span><span class="line"><span class="cl"><span class="mi">6</span> <span class="n">goto</span> <span class="mi">2</span></span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Unlock</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="n">delete</span><span class="p">(</span><span class="n">n</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>这种锁方案具有以下优点：</p>
+<ol>
+<li><font color="red">znode 的删除只会唤醒一个客户端</font>，因为每个 znode 只有一个其他客户端在监视，所以我们没有群体效应；</li>
+<li>没有轮询或超时；</li>
+<li>由于我们实现锁的方式，<font color="red">我们可以通过浏览 ZooKeeper 数据查看锁争用情况、破坏锁和调试锁问题</font>。</li>
+</ol>
+</li>
+<li>
+<p><strong>读/写锁</strong>：为了实现读/写锁，我们稍微更改了锁过程，并有单独的读锁和写锁过程。解锁过程与全局锁的情况相同。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Write Lock</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="n">n</span> <span class="o">=</span> <span class="n">create</span><span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="err">“</span><span class="o">/</span><span class="n">write</span><span class="o">-</span><span class="err">”</span><span class="p">,</span> <span class="n">EPHEMERAL</span><span class="o">|</span><span class="n">SEQUENTIAL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="n">C</span> <span class="o">=</span> <span class="n">getChildren</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="mi">3</span> <span class="k">if</span> <span class="n">n</span> <span class="ow">is</span> <span class="n">lowest</span> <span class="n">znode</span> <span class="ow">in</span> <span class="n">C</span><span class="p">,</span> <span class="n">exit</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span> <span class="n">p</span> <span class="o">=</span> <span class="n">znode</span> <span class="ow">in</span> <span class="n">C</span> <span class="n">ordered</span> <span class="n">just</span> <span class="n">before</span> <span class="n">n</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span> <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span> <span class="n">wait</span> <span class="k">for</span> <span class="n">event</span>
+</span></span><span class="line"><span class="cl"><span class="mi">6</span> <span class="n">goto</span> <span class="mi">2</span></span></span></code></pre></td></tr></table>
+</div>
+</div><div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="c1"># Read Lock</span>
+</span></span><span class="line"><span class="cl"><span class="mi">1</span> <span class="n">n</span> <span class="o">=</span> <span class="n">create</span><span class="p">(</span><span class="n">l</span> <span class="o">+</span> <span class="err">“</span><span class="o">/</span><span class="n">read</span><span class="o">-</span><span class="err">”</span><span class="p">,</span> <span class="n">EPHEMERAL</span><span class="o">|</span><span class="n">SEQUENTIAL</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="mi">2</span> <span class="n">C</span> <span class="o">=</span> <span class="n">getChildren</span><span class="p">(</span><span class="n">l</span><span class="p">,</span> <span class="n">false</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="mi">3</span> <span class="k">if</span> <span class="n">no</span> <span class="n">write</span> <span class="n">znodes</span> <span class="n">lower</span> <span class="n">than</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">C</span><span class="p">,</span> <span class="n">exit</span>
+</span></span><span class="line"><span class="cl"><span class="mi">4</span> <span class="n">p</span> <span class="o">=</span> <span class="n">write</span> <span class="n">znode</span> <span class="ow">in</span> <span class="n">C</span> <span class="n">ordered</span> <span class="n">just</span> <span class="n">before</span> <span class="n">n</span>
+</span></span><span class="line"><span class="cl"><span class="mi">5</span> <span class="k">if</span> <span class="n">exists</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">true</span><span class="p">)</span> <span class="n">wait</span> <span class="k">for</span> <span class="n">event</span>
+</span></span><span class="line"><span class="cl"><span class="mi">6</span> <span class="n">goto</span> <span class="mi">3</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>此锁过程与之前的锁略有不同。写锁仅在命名上有所不同。读锁第 3 行和第 4 行有所不同，因为只有较早的写锁 znode 会阻止客户端获取读锁。看起来当有多个客户端等待读锁时，会出现“群体效应”，并在较低序列号的“write-” znode 被删除时收到通知；实际上，这正是我们所期望的行为。<font color="red">一旦写锁被释放，所有等待读锁的客户端都应该被唤醒，因为它们现在有可能共同持有读锁</font>。这是因为读锁是可以共享的，一旦没有任何写锁存在，所有的读锁请求都可以被满足，所有等待读锁的客户端都能继续它们的操作，无需再等待。这种机制确保了读操作的高并发性，同时保证了写操作的独占性，从而维护了数据的一致性和完整性。</p>
+</li>
+<li>
+<p><strong>双重屏障</strong>：双重屏障机制为客户端提供了一种优雅的方式来同步计算阶段的启动与终止，确保所有参与方在统一的信号下协同行动。当加入屏障的进程数量超过屏障阈值时，标志着计算活动的开启；而随着各进程完成任务并相继退出，屏障亦随之解除。在这一机制中，屏障自身以ZooKeeper中的 znode 表示，我们将其命名为 $b$。</p>
+<p>每当进程 $p$ 欲进入屏障，它首先通过在 $b$ 下创建一个子 znode 来进行注册，表明自身已加入计算预备队列；而当进程准备撤离屏障，即宣告任务完成之时，它将移除先前创建的子 znode，以此来注销。<font color="red">屏障的激活与释放，分别对应于 $b$ 下子节点数目越过阈值及全部子节点被清除这两个条件</font>。</p>
+<p>为了确保进程高效等待进入与退出条件的达成，Zookeeper巧妙地运用了监视器。在进程寻求进入屏障时，它会设置监视器以监听 $b$ 的某个子 znode 的存在状态——这个子 znode 是由导致子节点数量首次超越屏障阈值的那个进程创建的。如此一来，进程得以实时知晓屏障开启的瞬间。相反，在进程意欲退出屏障之际，它将监视某个特定的子 znode 的消失，只有当这个标记着屏障即将解除的子 znode 被移除后，进程才检查是否满足退出条件，进而安全有序地脱离屏障环境。</p>
+</li>
+</ul>
+<h2 id="3-zookeeper应用" class="heading-element"><span>4 3 ZooKeeper应用</span>
+  <a href="#3-zookeeper%e5%ba%94%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>ZooKeeper作为一种强大的协调服务，在多种应用程序中发挥着关键作用。</p>
+<ul>
+<li>Yahoo!的抓取服务（FS）利用ZooKeeper来<strong>管理配置元数据</strong>、<strong>进行领导者选举</strong>，并从主进程故障中恢复，确保服务的高可用性。此外，ZooKeeper的监视机制允许FS在不直接与服务器通信的情况下，通过读取ZooKeeper中的状态信息来向健康的服务器发送请求。</li>
+<li>Katta作为一个非Yahoo!的分布式索引器，使用ZooKeeper进行协调，通过分片来分配索引工作。Katta使用ZooKeeper来跟踪主从服务器的状态（<strong>组成员关系</strong>），并处理主服务器的故障转移（<strong>领导者选举</strong>）。Katta还使用ZooKeeper来跟踪和管理分片分配给从服务器的分配（<strong>配置管理</strong>）。</li>
+<li>Yahoo!消息代理（YMB）是一个分布式发布-订阅系统。该系统管理数千个主题，客户端可以发布消息并接收消息。为了提供可扩展性，主题分布在一组服务器中。每个主题都使用主-备方案进行复制，确保消息被复制到两台机器上，以确保可靠地消息传递。构成YMB的服务器使用无共享分布式架构，这使得协调对于正确操作至关重要。<font color="red">YMB使用ZooKeeper来管理主题的分配（配置元数据），处理系统中机器的故障（故障检测和组成员关系），以及控制系统操作</font>。YMB的znode数据布局显示了如何通过ZooKeeper实现对活跃服务器的负载和状态信息的监控，以及如何通过集中控制实现对服务的管理和协调。</li>
+</ul>
+<h2 id="4-zookeeper实现" class="heading-element"><span>5 4 Zookeeper实现</span>
+  <a href="#4-zookeeper%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>ZooKeeper通过在构成其服务的每台服务器上进行数据复制来保障高可用性。这一设计考虑到了服务器可能发生的故障，同时假设故障服务器在后期能够恢复。为了维持服务的连续性和一致性，ZooKeeper采用了所下图所展示的一系列关键组件，确保了即使在单个服务器故障的情况下，整体服务仍能继续运行。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811220635787.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811220635787.png?size=small" data-sub-html="<h2>image-20240811220635787</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811220635787.png" alt="image-20240811220635787" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811220635787.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811220635787.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811220635787.png?size=large 2x" data-title="image-20240811220635787" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>当ZooKeeper服务器接收到请求时，首先通过请求处理器进行预处理。如果请求涉及服务器间的协作（如写操作），则会启动一个基于原子广播协议的共识机制。这种机制确保所有服务器最终将请求导致的变更同步至完全复制的数据库中，从而维护数据的一致性。对于只读请求，则可以直接从服务器本地的数据库副本中获取数据并形成响应，无需触发复杂的共识过程，这大大提升了读取操作的效率。</p>
+<p>数据库是内存中的，包含整个数据树，每个znode默认存储最大1MB的数据，但此值可配置。为了确保可恢复性，更新高效地记录到磁盘，且在应用于内存数据库前，强制写入磁盘。<font color="red">如同Chubby，我们维护一个重播日志，即写前日志，记录已提交的操作，并定期生成内存数据库的快照</font>。</p>
+<p>每个ZooKeeper服务器服务于客户端，客户端连接至某一台服务器提交请求。读请求从各服务器本地数据库的副本中服务，而写请求则通过共识协议处理。作为共识协议的一部分，写请求被转发至被称为领导者的单一服务器。其余服务器，即跟随者，接收来自领导者的状态变更提议，并对状态变更达成一致。</p>
+<h3 id="41-请求处理" class="heading-element"><span>5.1 4.1 请求处理</span>
+  <a href="#41-%e8%af%b7%e6%b1%82%e5%a4%84%e7%90%86" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>由于消息层的原子性，Zookeeper保证本地副本不会分歧，尽管任一时刻某些服务器可能应用了更多事务。不同于客户端发出的请求，事务是幂等的。当领导者接收到写请求时，它计算出写操作应用后的系统状态，并转换为捕捉新状态的事务。必须计算未来状态，因为可能有尚未应用到数据库的待处理事务。例如，客户端执行条件<code>setData</code>操作，如果请求中的版本号与待更新znode的未来版本号匹配，服务生成包含新数据、新版本号和更新时间戳的<code>setDataTXN</code>。若出现错误，如版本号不匹配或待更新的znode不存在，将生成<code>errorTXN</code>。</p>
+<h3 id="42-原子广播" class="heading-element"><span>5.2 4.2 原子广播</span>
+  <a href="#42-%e5%8e%9f%e5%ad%90%e5%b9%bf%e6%92%ad" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>所有更新ZooKeeper状态的请求均转发至领导者。领导者执行请求并通过Zab，一种原子广播协议，广播状态变更。接收客户端请求的服务器在交付相应状态变更时响应客户端。<font color="red">Zab默认使用简单多数票机制决定提案，因此Zab和ZooKeeper仅在多数服务器正常（即在$2f+1$服务器中可容忍$f$次故障）时工作</font>。</p>
+<p>为了实现高吞吐量，ZooKeeper尽力保持请求处理管道满载，可能有成千上万的请求处于管道的不同部分。由于状态变更依赖于先前状态变更的应用，Zab提供了比常规原子广播更强的顺序保证：</p>
+<ul>
+<li>由领导者广播的变更按照发送顺序交付</li>
+<li>所有来自之前领导者的变更在新领导者广播自身变更前交付。</li>
+</ul>
+<p><font color="red">使用TCP作为传输层简化了实施，因为消息顺序由网络维护</font>。Zab选出的领导者同时也是ZooKeeper的领导者，创建事务的同时也提议事务。使用日志作为内存数据库的写前日志，避免了两次写磁盘。Zab在常规操作中确实按顺序和恰好一次交付所有消息，但由于Zab未持久记录每个已交付消息的ID，因此在恢复过程中可能重传消息。由于使用了幂等事务，只要按顺序交付，多次交付是可以接受的。</p>
+<h3 id="43-复制数据库" class="heading-element"><span>5.3 4.3 复制数据库</span>
+  <a href="#43-%e5%a4%8d%e5%88%b6%e6%95%b0%e6%8d%ae%e5%ba%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>每个副本在内存中保存一份ZooKeeper状态的拷贝。当服务器从崩溃中恢复，需要恢复此内部状态。重放所有已交付的消息以恢复状态可能耗时过长，故ZooKeeper使用周期性快照，仅要求重传自快照开始以来的消息。<font color="red">我们称ZooKeeper快照为模糊快照，因为不锁定ZooKeeper状态来生成快照；相反，进行深搜，原子读取每个znode的数据和元数据，写入磁盘</font>。但是，由于快照的生成并非瞬时完成，这意味着在快照生成的过程中，新的状态变更可能会发生。因此，最终的快照可能包含了部分已提交但未被快照捕获的状态变更，导致快照中的数据并不完全反映某个时间点的系统状态。<font color="red">然而，由于状态变更是幂等的，我们可以按顺序重复应用它们。</font></p>
+<p>例如，假设ZooKeeper数据树中两个节点<code>/foo</code>和<code>/goo</code>分别具有值<code>f1</code>和<code>g1</code>，且版本均为$1$，当模糊快照开始时，以下状态变更流<code>&lt;transactionType, path, value, new-version&gt;</code>到达：</p>
+<ul>
+<li><code>&lt;SetDataTXN, /foo, f2, 2&gt;</code></li>
+<li><code>&lt;SetDataTXN, /goo, g2, 2&gt;</code></li>
+<li><code>&lt;SetDataTXN, /foo, f3, 3&gt;</code></li>
+</ul>
+<p>处理这些状态变更后，<code>/foo</code>和<code>/goo</code>的值分别为<code>f3</code>和<code>g2</code>，版本为$3$和$2$。然而，模糊快照可能记录了<code>/foo</code>和<code>/goo</code>的值为<code>f3</code>和<code>g1</code>，版本为$3$和$1$，即第一个变更和第三个变更被快照捕获，但第二个变更之前快照生成完成，这不是ZooKeeper数据树的有效状态。</p>
+<p><font color="red">当服务器崩溃并重新启动时，它会从最近的快照恢复，然后重放自该快照之后的所有事务日志。由于事务是幂等的，即使快照中的状态与实际的某时刻状态不完全一致，重放事务日志也能确保服务器恢复到最后一致的状态</font>。</p>
+<h3 id="44-客户端-服务器交互" class="heading-element"><span>5.4 4.4 客户端-服务器交互</span>
+  <a href="#44-%e5%ae%a2%e6%88%b7%e7%ab%af-%e6%9c%8d%e5%8a%a1%e5%99%a8%e4%ba%a4%e4%ba%92" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>ZooKeeper通过客户端-服务器交互实现高效的分布式协调。服务器在处理写请求时，会发送并清除相关监视通知，保证通知的顺序性。服务器顺序处理写请求，而读请求则在本地服务器上独立处理，每个读请求都会标记一个zxid，代表服务器已看到的最后事务，从而确保读写请求的部分顺序性。</p>
+<p>本地处理读请求带来了出色的读取性能，因为它仅仅是本地服务器上的内存操作，无需磁盘活动或运行协议。然而，这种快速读取可能不保证读操作的顺序性，可能会返回过时的数据。为了解决这个问题，<font color="red">ZooKeeper提供了同步操作<code>sync()</code>，通过领导者异步执行并排序，客户端只需读取后立即调用<code>sync()</code>，确保读操作能够返回最新（<code>sync</code>之前所有的变更）的数据</font>。</p>
+<p>ZooKeeper服务器使用FIFO顺序处理客户端请求，并在响应中包含相关的zxid，确保客户端即使在服务器间切换时也能看到最新的数据（需要检查zxid）。此外，<font color="red">ZooKeeper使用超时机制来检测客户端会话故障，客户端通过发送心跳消息（包含最后一个zxid）来维持会话，如果无法与当前服务器通信，会自动切换到其他服务器</font>。</p>
+<h2 id="5-评估" class="heading-element"><span>6 5 评估</span>
+  <a href="#5-%e8%af%84%e4%bc%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>ZooKeeper展现出了卓越的性能，其<strong>高吞吐量和低请求延迟</strong>在多个基准测试中得到了证明。在模仿Chubby基准的测试中，即使处理的数据量增加，ZooKeeper的吞吐量也达到了Chubby的三倍以上。具体来说，单个工作进程在三个服务器上的平均请求延迟仅为1.2毫秒，在九个服务器上为1.4毫秒。</p>
+<p>在屏障性能测试中，ZooKeeper处理屏障操作的能力随着屏障数量和客户端数量的增加而线性增长，显示出对并发访问的高效管理，并没有出现意外的延迟。即使在高比例的读操作下（80%），ZooKeeper的屏障操作吞吐量也保持在每秒1,950到3,100次之间，远高于实际应用中所需的性能。</p>
+]]></description></item></channel></rss>
