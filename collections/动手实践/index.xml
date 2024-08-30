@@ -1,4 +1,494 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>动手实践 - 合集 | ZephyrHe</title><link>https://hezephyr.github.io/collections/%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5/</link><description>动手实践 - 合集 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 11 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/collections/%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5/" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>动手实践 - 合集 | ZephyrHe</title><link>https://hezephyr.github.io/collections/%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5/</link><description>动手实践 - 合集 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 30 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/collections/%E5%8A%A8%E6%89%8B%E5%AE%9E%E8%B7%B5/" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现</title><link>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
+  <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><font color="red">本实验旨在利用lab 3中的Raft库，构建一个具备容错能力的键值存储服务</font>。服务将作为一个复制状态机，由多个服务器组成，各服务器通过Raft协议同步数据库状态。即使在部分故障或网络隔离的情况下，只要大多数服务器正常，服务仍需继续响应客户端请求。在lab 4完成后，你将实现图中Raft交互的所有部分（Clerk、Service和Raft）。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small" data-sub-html="<h2>x</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png" alt="x" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large 2x" data-title="x" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>客户端通过Clerk与键值服务交互，发送RPC请求，支持Put、Append和Get三种操作。服务需确保这些操作线性化，如果逐个调用，这些方法应表现得好像系统只有一个状态副本，每个调用都应观察到前序调用序列对状态的修改。对于并发调用，返回值和最终状态必须与操作按某种顺序逐个执行时相同。如果调用在时间上重叠，则认为是并发调用。</p>
+<p>为单一服务器提供线性化相对容易，但如果服务是复制的，则较为困难，因为所有服务器必须为并发请求选择相同的执行顺序，避免使用过时的状态回复客户端，并在故障恢复时以保留所有确认的客户端更新为前提。Raft 作者的<a href="https://web.stanford.edu/~ouster/cgi-bin/papers/OngaroPhD.pdf"target="_blank" rel="external nofollow noopener noreferrer">博士论文<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>的第 6.3 小节介绍了如何实现线性化语义，在知乎上也有关于这方面的<a href="https://www.zhihu.com/question/278551592"target="_blank" rel="external nofollow noopener noreferrer">讨论<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，可以参考 dragonboat 作者的回答。</p>
+<p>实验分为两个阶段：A阶段实现基于Raft的键值服务，不使用快照；B阶段则集成快照功能，优化日志管理。</p>
+<p>我的实验代码仓库：https://github.com/HeZephyr/MIT6.5840/tree/main/src/kvraft，已通过压力测试，代码严格遵守上述按要求实现。</p>
+<p><font color="red">注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库。</font></p>
+<h2 id="2-实验设计" class="heading-element"><span>2 2 实验设计</span>
+  <a href="#2-%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="21-思路" class="heading-element"><span>2.1 2.1 思路</span>
+  <a href="#21-%e6%80%9d%e8%b7%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>lab4需要我们基于lab3实现的Raft，实现一个可用的KV服务，这意味着我们需要保证线性一致性（要求从外部观察者的角度来看，所有操作都按照某个全局顺序执行，并且结果与这些操作按该顺序串行执行的结果相同）。尽管 Raft 共识算法本身支持线性化语义，但要真正保证线性化语义在整个系统中生效，仍然需要上层服务的配合。</p>
+<p>例如，在下面这张图中：x初始值为0，client1发送put请求(x,1)，client2发送put请求(x,2)，并在put请求前后发送get请求，此时如果put请求因为超时不断重发，如果在client2的put请求之后才被应用，则导致最后client2读到的是1，RaftKV的结果也是1，这就违背了线性一致性。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=small" data-sub-html="<h2>image-20240822144442922</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png" alt="image-20240822144442922" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=large 2x" data-title="image-20240822144442922" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>这是因为当客户端向服务端提交command时，服务端在Raft层中同步、提交并应用后，客户端因为没有收到请求回复，会重试此操作，这种重试机制会导致相同的命令被执行多次。<font color="red">注意，这里讨论的都是写请求，因为读请求不会改变系统状态，可以重复执行多次。</font></p>
+<p>为了解决重复执行命令导致线性一致性破坏的问题，Raft 作者提出了一种解决方案：客户端为每个命令分配一个唯一的序列号。状态机会记录每个客户端的最新序列号及其对应的执行结果。如果一个命令的序列号已经被处理过，则系统会直接返回先前的结果，而不会重新执行该命令。这样可以确保每个命令只被应用到状态机一次，避免了重复执行可能带来的线性一致性问题。</p>
+<p>在这个lab中，我们可以按照如下机制具体实现：</p>
+<ol>
+<li><strong>客户端命令唯一化</strong>：每个客户端发送给服务端的每个<code>command</code>请求都携带一个由<code>ClientId</code>和<code>CommandId</code>组成的二元组。<code>ClientId</code>是客户端的唯一标识符，<code>CommandId</code>是一个递增的整数，用于唯一标识客户端发出的每一个命令。</li>
+<li><strong>服务器端状态记录</strong>：在服务器端，维护一个映射表，这个映射表以<code>ClientId</code>作为主键，其值是一个结构体包含：
+<ul>
+<li>最近执行的来自该客户端的<code>CommandId</code>。</li>
+<li>对应的命令执行结果。</li>
+</ul>
+</li>
+<li><strong>重复命令检测与处理</strong>：
+<ul>
+<li>当一个新命令到达时，首先检查映射表中是否存在对应的<code>ClientId</code>条目。</li>
+<li>如果存在，则比较新命令的<code>CommandId</code>与映射表中记录的<code>CommandId</code>。
+<ul>
+<li>如果新命令的<code>CommandId</code>小于或等于记录的<code>CommandId</code>，则说明这是一个重复命令，服务器可以直接返回之前存储的结果。</li>
+<li>如果新命令的<code>CommandId</code>大于记录的<code>CommandId</code>，则说明这是新的命令，服务器应该正常处理这个命令，并更新映射表中对应<code>ClientId</code>的<code>CommandId</code>及结果。</li>
+</ul>
+</li>
+<li>如果不存在对应的<code>ClientId</code>条目，则将此命令视为首次出现的命令进行处理，并添加一个新的条目到映射表中。</li>
+</ul>
+</li>
+</ol>
+<h3 id="22-lab4a无快照" class="heading-element"><span>2.2 2.2 lab4A：无快照</span>
+  <a href="#22-lab4a%e6%97%a0%e5%bf%ab%e7%85%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>整体的时序图如下所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small" data-sub-html="<h2>image-20240829224033039</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png" alt="image-20240829224033039" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large 2x" data-title="image-20240829224033039" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h4 id="221-客户端" class="heading-element"><span>2.2.1 2.2.1 客户端</span>
+  <a href="#221-%e5%ae%a2%e6%88%b7%e7%ab%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>对于客户端，需要有<code>(clientId, commandId)</code>来标识唯一命令，对于<code>clientId</code>，通过lab提供的随机数生成器<code>nrand</code>生成即可，对于<code>commandId</code>，可以采用递增的方式进行管理。这意味着每当客户端发送一个新的命令时，<code>commandId</code>都会递增一次，从而确保每个命令都有一个唯一的标识符，这样也需要保证如果这条命令没处理完（请求的server不是leader或者请求超时）需重复执行的时候，不能改变commandId。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">CommandArgs</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Key</span>       <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Value</span>     <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Op</span>        <span class="nx">OpType</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ClientId</span>  <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">CommandId</span> <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">CommandReply</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Err</span>   <span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Value</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Clerk</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">servers</span> <span class="p">[]</span><span class="o">*</span><span class="nx">labrpc</span><span class="p">.</span><span class="nx">ClientEnd</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">leaderId</span>  <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">clientId</span>  <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">commandId</span> <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">ck</span><span class="p">.</span><span class="nf">ExecuteCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">CommandArgs</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">Op</span><span class="p">:</span> <span class="nx">OpGet</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ck</span><span class="p">.</span><span class="nf">ExecuteCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">CommandArgs</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">Value</span><span class="p">:</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">Op</span><span class="p">:</span> <span class="nx">OpPut</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Append</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ck</span><span class="p">.</span><span class="nf">ExecuteCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">CommandArgs</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">Value</span><span class="p">:</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">Op</span><span class="p">:</span> <span class="nx">OpAppend</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">ExecuteCommand</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">CommandId</span> <span class="p">=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">clientId</span><span class="p">,</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">commandId</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">!</span><span class="nx">ck</span><span class="p">.</span><span class="nx">servers</span><span class="p">[</span><span class="nx">ck</span><span class="p">.</span><span class="nx">leaderId</span><span class="p">].</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KVServer.ExecuteCommand&#34;</span><span class="p">,</span> <span class="nx">args</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span> <span class="o">||</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">ErrWrongLeader</span> <span class="o">||</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">ErrTimeout</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">ck</span><span class="p">.</span><span class="nx">leaderId</span> <span class="p">=</span> <span class="p">(</span><span class="nx">ck</span><span class="p">.</span><span class="nx">leaderId</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nx">ck</span><span class="p">.</span><span class="nx">servers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">continue</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ck</span><span class="p">.</span><span class="nx">commandId</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="222-服务端" class="heading-element"><span>2.2.2 2.2.2 服务端</span>
+  <a href="#222-%e6%9c%8d%e5%8a%a1%e7%ab%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><code>KVServer</code>结构体被设计成一个基于Raft一致性协议实现的键值存储服务。为了确保客户端请求的幂等性，并且能够正确地处理来自客户端的重复请求，<code>lastOperations</code>映射表用于跟踪每个客户端（由<code>clientId</code>标识）的最后已应用的<code>commandId</code>以及相应的<code>reply</code>。这使得服务器能够在接收到重复请求时返回之前的结果而无需再次执行相同的命令。</p>
+<p>状态机<code>stateMachine</code>在此处被实现为内存中的键值对存储<code>MemoryKV</code>，这意味着所有的键值对数据都保存在内存中，这对于快速读写操作是非常有效的，但可能不是持久化存储的最佳选择，因为如果服务器重启或崩溃，所有数据都会丢失。</p>
+<p><code>lastApplied</code>字段被用来记录最后应用到状态机的日志条目的索引，以此来避免处理那些已经被应用过的过期日志条目。</p>
+<p><code>notifyChs</code>是一个映射，它的键是日志条目的索引，值是一个<code>channel</code>。用于通知Raft的处理结果（机即复制到大多数副本并且应用到状态机之后）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">KVServer</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>      <span class="nx">sync</span><span class="p">.</span><span class="nx">RWMutex</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">me</span>      <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rf</span>      <span class="o">*</span><span class="nx">raft</span><span class="p">.</span><span class="nx">Raft</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">applyCh</span> <span class="kd">chan</span> <span class="nx">raft</span><span class="p">.</span><span class="nx">ApplyMsg</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">dead</span>    <span class="kt">int32</span> <span class="c1">// set by Kill()
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">maxraftstate</span> <span class="kt">int</span> <span class="c1">// snapshot if log grows this big
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">lastApplied</span>  <span class="kt">int</span> <span class="c1">//record the last applied index to avoid duplicate apply
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">stateMachine</span>   <span class="nx">KVStateMachine</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lastOperations</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int64</span><span class="p">]</span><span class="nx">OperationContext</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">notifyChs</span>      <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="kd">chan</span> <span class="o">*</span><span class="nx">CommandReply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">KVStateMachine</span> <span class="kd">interface</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="nx">Err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">Append</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">Err</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">OperationContext</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MaxAppliedCommandId</span> <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">LastReply</span>           <span class="o">*</span><span class="nx">CommandReply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>ExecuteCommand</code>RPC实现如下，这段首先检查是否不是Get请求且为重复的命令，如果是则返回上次的结果，否则通过Raft的<code>Start</code>方法复制并应用日志，如果<code>Start</code>方法返回结果告知当前server不是Leader，则返回<code>ErrWrongLeader</code>，否则，去注册一个channel去阻塞等待执行结果（因为Start返回只是代表日志被复制到大多数节点中，有没有应用还不知道），这个执行结果由<code>applier</code>协程push。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">ExecuteCommand</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">CommandReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RLock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicatedCommand</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastReply</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">index</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">Start</span><span class="p">(</span><span class="nx">Command</span><span class="p">{</span><span class="nx">args</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">!</span><span class="nx">isLeader</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrWrongLeader</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ch</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyCh</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="nx">result</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">time</span><span class="p">.</span><span class="nf">After</span><span class="p">(</span><span class="nx">ExecuteTimeout</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrTimeout</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nf">deleteNotifyCh</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="223-applier" class="heading-element"><span>2.2.3 2.2.3 applier</span>
+  <a href="#223-applier" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><code>applier</code>协程实现如下，主要是监控<code>applyCh</code>，根据Raft的应用结果来进行响应处理，需要注意的就是检测是否为重复的命令，如果不是，则需要应用到状态机，并保存最近的响应结果。最后，如果当前节点是领导者，并且该日志条目属于当前任期，则通知相关的客户端。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">applier</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">killed</span><span class="p">()</span> <span class="o">==</span> <span class="kc">false</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">message</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">kv</span><span class="p">.</span><span class="nx">applyCh</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} tries to apply message %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span> <span class="o">&lt;=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} discards outdated message %v because a newer snapshot which lastApplied is %v has been restored&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">					<span class="k">continue</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">command</span> <span class="o">:=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Command</span><span class="p">.(</span><span class="nx">Command</span><span class="p">)</span> <span class="c1">// type assertion
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicatedCommand</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} doesn&#39;t apply duplicated message %v to stateMachine because maxAppliedCommandId is %v for client %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">],</span> <span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyLogToStateMachine</span><span class="p">(</span><span class="nx">command</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">						<span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">]</span> <span class="p">=</span> <span class="nx">OperationContext</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">MaxAppliedCommandId</span><span class="p">:</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">LastReply</span><span class="p">:</span>           <span class="nx">reply</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">						<span class="p">}</span>
+</span></span><span class="line"><span class="cl">					<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="c1">// just notify related channel for currentTerm&#39;s log when node is leader
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">currentTerm</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetState</span><span class="p">();</span> <span class="nx">isLeader</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandTerm</span> <span class="o">==</span> <span class="nx">currentTerm</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyCh</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="22-lab4b有快照" class="heading-element"><span>2.3 2.2 lab4B：有快照</span>
+  <a href="#22-lab4b%e6%9c%89%e5%bf%ab%e7%85%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>实现了lab4A，lab4B就好做了，只需要修改<code>applier</code>，每次应用了<code>command</code>之后，都需要检查是否达到<code>maxraftstate</code>，如果达到，则调用<code>snapshot</code>来制作快照，需要注意，快照中，不仅需要保存状态机的状态，还需要包含用来去重的<code>lastOperations</code>，这也是为了防止应用快照后的节点成为leader后，由于没有<code>lastOperations</code>导致重复执行命令。</p>
+<p>然后，<code>applyCh</code>中还有Leader发来的快照，我们需要进行验证，如果有效，则需要更新相应的状态，具体实现代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">applier</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">killed</span><span class="p">()</span> <span class="o">==</span> <span class="kc">false</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">message</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">kv</span><span class="p">.</span><span class="nx">applyCh</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} tries to apply message %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span> <span class="o">&lt;=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} discards outdated message %v because a newer snapshot which lastApplied is %v has been restored&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">					<span class="k">continue</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">command</span> <span class="o">:=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Command</span><span class="p">.(</span><span class="nx">Command</span><span class="p">)</span> <span class="c1">// type assertion
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicatedCommand</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} doesn&#39;t apply duplicated message %v to stateMachine because maxAppliedCommandId is %v for client %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">],</span> <span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyLogToStateMachine</span><span class="p">(</span><span class="nx">command</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">						<span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">]</span> <span class="p">=</span> <span class="nx">OperationContext</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">MaxAppliedCommandId</span><span class="p">:</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">LastReply</span><span class="p">:</span>           <span class="nx">reply</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">						<span class="p">}</span>
+</span></span><span class="line"><span class="cl">					<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="c1">// just notify related channel for currentTerm&#39;s log when node is leader
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">currentTerm</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetState</span><span class="p">();</span> <span class="nx">isLeader</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandTerm</span> <span class="o">==</span> <span class="nx">currentTerm</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyCh</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">needSnapshot</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nf">takeSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">CondInstallSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotTerm</span><span class="p">,</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotIndex</span><span class="p">,</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Snapshot</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nf">restoreStateFromSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">Snapshot</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotIndex</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nb">panic</span><span class="p">(</span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;Invalid ApplyMsg %v&#34;</span><span class="p">,</span> <span class="nx">message</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="3-压测结果" class="heading-element"><span>3 3 压测结果</span>
+  <a href="#3-%e5%8e%8b%e6%b5%8b%e7%bb%93%e6%9e%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>网上提供了一个<a href="https://gist.github.com/JJGO/0d73540ef7cc2f066cb535156b7cbdab"target="_blank" rel="external nofollow noopener noreferrer">测试脚本<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，功能强大。我的压测结果如下所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small" data-sub-html="<h2>image-20240820095009785</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png" alt="image-20240820095009785" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large 2x" data-title="image-20240820095009785" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+]]></description></item><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
   <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>

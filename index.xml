@@ -1,4 +1,1008 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>ZephyrHe</title><link>https://hezephyr.github.io/</link><description>HeZephyr's Note Zephyr He的博客：日拱一卒无有尽，功不唐捐终入海</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sun, 11 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>ZephyrHe</title><link>https://hezephyr.github.io/</link><description>HeZephyr's Note Zephyr He的博客：日拱一卒无有尽，功不唐捐终入海</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 30 Aug 2024 21:22:38 +0800</lastBuildDate><atom:link href="https://hezephyr.github.io/index.xml" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现</title><link>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
+  <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p><font color="red">本实验旨在利用lab 3中的Raft库，构建一个具备容错能力的键值存储服务</font>。服务将作为一个复制状态机，由多个服务器组成，各服务器通过Raft协议同步数据库状态。即使在部分故障或网络隔离的情况下，只要大多数服务器正常，服务仍需继续响应客户端请求。在lab 4完成后，你将实现图中Raft交互的所有部分（Clerk、Service和Raft）。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small" data-sub-html="<h2>x</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png" alt="x" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large 2x" data-title="x" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>客户端通过Clerk与键值服务交互，发送RPC请求，支持Put、Append和Get三种操作。服务需确保这些操作线性化，如果逐个调用，这些方法应表现得好像系统只有一个状态副本，每个调用都应观察到前序调用序列对状态的修改。对于并发调用，返回值和最终状态必须与操作按某种顺序逐个执行时相同。如果调用在时间上重叠，则认为是并发调用。</p>
+<p>为单一服务器提供线性化相对容易，但如果服务是复制的，则较为困难，因为所有服务器必须为并发请求选择相同的执行顺序，避免使用过时的状态回复客户端，并在故障恢复时以保留所有确认的客户端更新为前提。Raft 作者的<a href="https://web.stanford.edu/~ouster/cgi-bin/papers/OngaroPhD.pdf"target="_blank" rel="external nofollow noopener noreferrer">博士论文<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>的第 6.3 小节介绍了如何实现线性化语义，在知乎上也有关于这方面的<a href="https://www.zhihu.com/question/278551592"target="_blank" rel="external nofollow noopener noreferrer">讨论<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，可以参考 dragonboat 作者的回答。</p>
+<p>实验分为两个阶段：A阶段实现基于Raft的键值服务，不使用快照；B阶段则集成快照功能，优化日志管理。</p>
+<p>我的实验代码仓库：https://github.com/HeZephyr/MIT6.5840/tree/main/src/kvraft，已通过压力测试，代码严格遵守上述按要求实现。</p>
+<p><font color="red">注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库。</font></p>
+<h2 id="2-实验设计" class="heading-element"><span>2 2 实验设计</span>
+  <a href="#2-%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="21-思路" class="heading-element"><span>2.1 2.1 思路</span>
+  <a href="#21-%e6%80%9d%e8%b7%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>lab4需要我们基于lab3实现的Raft，实现一个可用的KV服务，这意味着我们需要保证线性一致性（要求从外部观察者的角度来看，所有操作都按照某个全局顺序执行，并且结果与这些操作按该顺序串行执行的结果相同）。尽管 Raft 共识算法本身支持线性化语义，但要真正保证线性化语义在整个系统中生效，仍然需要上层服务的配合。</p>
+<p>例如，在下面这张图中：x初始值为0，client1发送put请求(x,1)，client2发送put请求(x,2)，并在put请求前后发送get请求，此时如果put请求因为超时不断重发，如果在client2的put请求之后才被应用，则导致最后client2读到的是1，RaftKV的结果也是1，这就违背了线性一致性。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=small" data-sub-html="<h2>image-20240822144442922</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png" alt="image-20240822144442922" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240822144442922.png?size=large 2x" data-title="image-20240822144442922" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>这是因为当客户端向服务端提交command时，服务端在Raft层中同步、提交并应用后，客户端因为没有收到请求回复，会重试此操作，这种重试机制会导致相同的命令被执行多次。<font color="red">注意，这里讨论的都是写请求，因为读请求不会改变系统状态，可以重复执行多次。</font></p>
+<p>为了解决重复执行命令导致线性一致性破坏的问题，Raft 作者提出了一种解决方案：客户端为每个命令分配一个唯一的序列号。状态机会记录每个客户端的最新序列号及其对应的执行结果。如果一个命令的序列号已经被处理过，则系统会直接返回先前的结果，而不会重新执行该命令。这样可以确保每个命令只被应用到状态机一次，避免了重复执行可能带来的线性一致性问题。</p>
+<p>在这个lab中，我们可以按照如下机制具体实现：</p>
+<ol>
+<li><strong>客户端命令唯一化</strong>：每个客户端发送给服务端的每个<code>command</code>请求都携带一个由<code>ClientId</code>和<code>CommandId</code>组成的二元组。<code>ClientId</code>是客户端的唯一标识符，<code>CommandId</code>是一个递增的整数，用于唯一标识客户端发出的每一个命令。</li>
+<li><strong>服务器端状态记录</strong>：在服务器端，维护一个映射表，这个映射表以<code>ClientId</code>作为主键，其值是一个结构体包含：
+<ul>
+<li>最近执行的来自该客户端的<code>CommandId</code>。</li>
+<li>对应的命令执行结果。</li>
+</ul>
+</li>
+<li><strong>重复命令检测与处理</strong>：
+<ul>
+<li>当一个新命令到达时，首先检查映射表中是否存在对应的<code>ClientId</code>条目。</li>
+<li>如果存在，则比较新命令的<code>CommandId</code>与映射表中记录的<code>CommandId</code>。
+<ul>
+<li>如果新命令的<code>CommandId</code>小于或等于记录的<code>CommandId</code>，则说明这是一个重复命令，服务器可以直接返回之前存储的结果。</li>
+<li>如果新命令的<code>CommandId</code>大于记录的<code>CommandId</code>，则说明这是新的命令，服务器应该正常处理这个命令，并更新映射表中对应<code>ClientId</code>的<code>CommandId</code>及结果。</li>
+</ul>
+</li>
+<li>如果不存在对应的<code>ClientId</code>条目，则将此命令视为首次出现的命令进行处理，并添加一个新的条目到映射表中。</li>
+</ul>
+</li>
+</ol>
+<h3 id="22-lab4a无快照" class="heading-element"><span>2.2 2.2 lab4A：无快照</span>
+  <a href="#22-lab4a%e6%97%a0%e5%bf%ab%e7%85%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>整体的时序图如下所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small" data-sub-html="<h2>image-20240829224033039</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png" alt="image-20240829224033039" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large 2x" data-title="image-20240829224033039" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h4 id="221-客户端" class="heading-element"><span>2.2.1 2.2.1 客户端</span>
+  <a href="#221-%e5%ae%a2%e6%88%b7%e7%ab%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>对于客户端，需要有<code>(clientId, commandId)</code>来标识唯一命令，对于<code>clientId</code>，通过lab提供的随机数生成器<code>nrand</code>生成即可，对于<code>commandId</code>，可以采用递增的方式进行管理。这意味着每当客户端发送一个新的命令时，<code>commandId</code>都会递增一次，从而确保每个命令都有一个唯一的标识符，这样也需要保证如果这条命令没处理完（请求的server不是leader或者请求超时）需重复执行的时候，不能改变commandId。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">CommandArgs</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Key</span>       <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Value</span>     <span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Op</span>        <span class="nx">OpType</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ClientId</span>  <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">CommandId</span> <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">CommandReply</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Err</span>   <span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Value</span> <span class="kt">string</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Clerk</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">servers</span> <span class="p">[]</span><span class="o">*</span><span class="nx">labrpc</span><span class="p">.</span><span class="nx">ClientEnd</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">leaderId</span>  <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">clientId</span>  <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">commandId</span> <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">ck</span><span class="p">.</span><span class="nf">ExecuteCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">CommandArgs</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">Op</span><span class="p">:</span> <span class="nx">OpGet</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Put</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ck</span><span class="p">.</span><span class="nf">ExecuteCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">CommandArgs</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">Value</span><span class="p">:</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">Op</span><span class="p">:</span> <span class="nx">OpPut</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Append</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ck</span><span class="p">.</span><span class="nf">ExecuteCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">CommandArgs</span><span class="p">{</span><span class="nx">Key</span><span class="p">:</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">Value</span><span class="p">:</span> <span class="nx">value</span><span class="p">,</span> <span class="nx">Op</span><span class="p">:</span> <span class="nx">OpAppend</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">ExecuteCommand</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">CommandId</span> <span class="p">=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">clientId</span><span class="p">,</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">commandId</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="p">!</span><span class="nx">ck</span><span class="p">.</span><span class="nx">servers</span><span class="p">[</span><span class="nx">ck</span><span class="p">.</span><span class="nx">leaderId</span><span class="p">].</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;KVServer.ExecuteCommand&#34;</span><span class="p">,</span> <span class="nx">args</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span> <span class="o">||</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">ErrWrongLeader</span> <span class="o">||</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">ErrTimeout</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">ck</span><span class="p">.</span><span class="nx">leaderId</span> <span class="p">=</span> <span class="p">(</span><span class="nx">ck</span><span class="p">.</span><span class="nx">leaderId</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nx">ck</span><span class="p">.</span><span class="nx">servers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">continue</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">ck</span><span class="p">.</span><span class="nx">commandId</span> <span class="o">+=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="222-服务端" class="heading-element"><span>2.2.2 2.2.2 服务端</span>
+  <a href="#222-%e6%9c%8d%e5%8a%a1%e7%ab%af" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><code>KVServer</code>结构体被设计成一个基于Raft一致性协议实现的键值存储服务。为了确保客户端请求的幂等性，并且能够正确地处理来自客户端的重复请求，<code>lastOperations</code>映射表用于跟踪每个客户端（由<code>clientId</code>标识）的最后已应用的<code>commandId</code>以及相应的<code>reply</code>。这使得服务器能够在接收到重复请求时返回之前的结果而无需再次执行相同的命令。</p>
+<p>状态机<code>stateMachine</code>在此处被实现为内存中的键值对存储<code>MemoryKV</code>，这意味着所有的键值对数据都保存在内存中，这对于快速读写操作是非常有效的，但可能不是持久化存储的最佳选择，因为如果服务器重启或崩溃，所有数据都会丢失。</p>
+<p><code>lastApplied</code>字段被用来记录最后应用到状态机的日志条目的索引，以此来避免处理那些已经被应用过的过期日志条目。</p>
+<p><code>notifyChs</code>是一个映射，它的键是日志条目的索引，值是一个<code>channel</code>。用于通知Raft的处理结果（机即复制到大多数副本并且应用到状态机之后）。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">KVServer</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>      <span class="nx">sync</span><span class="p">.</span><span class="nx">RWMutex</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">me</span>      <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">rf</span>      <span class="o">*</span><span class="nx">raft</span><span class="p">.</span><span class="nx">Raft</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">applyCh</span> <span class="kd">chan</span> <span class="nx">raft</span><span class="p">.</span><span class="nx">ApplyMsg</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">dead</span>    <span class="kt">int32</span> <span class="c1">// set by Kill()
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">maxraftstate</span> <span class="kt">int</span> <span class="c1">// snapshot if log grows this big
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">lastApplied</span>  <span class="kt">int</span> <span class="c1">//record the last applied index to avoid duplicate apply
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">stateMachine</span>   <span class="nx">KVStateMachine</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lastOperations</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int64</span><span class="p">]</span><span class="nx">OperationContext</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">notifyChs</span>      <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="kd">chan</span> <span class="o">*</span><span class="nx">CommandReply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">KVStateMachine</span> <span class="kd">interface</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">Get</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">)</span> <span class="p">(</span><span class="kt">string</span><span class="p">,</span> <span class="nx">Err</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="nf">Append</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="kt">string</span><span class="p">)</span> <span class="nx">Err</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">OperationContext</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">MaxAppliedCommandId</span> <span class="kt">int64</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">LastReply</span>           <span class="o">*</span><span class="nx">CommandReply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>ExecuteCommand</code>RPC实现如下，这段首先检查是否不是Get请求且为重复的命令，如果是则返回上次的结果，否则通过Raft的<code>Start</code>方法复制并应用日志，如果<code>Start</code>方法返回结果告知当前server不是Leader，则返回<code>ErrWrongLeader</code>，否则，去注册一个channel去阻塞等待执行结果（因为Start返回只是代表日志被复制到大多数节点中，有没有应用还不知道），这个执行结果由<code>applier</code>协程push。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">ExecuteCommand</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">CommandReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RLock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicatedCommand</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastReply</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">index</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">Start</span><span class="p">(</span><span class="nx">Command</span><span class="p">{</span><span class="nx">args</span><span class="p">})</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">!</span><span class="nx">isLeader</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrWrongLeader</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ch</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyCh</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="nx">result</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">ch</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">time</span><span class="p">.</span><span class="nf">After</span><span class="p">(</span><span class="nx">ExecuteTimeout</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrTimeout</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nf">deleteNotifyCh</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="223-applier" class="heading-element"><span>2.2.3 2.2.3 applier</span>
+  <a href="#223-applier" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p><code>applier</code>协程实现如下，主要是监控<code>applyCh</code>，根据Raft的应用结果来进行响应处理，需要注意的就是检测是否为重复的命令，如果不是，则需要应用到状态机，并保存最近的响应结果。最后，如果当前节点是领导者，并且该日志条目属于当前任期，则通知相关的客户端。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">applier</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">killed</span><span class="p">()</span> <span class="o">==</span> <span class="kc">false</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">message</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">kv</span><span class="p">.</span><span class="nx">applyCh</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} tries to apply message %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span> <span class="o">&lt;=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} discards outdated message %v because a newer snapshot which lastApplied is %v has been restored&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">					<span class="k">continue</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">command</span> <span class="o">:=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Command</span><span class="p">.(</span><span class="nx">Command</span><span class="p">)</span> <span class="c1">// type assertion
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicatedCommand</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} doesn&#39;t apply duplicated message %v to stateMachine because maxAppliedCommandId is %v for client %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">],</span> <span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyLogToStateMachine</span><span class="p">(</span><span class="nx">command</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">						<span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">]</span> <span class="p">=</span> <span class="nx">OperationContext</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">MaxAppliedCommandId</span><span class="p">:</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">LastReply</span><span class="p">:</span>           <span class="nx">reply</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">						<span class="p">}</span>
+</span></span><span class="line"><span class="cl">					<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="c1">// just notify related channel for currentTerm&#39;s log when node is leader
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">currentTerm</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetState</span><span class="p">();</span> <span class="nx">isLeader</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandTerm</span> <span class="o">==</span> <span class="nx">currentTerm</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyCh</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="22-lab4b有快照" class="heading-element"><span>2.3 2.2 lab4B：有快照</span>
+  <a href="#22-lab4b%e6%9c%89%e5%bf%ab%e7%85%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>实现了lab4A，lab4B就好做了，只需要修改<code>applier</code>，每次应用了<code>command</code>之后，都需要检查是否达到<code>maxraftstate</code>，如果达到，则调用<code>snapshot</code>来制作快照，需要注意，快照中，不仅需要保存状态机的状态，还需要包含用来去重的<code>lastOperations</code>，这也是为了防止应用快照后的节点成为leader后，由于没有<code>lastOperations</code>导致重复执行命令。</p>
+<p>然后，<code>applyCh</code>中还有Leader发来的快照，我们需要进行验证，如果有效，则需要更新相应的状态，具体实现代码如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">KVServer</span><span class="p">)</span> <span class="nf">applier</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">killed</span><span class="p">()</span> <span class="o">==</span> <span class="kc">false</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">case</span> <span class="nx">message</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">kv</span><span class="p">.</span><span class="nx">applyCh</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} tries to apply message %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span> <span class="o">&lt;=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} discards outdated message %v because a newer snapshot which lastApplied is %v has been restored&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">					<span class="k">continue</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">command</span> <span class="o">:=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Command</span><span class="p">.(</span><span class="nx">Command</span><span class="p">)</span> <span class="c1">// type assertion
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicatedCommand</span><span class="p">(</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nf">DPrintf</span><span class="p">(</span><span class="s">&#34;{Node %v} doesn&#39;t apply duplicated message %v to stateMachine because maxAppliedCommandId is %v for client %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">message</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">],</span> <span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyLogToStateMachine</span><span class="p">(</span><span class="nx">command</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="k">if</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">OpGet</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">						<span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">command</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">]</span> <span class="p">=</span> <span class="nx">OperationContext</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">MaxAppliedCommandId</span><span class="p">:</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">							<span class="nx">LastReply</span><span class="p">:</span>           <span class="nx">reply</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">						<span class="p">}</span>
+</span></span><span class="line"><span class="cl">					<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="c1">// just notify related channel for currentTerm&#39;s log when node is leader
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">currentTerm</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetState</span><span class="p">();</span> <span class="nx">isLeader</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandTerm</span> <span class="o">==</span> <span class="nx">currentTerm</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyCh</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ch</span> <span class="o">&lt;-</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">needSnapshot</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nf">takeSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">CondInstallSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotTerm</span><span class="p">,</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotIndex</span><span class="p">,</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Snapshot</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nf">restoreStateFromSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">Snapshot</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotIndex</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nb">panic</span><span class="p">(</span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;Invalid ApplyMsg %v&#34;</span><span class="p">,</span> <span class="nx">message</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="3-压测结果" class="heading-element"><span>3 3 压测结果</span>
+  <a href="#3-%e5%8e%8b%e6%b5%8b%e7%bb%93%e6%9e%9c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>网上提供了一个<a href="https://gist.github.com/JJGO/0d73540ef7cc2f066cb535156b7cbdab"target="_blank" rel="external nofollow noopener noreferrer">测试脚本<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，功能强大。我的压测结果如下所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small" data-sub-html="<h2>image-20240820095009785</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png" alt="image-20240820095009785" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large 2x" data-title="image-20240820095009785" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+]]></description></item><item><title>【论文阅读笔记】Grove: a Separation-Logic Library for Verifying Distributed Systems (Extended Version)</title><link>https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/</guid><description><![CDATA[<h2 id="1-介绍" class="heading-element"><span>1 1 介绍</span>
+  <a href="#1-%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>大型应用在分布式系统中遭遇多重挑战，如并发控制、故障恢复、网络不稳定及服务器时钟异步等。形式化验证则是一种严格确立系统正确性的方法，帮助处理边缘情况。</p>
+<p>租约是分布式系统中的关键技术，用于保证系统某方面在一定时间内不变，GFS、Chubby和DynamoDB都具有类似的机制。例如租约允许领导者高效执行只读查询，无需频繁验证自身领导权，然而，这一机制的有效性验证却是一项艰巨任务。</p>
+<p>Grove，作为前沿的并发分离逻辑（Concurrent Separation Logic, CSL）库，首开先河地解决了基于时间的租约验证问题，包括其与系统重新配置、故障恢复、线程级并发以及不可靠网络通信之间的复杂交互。</p>
+<p>CSL的应用精髓在于，通过将系统状态细分为独立资源，并借助同步原语转移资源所有权，从而实现模块化且精确的推理分析。</p>
+<p>Grove的创新亮点可概括如下：</p>
+<ol>
+<li><strong>时间有界不变性推理</strong>：引入新颖的时间维度，有效解析租约的有效期及其对系统状态的影响。</li>
+<li><strong>扩展Crash Hoare逻辑</strong>：强化逻辑体系，使之能妥善应对分布式环境下的节点崩溃情形。</li>
+<li><strong>抽象机制</strong>：提供工具集，支持对仅附加日志及单调时钟计数器的精准推理，增强系统的时间一致性。</li>
+</ol>
+<p><a href="https://github.com/mit-pdos/perennial"target="_blank" rel="external nofollow noopener noreferrer">Grove code<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h2 id="2-常见组件-grove案例研究" class="heading-element"><span>2 2 常见组件-Grove案例研究</span>
+  <a href="#2-%e5%b8%b8%e8%a7%81%e7%bb%84%e4%bb%b6-grove%e6%a1%88%e4%be%8b%e7%a0%94%e7%a9%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="21-rpc库" class="heading-element"><span>2.1 2.1 RPC库</span>
+  <a href="#21-rpc%e5%ba%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>RPC是分布式系统的重要构建模块，它允许客户端在远程服务器上调用过程。例如，客户端调用<code>rpcClient.Call(&quot;f&quot;, args)</code>将在与<code>rpcClient</code>相连的服务器上调用<code>f(args)</code>。RPC库提供的是不可靠的RPC，意味着客户端的一次调用可能导致服务器运行对应的函数一次、零次或多于一次。这是因为底层网络可能会丢弃、重排或复制数据包。应用程序通常不会直接调用RPC，而是使用各种代理（clerk），它们封装了RPC并附加额外的处理（如添加请求ID、重试等）。</p>
+<h3 id="22-复制状态机库" class="heading-element"><span>2.2 2.2 复制状态机库</span>
+  <a href="#22-%e5%a4%8d%e5%88%b6%e7%8a%b6%e6%80%81%e6%9c%ba%e5%ba%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>vRSM复制由应用程序提供的状态机，具体的接口如下图所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240830211745211.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240830211745211.png?size=small" data-sub-html="<h2>image-20240830211745211</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240830211745211.png" alt="image-20240830211745211" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240830211745211.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240830211745211.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240830211745211.png?size=large 2x" data-title="image-20240830211745211" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>vRSM由多个组件实现，每个组件处理状态机复制的不同方面，例如持久性可以与复制协议分开实现。</p>
+<ol>
+<li>
+<p><strong>副本服务器：写入复制</strong></p>
+<ul>
+<li>副本组件管理被复制的状态机的副本。</li>
+<li>主要角色包括主服务器(Primary)和备份服务器(Backup)。主服务器处理来自客户端的写请求，备份服务器则处理读请求。</li>
+<li>主服务器在收到操作后，会先在本地应用，然后复制到所有备份服务器，最后回复客户端。复制操作时，主服务器会生成线程以并发方式向每个备份发送RPC，并使用Go WaitGroup等待所有线程完成，确保操作被所有副本服务器应用。</li>
+</ul>
+</li>
+<li>
+<p><strong>使用configservice重新配置</strong></p>
+<p>利用<code>epochs</code>和<code>configservice</code>来管理服务器的添加或移除。系统通过epoch来跟踪不同的服务器配置。每个epoch对应一组特定的服务器配置，包括一个主服务器和多个备份服务器。时代分为活跃epoch和保留epoch，后者指未实际运行的配置。<code>configservice</code> 负责维护当前系统的最新epoch和配置信息。它允许客户端获取当前配置，并在重新配置过程中提供原子操作以更新配置。</p>
+<p>在重新配置期间，客户端可能向旧配置发送操作，这可能导致新配置中遗漏操作。为解决此问题，重新配置过程首先会封闭旧配置中的一个服务器，使其不再接受写操作，直到进入新的epoch。</p>
+<p><strong>重新配置步骤</strong> 包括：</p>
+<ol>
+<li>原子性地创建新epoch</li>
+<li>从旧配置中获取状态</li>
+<li>在新服务器上初始化状态</li>
+<li>更新configservice中的配置信息</li>
+<li>激活新主服务器。</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Reserve a new epoch number for reconfiguration, and return the current configuration (set of servers).
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">ReserveEpochAndGetConfig</span><span class="p">()</span> <span class="p">(</span><span class="kt">uint64</span><span class="p">,</span> <span class="p">[]</span><span class="nx">Address</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Return current configuration, used by clients to determine what servers to talk to.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">GetConfig</span><span class="p">()</span> <span class="p">[]</span><span class="nx">Address</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">//  Set new configuration, making epoch live, as long as no higher-numbered epoch has been reserved.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">TryWriteConfig</span><span class="p">(</span><span class="nx">epoch</span> <span class="kt">uint64</span><span class="p">,</span> <span class="nx">config</span> <span class="p">[]</span><span class="nx">Address</span><span class="p">)</span> <span class="nx">Error</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Get a lease for specified epoch, as long as it’s the current epoch, returning the new lease expiration time.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">GetLease</span><span class="p">(</span><span class="nx">epoch</span> <span class="kt">uint64</span><span class="p">)</span> <span class="p">(</span><span class="nx">Error</span><span class="p">,</span> <span class="kt">uint64</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">Reconfigure</span><span class="p">(</span><span class="nx">newServers</span> <span class="p">[]</span><span class="nx">Address</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">newEpoch</span><span class="p">,</span> <span class="nx">oldServers</span> <span class="o">:=</span> <span class="nx">configClerk</span><span class="p">.</span><span class="nf">ReserveEpochAndGetConfig</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// get state from a server from old config
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">oldClerk</span> <span class="o">:=</span> <span class="nf">MakeClerk</span><span class="p">(</span><span class="nx">oldServers</span><span class="p">[</span><span class="nf">Rand</span><span class="p">()</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nx">oldServers</span><span class="p">)])</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">oldState</span> <span class="o">:=</span> <span class="nx">oldClerk</span><span class="p">.</span><span class="nf">GetStateAndSeal</span><span class="p">(</span><span class="nx">newEpoch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// make clerks to all of the new servers
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="kd">var</span> <span class="nx">newClerks</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="nx">Clerk</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">newServers</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">newServers</span><span class="p">);</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">newClerks</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span> <span class="p">=</span> <span class="nf">MakeClerk</span><span class="p">(</span><span class="nx">newServers</span><span class="p">[</span><span class="nx">i</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// set state on all the new servers
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">wg</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">WaitGroup</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="mi">0</span><span class="p">;</span> <span class="nx">i</span> <span class="p">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">newClerks</span><span class="p">);</span> <span class="nx">i</span><span class="o">++</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">wg</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">i</span> <span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">newClerks</span><span class="p">[</span><span class="nx">i</span><span class="p">].</span><span class="nf">SetNewEpochState</span><span class="p">(</span><span class="nx">newEpoch</span><span class="p">,</span> <span class="nx">oldState</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">wg</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}(</span><span class="nx">i</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">wg</span><span class="p">.</span><span class="nf">Wait</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// write new addresses to config service
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">err</span> <span class="o">:=</span> <span class="nx">configClerk</span><span class="p">.</span><span class="nf">TryWriteConfig</span><span class="p">(</span><span class="nx">newEpoch</span><span class="p">,</span> <span class="nx">newServers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">err</span> <span class="o">==</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// activate the new primary server
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">newClerks</span><span class="p">[</span><span class="mi">0</span><span class="p">].</span><span class="nf">BecomePrimary</span><span class="p">(</span><span class="nx">newEpoch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>在网络分区的情况下，configservice通过仅接受最高编号的新epoch来避免创建多个冲突的系统实例。</p>
+</li>
+<li>
+<p><strong>副本服务器：基于租约的读取</strong></p>
+<p>副本服务器（主服务器和备份服务器）利用租约提供线性化读取服务，无需跨服务器通信。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">s</span> <span class="o">*</span><span class="nx">Server</span><span class="p">)</span> <span class="nf">ApplyReadonly</span><span class="p">(</span><span class="nx">op</span><span class="p">)</span> <span class="nx">Result</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="nx">s</span><span class="p">.</span><span class="nx">mutex</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">if</span> <span class="nx">s</span><span class="p">.</span><span class="nx">leaseExpiry</span> <span class="p">&gt;</span> <span class="nf">GetTimeRange</span><span class="p">().</span><span class="nx">latest</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">e</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">epoch</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">idx</span><span class="p">,</span> <span class="nx">res</span> <span class="o">:=</span> <span class="nx">s</span><span class="p">.</span><span class="nx">stateLogger</span><span class="p">.</span><span class="nf">LocalRead</span><span class="p">(</span><span class="nx">op</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span><span class="p">.</span><span class="nx">mutex</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// 如果在此期间发生重新配置，服务器会通知客户端重试
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="nx">s</span><span class="p">.</span><span class="nf">waitForCommitted</span><span class="p">(</span><span class="nx">e</span><span class="p">,</span> <span class="nx">op</span><span class="p">,</span> <span class="nx">idx</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">res</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">ErrRetry</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">s</span><span class="p">.</span><span class="nx">mutex</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="k">return</span> <span class="nx">ErrRetry</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li><strong>租约机制</strong>：
+<ul>
+<li>租约防止重新配置时返回过时数据，确保各服务器同步。</li>
+<li>后台线程定期更新租约，承诺配置不变，直至租约到期（如1秒后）。</li>
+</ul>
+</li>
+<li><strong>读取流程</strong>：
+<ul>
+<li>服务器收到只读请求且租约有效时，根据本地状态计算响应。本地状态包含所有已提交操作，可能含未提交的写操作。</li>
+<li>读取依赖的前序写操作需全部提交，方能向客户端发送结果。</li>
+</ul>
+</li>
+</ul>
+<p>Grove使用类似TrueTime的<code>GetTimeRange()</code>API，提供当前时间的上下限，解决时钟偏移问题。</p>
+</li>
+<li>
+<p><strong>存储库：状态日志器</strong></p>
+<p>副本服务器使用存储库管理持久状态，提供“状态日志器”用于在追加型文件中持久化新操作。状态日志器在内存中缓冲追加操作，后台线程异步追加并同步缓冲区到文件，以提升性能。存储库提供 <code>Wait()</code> 函数，允许等待直到文件的前缀部分被持久化。副本库在回复 RPC 之前使用 <code>Wait()</code> 确保变更被持久存储。</p>
+</li>
+<li>
+<p><strong>基于Paxos的容错配置服务</strong></p>
+<p><strong>Paxos 库</strong>用于处理配置服务自身的服务器故障，是一个简单的基于 Paxos 一致性算法的复制库。Paxos在固定服务器集上运行，仅需要多数服务器处理请求，使用 leader 协调操作，但在 leader 崩溃时允许更换。与主-备份复制的差异：</p>
+<ul>
+<li>Paxos 自行选择新的epoch编号，因为服务器集不会在运行时改变。</li>
+<li>仅要求多数服务器提交操作，新 leader 必须从多数服务器获取最新状态。</li>
+<li>Paxos 较为简单，不使用租约，每次更新都写入整个状态到磁盘，而非追加操作到日志。</li>
+<li>写操作性能较低，但对于配置服务是可接受的；提供快速但弱一致性的读取。</li>
+</ul>
+<p>Paxos提供的接口如下：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// 返回当前Paxos实例中的复制状态。可能过时或未提交，GetConfig 使用 WeakRead 以确保快速响应
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <span class="o">*</span><span class="nx">Paxos</span><span class="p">)</span> <span class="nf">WeakRead</span><span class="p">()</span> <span class="p">[]</span><span class="kt">byte</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 开始一个新的提议过程。它返回当前的复制状态和一个commit回调函数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <span class="o">*</span><span class="nx">Paxos</span><span class="p">)</span> <span class="nf">Begin</span><span class="p">()</span> <span class="p">(</span><span class="nx">oldstate</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">commit</span> <span class="kd">func</span><span class="p">(</span><span class="nx">newstate</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="kt">error</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// 尝试使当前节点成为领导者。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">p</span> <span class="o">*</span><span class="nx">Paxos</span><span class="p">)</span> <span class="nf">TryBecomingLeader</span><span class="p">()</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>要执行写操作，如下面这段代码所示，configserver使用<code>Begin()</code>方法。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// 参数args在此处未使用，通常用于接收客户端请求的参数。
+</span></span></span><span class="line"><span class="cl"><span class="c1">// reply 是方法的输出，它将包含操作的结果状态以及预留的新epoch和配置信息。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">c</span> <span class="o">*</span><span class="nx">ConfigService</span><span class="p">)</span> <span class="nf">ReserveEpochAndGetConfig</span><span class="p">(</span><span class="nx">args</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="c1">// 从Paxos实例开始一个新的提议，获取当前状态和提交函数。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 应该在当前的领导者上调用此方法，否则提议无法成功提交。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">oldstate</span><span class="p">,</span> <span class="nx">commit</span> <span class="o">:=</span> <span class="nx">c</span><span class="p">.</span><span class="nx">paxos</span><span class="p">.</span><span class="nf">Begin</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 反序列化旧状态，以便修改。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">st</span> <span class="o">:=</span> <span class="nf">unmarshal</span><span class="p">(</span><span class="nx">oldstate</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 更新状态中的预留epoch字段，准备进入下一个epoch。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">st</span><span class="p">.</span><span class="nx">reservedEpoch</span> <span class="p">=</span> <span class="nx">st</span><span class="p">.</span><span class="nx">reservedEpoch</span> <span class="o">+</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 序列化更新后的状态，准备提交。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">newstate</span> <span class="o">:=</span> <span class="nf">marshal</span><span class="p">(</span><span class="nx">st</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 使用从Begin获得的提交函数尝试提交新状态。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="c1">// 此操作会与其他服务器通信，以确保新状态被复制到大多数服务器。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nx">err</span> <span class="o">:=</span> <span class="nf">commit</span><span class="p">(</span><span class="nx">newstate</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1">// 检查提交是否成功。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 如果提交失败，将错误状态编码并写入reply。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="o">*</span><span class="nx">reply</span> <span class="p">=</span> <span class="nx">marshal</span><span class="p">.</span><span class="nf">WriteInt</span><span class="p">(</span><span class="kc">nil</span><span class="p">,</span> <span class="nx">STAT_ERROR</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// 如果提交成功，将OK状态编码并写入reply。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="o">*</span><span class="nx">reply</span> <span class="p">=</span> <span class="nx">marshal</span><span class="p">.</span><span class="nf">WriteInt</span><span class="p">(</span><span class="kc">nil</span><span class="p">,</span> <span class="nx">STAT_OK</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// 编码并写入新的预留epoch到reply。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="o">*</span><span class="nx">reply</span> <span class="p">=</span> <span class="nx">marshal</span><span class="p">.</span><span class="nf">WriteInt</span><span class="p">(</span><span class="o">*</span><span class="nx">reply</span><span class="p">,</span> <span class="nx">st</span><span class="p">.</span><span class="nx">reservedEpoch</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// 编码并写入当前配置到reply。
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="o">*</span><span class="nx">reply</span> <span class="p">=</span> <span class="nx">marshal</span><span class="p">.</span><span class="nf">WriteBytes</span><span class="p">(</span><span class="o">*</span><span class="nx">reply</span><span class="p">,</span> <span class="nf">encode_cfg</span><span class="p">(</span><span class="nx">st</span><span class="p">.</span><span class="nx">config</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><strong>版本化状态机API</strong></p>
+<p>开发者需实现如下所示的版本化状态机接口，以便在 vRSM 上构建应用。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">VersionedStateMachine</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Apply</span>		<span class="kd">func</span><span class="p">(</span><span class="nx">op</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">idx</span> <span class="kt">uint64</span><span class="p">)</span> <span class="p">[]</span><span class="kt">byte</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Read</span>		<span class="kd">func</span><span class="p">(</span><span class="nx">op</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span> <span class="p">(</span><span class="kt">uint64</span><span class="p">,</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">SetState</span> 	<span class="kd">func</span><span class="p">(</span><span class="nx">snap</span> <span class="p">[]</span><span class="kt">byte</span><span class="p">,</span> <span class="nx">idx</span> <span class="kt">uint64</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">GetState</span> 	<span class="kd">func</span><span class="p">()</span> <span class="p">[]</span><span class="kt">byte</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><ul>
+<li>操作执行：
+<ul>
+<li><code>Apply()</code>：执行应用级别的读写操作。</li>
+<li><code>Read()</code>：对当前内存状态执行应用级别的读操作。</li>
+</ul>
+</li>
+<li>状态管理：
+<ul>
+<li><code>SetState()</code> 和 <code>GetState()</code>：允许序列化内存状态。</li>
+<li>vRSM 库：负责状态的磁盘检查点和新副本的状态复制。</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>vRSM客户端库（clerk）</strong></p>
+<p>vRSM 提供客户端库，简化了通过网络向 vRSM 发送请求的复杂性。Clerk 从配置服务获取并缓存副本服务器地址。</p>
+<p>操作执行：</p>
+<ul>
+<li><code>clerk.Apply(op)</code>：向主服务器发送读写操作。</li>
+<li><code>clerk.Read(op)</code>：向任何副本发送只读操作。</li>
+</ul>
+<p>若服务器不再为主服务器或副本服务器，Clerk 会请求新服务器信息并重试。由于重试，可能导致一个操作被应用许多次，需要更高级库处理操作去重。</p>
+</li>
+<li>
+<p><strong>exactlyonce库</strong></p>
+<p>确保使用 vRSM 的应用操作仅执行一次。组件构成：</p>
+<ul>
+<li>新型 Clerk：包装 vRSM Clerk，通过添加唯一请求 ID 防止操作重复。</li>
+<li>状态机转换器：为应用级状态机添加回复表，追踪已应用请求及其回复。</li>
+</ul>
+<p>操作处理：</p>
+<ul>
+<li>新请求：调用状态机的 <code>Apply()</code> 并存储回复。</li>
+<li>重复请求：不调用状态机，直接返回先前回复。</li>
+<li>只读操作：忽略回复表，直接调用状态机的 <code>Read()</code>。</li>
+</ul>
+</li>
+</ol>
+<h3 id="23-vrsm上层应用" class="heading-element"><span>2.3 2.3 vRSM上层应用</span>
+  <a href="#23-vrsm%e4%b8%8a%e5%b1%82%e5%ba%94%e7%94%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ol>
+<li>
+<p><strong>vKV实现</strong></p>
+<ul>
+<li><strong>vKV 架构</strong>：基于 vRSM 和 exactlyonce 库实现。</li>
+<li><strong>服务器端</strong>：实现 vRSM 期望的状态机接口。</li>
+<li><strong>客户端</strong>：基于 exactlyonce clerk 实现的 clerk，提供简化的 API（<code>Put</code>、<code>CondPut</code>、<code>Get</code>）。</li>
+<li><strong>实现细节</strong>：vKV 实现简单，包括 (反)序列化方法和内存映射的读写函数。</li>
+<li><strong>性能优化</strong>：vKV 存储键到值的映射以及键的最后修改操作索引，利用 vRSM 的版本化状态机接口提升读取性能。</li>
+</ul>
+</li>
+<li>
+<p><strong>基于租约的客户端缓存-cachekv</strong></p>
+<p>cachekv 库通过在 vKV 中存储数据和租约到期时间实现基于租约的客户端缓存。GetAndCache 函数如下所示：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">k</span> <span class="o">*</span><span class="nx">CacheKv</span><span class="p">)</span> <span class="nf">GetAndCache</span><span class="p">(</span><span class="nx">key</span> <span class="kt">string</span><span class="p">,</span> <span class="nx">cachetime</span> <span class="kt">uint64</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="c1">// first attempt to read from the local cache, and if not cached, call vKV&#39;s Get.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">old</span> <span class="o">:=</span> <span class="nx">k</span><span class="p">.</span><span class="nx">kv</span><span class="p">.</span><span class="nf">Get</span><span class="p">(</span><span class="nx">key</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">new</span> <span class="o">:=</span> <span class="nx">old</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="nx">newExpiration</span> <span class="o">:=</span> <span class="nb">max</span><span class="p">(</span><span class="nf">GetTimeRange</span><span class="p">().</span><span class="nx">latest</span><span class="o">+</span><span class="nx">cachetime</span><span class="p">,</span> <span class="nx">old</span><span class="p">.</span><span class="nx">leaseExpiration</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">new</span><span class="p">.</span><span class="nx">leaseExpiration</span> <span class="p">=</span> <span class="nx">newExpiration</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="c1">// Try to update the lease expiration time on the backend
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">resp</span> <span class="o">:=</span> <span class="nx">k</span><span class="p">.</span><span class="nx">kv</span><span class="p">.</span><span class="nf">CondPut</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">old</span><span class="p">,</span> <span class="nx">new</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">resp</span> <span class="o">==</span> <span class="s">&#34;ok&#34;</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">k</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">k</span><span class="p">.</span><span class="nx">cache</span><span class="p">[</span><span class="nx">key</span><span class="p">]</span> <span class="p">=</span> <span class="nx">cacheValue</span><span class="p">{</span><span class="nx">v</span><span class="p">:</span> <span class="nx">old</span><span class="p">.</span><span class="nx">v</span><span class="p">,</span> <span class="nx">l</span><span class="p">:</span> <span class="nx">newLeaseExpiration</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">k</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span> <span class="nx">old</span><span class="p">.</span><span class="nx">v</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>它返回指定键的值，并在内部缓存，使用 <code>CondPut</code> （确保仅在租约过期时更改值）原子增加租约持续时间，确保并发修改不会改变值。</p>
+</li>
+<li>
+<p><strong>锁服务</strong></p>
+<p><strong>锁服务接口</strong>基于 vKV 实现，使用 vKV 的 CondPut() 操作实现锁。每个锁对应一个键值对，提供 Acquire() 和 Release() 方法的规范，支持应用实现独占锁。锁服务的规范与传统的并发分离逻辑锁规范不同，简化了资源保护。</p>
+</li>
+<li>
+<p><strong>银行事务</strong></p>
+<p>顶层应用，使用基于 vKV clerk 和锁服务接口构建的事务。</p>
+<ul>
+<li><strong>账户状态存储</strong>：使用 vKV 实例存储账户状态，每个账户余额用一对键值存储。</li>
+<li><strong>并发访问控制</strong>：使用锁服务处理账户的并发访问，每次转账操作获取两个锁，确保并发转账的安全执行。</li>
+<li><strong>审计功能 (Audit)</strong>：获取所有账户的锁，计算总余额，并释放锁。</li>
+<li><strong>容错处理</strong>：若银行节点崩溃，锁服务中的锁将保持锁定状态，恢复需要某种形式的撤销或重做日志，但原型中未实现。</li>
+</ul>
+</li>
+</ol>
+<h2 id="3-grove性能评估" class="heading-element"><span>3 3 Grove性能评估</span>
+  <a href="#3-grove%e6%80%a7%e8%83%bd%e8%af%84%e4%bc%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ol>
+<li>
+<p><strong>实验目的</strong>：</p>
+<ul>
+<li>
+<p>证明 Grove 能够验证现实世界中高性能的分布式系统。</p>
+</li>
+<li>
+<p><font color="red">展示 vKV 原型通过 Grove 验证后能够实现高性能</font>。</p>
+</li>
+<li>
+<p>特别强调租约在 vKV 中实现高性能读取的重要性。</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>baseline性能对比</strong>：将vKV与Redis进行比较，后者是高性能键值服务器，以C语言编写。为了使Redis与vKV在持久化保障上可比，Redis开启appendfsync always选项，而vKV运行于单核并禁用备份副本。结果显示，vKV吞吐量为Redis的67%-73%，请求延迟相当，多核下vKV吞吐量更高（例如，8核下YCSB 5%写入情况下，吞吐量提升5.1倍）。</p>
+</li>
+<li>
+<p><strong>重新配置能力</strong>：通过添加新服务器进行系统重配置，同时继续正确处理客户端请求的能力。实验中，主服务器在 10 秒时被杀掉，开始重配置过程。使用 YCSB 工作负载变体，100 个客户端持续写入，100 个客户端持续读取。重配置期间，写入操作会阻塞，但读取可以继续。实验结果显示 vKV 可以在重配置期间继续提供读取服务。</p>
+</li>
+<li>
+<p><strong>租约对读取性能的影响</strong>：<strong>写入密集型工作负载</strong>（50%或100%写入），增加副本会降低性能，因为写入在主服务器遇到更多开销，且其它副本处理的读取不足以抵消成本。对于<strong>读取密集型工作负载</strong>，增加副本可以提升性能，例如，YCSB 5%和0%写入情况下，3台服务器分别达到单服务器1.7倍和2.3倍的吞吐量。</p>
+</li>
+</ol>
+<h2 id="4-总结" class="heading-element"><span>4 4 总结</span>
+  <a href="#4-%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="41-grovekv系统" class="heading-element"><span>4.1 4.1 GroveKV系统</span>
+  <a href="#41-grovekv%e7%b3%bb%e7%bb%9f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>GroveKV特点：</p>
+<ul>
+<li>容错、线性化的键值（KV）服务。</li>
+<li>操作（Put/Get）exactlyonce。</li>
+<li>崩溃安全且可重配置。</li>
+</ul>
+<p>要进行重配置，GroveKV使用configservice管理服务器更改。如果没有configservice，类似VMWare-FT的问题，即两个备份可能是网络的彼此分区并且都想成为主分区。这可以通过ZooKeeper之类的配置服务解决。</p>
+<p>lab3也是一个容错KV服务，但GroveKV使用主/备份复制而不是Raft。<strong>关键操作</strong>如下：</p>
+<ol>
+<li>复制：Primary使用goroutines复制到其他服务器，基于RPC。执行操作时需要持有锁。</li>
+<li>重配置：封闭当前的服务器组，从中获取状态副本，安装到新服务器。使用epoch编号处理并发重配置。</li>
+<li>基于租约的读取：服务器不跟任何人协调回复<code>Get</code>请求。</li>
+</ol>
+<h3 id="42-grove核心" class="heading-element"><span>4.2 4.2 Grove核心</span>
+  <a href="#42-grove%e6%a0%b8%e5%bf%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>在正式验证领域，Grove 的核心在于证明代码在所有可能场景下均能表现得当，这一过程要求对代码执行的数学模型有深刻理解，以及对系统行为“正确”的明确定义。通过引入机械证明检查器，Grove 大幅降低了开发者在证明过程中犯错的可能性。</p>
+<p>在 Grove 中，规范由前条件和后条件构成，用于描述操作前后的系统状态。以 GroveKV 为例，Put 和 Get 操作的规范不仅限定了操作的预期结果，还明确了数据所有权的转移。</p>
+<p>Concurrent Separation Logic（CSL）是一种针对并发程序的形式化验证方法，Grove 对其进行了创新性的拓展，使之适用于分布式系统。CSL 强调基于资源所有权的代码分析，其中“堆指向”是一个典型的例子，它确保了数据的一致性不受并发访问的影响。</p>
+<p>在 Grove 中，不变量指的是系统运行中必须始终保持为真的属性，而时间有界不变量（tinv）则进一步限制了特定资源的有效期。例如，<code>GetTimeRange</code> 函数允许在租约未到期的情况下，临时访问底层资源，这在处理基于租约的读取时尤为关键。</p>
+<p>尽管正式验证能够显著减少某些类型的错误，但它并非万能药。验证不能保证所有实际中可能遇到的问题都被解决，特别是那些涉及系统活性性的问题，如死锁或饥饿。此外，编写高质量的证明和测试同样需要大量时间和精力，与开发代码无异，甚至有时还需经历重构的过程。</p>
+]]></description></item><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
   <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -10699,346 +11703,4 @@ Go切片比Go数组更灵活，因为数组的大小是其类型的一部分，�
 </div><p>因为多次处理同一个任务，且任务没有异常。这是因为在分配任务后没有更新任务的状态，例如标记为已分配和记录当前时间戳。</p>
 </li>
 </ol>
-]]></description></item><item><title>【MIT 6.5840(6.824)学习笔记】 分布式系统介绍</title><link>https://hezephyr.github.io/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/</link><pubDate>Tue, 14 May 2024 14:12:32 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%BB%8B%E7%BB%8D/</guid><description><![CDATA[<h2 id="概念" class="heading-element"><span>1 概念</span>
-  <a href="#%e6%a6%82%e5%bf%b5" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>当我们谈论分布式系统时，我们指的是一组通过网络连接的计算机，它们协同工作以完成某种共同的任务或目标。</p>
-<p>在分布式系统中，通信是通过消息传递进行的。<font color="red">这意味着各个计算节点之间通过发送和接收消息来进行通信，而不是通过共享内存。</font>这种消息传递模型使得分布式系统的设计和实现更为灵活，因为每个节点可以独立地运行，并通过消息传递来进行协作。</p>
-<p>尽管消息传递模型具有很多优点，但也需要注意到它引入了一些复杂性。例如，需要考虑消息的传递延迟、顺序和可靠性等问题。因此，在设计分布式系统时，需要仔细考虑如何有效地管理消息传递，以确保系统的正确性和性能。</p>
-<blockquote>
-<p>TIP：在设计系统或解决问题时，应该始终优先考虑在单台计算机上解决。只有在问题规模超出单台计算机的处理能力，或者需要满足高可用性、容错性等需求时，才需要考虑采用分布式系统。因此，深入了解问题的性质和需求，以及权衡利弊，是设计分布式系统的关键。</p>
-</blockquote>
-<h2 id="驱动力和挑战" class="heading-element"><span>2 驱动力和挑战</span>
-  <a href="#%e9%a9%b1%e5%8a%a8%e5%8a%9b%e5%92%8c%e6%8c%91%e6%88%98" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>当人们构建分布式系统时，驱动力主要包括以下几个方面：</p>
-<ol>
-<li><strong>追求更高的计算性能</strong>：分布式系统能够利用大量的计算资源，实现并行运算，充分利用多个CPU、大容量内存和磁盘资源。</li>
-<li><strong>实现容错性</strong>：即使在其中一台计算机发生故障时，系统仍然能够保持正常运行。</li>
-<li><strong>解决空间分布性问题</strong>：某些问题天然具有空间分布性，需要跨越不同地理位置的计算资源和数据进行协同处理。例如，银行跨地域的资金转移需要协调不同地点的数据和操作，这就需要分布式系统来实现数据的同步和协调，以确保交易的准确性和可靠性。</li>
-<li><strong>提高安全性</strong>：分布式系统可以通过将系统分散在多个计算机上来提高安全性。不信任的代码或系统可能存在潜在的安全风险，通过在分布式环境中运行代码并采用加密通信等安全措施，可以有效降低风险，并限制错误和攻击的影响范围。</li>
-</ol>
-<p>分布式系统的挑战源自其驱动力：</p>
-<ol>
-<li><strong>并发执行和复杂交互</strong>：分布式系统中存在大量并发执行的部分，以及复杂的交互关系。这导致了在并发编程中遇到各种问题，例如同步、异步操作的管理以及处理时间依赖性。</li>
-<li><strong>意外故障</strong>：分布式系统由多个组成部分和计算机网络组成，因此容易受到意外故障的影响。与单个计算机不同，这些组件可能在工作或停止状态之间切换，同时还受到网络中断或不稳定性的影响。</li>
-<li><strong>性能预期</strong>：分布式系统的设计旨在实现更高的性能，例如利用大量计算资源实现并行处理。但实际评估多台计算机或磁盘臂的性能存在一定挑战，需要仔细的设计和调整以实现预期的性能水平。</li>
-</ol>
-<h2 id="抽象和实现工具" class="heading-element"><span>3 抽象和实现工具</span>
-  <a href="#%e6%8a%bd%e8%b1%a1%e5%92%8c%e5%ae%9e%e7%8e%b0%e5%b7%a5%e5%85%b7" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>分布式系统基础架构主要包括<font color="red">存储、通信（网络）和计算</font>这三种类型。我们的目标是设计简单的接口，使第三方应用程序能够轻松使用这些分布式存储和计算功能，这样才能简单的在这些基础架构之上，构建第三方应用程序。</p>
-<p>通过这种抽象接口，我们可以将分布式系统的复杂性隐藏在系统内部，使用户专注于应用程序的开发。举例来说，在存储方面，用户可以将整个系统视为非分布式系统，类似于一个文件系统或者常规的编程模型，而不必担心分布式系统的细节。我们的目标是构建一个接口，使其看起来像一个非分布式存储和计算系统，但实际上却具备了分布式系统的高性能和容错性。</p>
-<p>但实际上，很难能找到一个抽象来描述分布式的存储或者计算，使得它们能够像非分布式系统一样有简单易懂的接口。</p>
-<p>抽象的实际实现是我们首先要考虑的问题。在构建分布式系统时，人们使用了许多工具：</p>
-<ul>
-<li><strong>RPC（Remote Procedure Call）</strong>：RPC旨在掩盖在不可靠网络上通信的复杂性，使得远程调用过程更为简单直接。</li>
-<li><strong>线程</strong>：线程是一种重要的编程技术，可用于充分利用多核心计算机。它不仅仅是为了提高计算机的利用率，更重要的是提供了结构化的并发操作方式，简化了程序员对并发操作的处理。</li>
-<li><strong>分布式文件系统</strong>：分布式文件系统是分布式系统中常用的存储工具之一，它提供了分布式的数据存储和访问接口。通过分布式文件系统，可以实现数据的分布式存储和管理，从而支持大规模数据处理和分布式计算任务的执行。</li>
-</ul>
-<h2 id="分布式系统特性" class="heading-element"><span>4 分布式系统特性</span>
-  <a href="#%e5%88%86%e5%b8%83%e5%bc%8f%e7%b3%bb%e7%bb%9f%e7%89%b9%e6%80%a7" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><h3 id="可扩展性" class="heading-element"><span>4.1 可扩展性</span>
-  <a href="#%e5%8f%af%e6%89%a9%e5%b1%95%e6%80%a7" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>分布式系统的主要特性是可扩展性（Scalability）。可扩展性指的是，增加计算资源后系统能够以相应的方式提高性能或吞吐量。举例来说，如果一台计算机能够解决一定量的问题，那么增加第二台计算机后，系统能够以更快的速度解决相同数量的问题，或者在相同时间内处理更多的问题。如果由两台计算机组成的系统能够实现两倍的性能或吞吐量，那就达到了可扩展性的标准。</p>
-<p>这是一个极为强大的特性，因为只需花钱就可以购买计算机。如果构建的系统能够通过增加计算机数量来提高性能或吞吐量，那将是一个巨大的成就。相比之下，通过雇佣程序员来优化系统或应用更优的算法通常是一种昂贵的方法。我们希望通过增加计算机数量，从十台提升到一千台，来应对一百倍的流量。</p>
-<p>例如在构建一个常规网站时，通常会有一个HTTP服务器、一些用户和浏览器以及基于Python或PHP的Web服务器，它们与数据库进行交互。</p>
-<p>在初始阶段，一台计算机可以运行Web服务器和数据库，或者将Web服务器和数据库分别部署在两台计算机上。但是，当网站突然迎来数以亿计的用户登录请求时，单一服务器显然无法满足需求。</p>
-<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=small" data-sub-html="<h2>image-20240513103410005</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web" alt="image-20240513103410005" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/Web?size=large 2x" data-title="image-20240513103410005" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<p>为了应对高流量，第一步是购买更多的Web服务器，并将用户分配到不同的服务器上。这样，不同的用户可以访问不同的Web服务器，但它们需要访问相同的数据，因此所有的Web服务器都需要与后端数据库通信。在这个阶段，通过添加更多的Web服务器来提高代码效率是一个有效的方法，前提是单个服务器不会给数据库带来过大的压力。</p>
-<p>然而，可扩展性并非无限的。随着Web服务器数量的增加，数据库很可能成为性能的瓶颈。即使增加更多的Web服务器也无法解决问题。在某个临界点，系统中添加更多计算机将不再有效，而瓶颈将转移到其他地方，比如从Web服务器转移到数据库。</p>
-<p>在这种情况下，必须进行一些重构工作。然而，重构一个单一的数据库是困难的，尽管可以将数据库拆分为多个来提高性能，但这需要大量的工作。</p>
-<h3 id="可用性" class="heading-element"><span>4.2 可用性</span>
-  <a href="#%e5%8f%af%e7%94%a8%e6%80%a7" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>在构建系统时，使用单台计算机往往具有较高的可靠性。单台计算机通常可以长时间稳定运行，这是因为计算机和操作系统都很可靠，而且电源也很稳定。然而，如果系统由数千台计算机构成，即使每台计算机都能稳定运行一年，每天也会有多台计算机发生故障。</p>
-<p>因此，大型分布式系统面临的一个主要问题是放大一些罕见问题的影响。在这样的系统中，总会有一些机器故障、运行错误、执行缓慢或执行错误任务的情况发生。网络问题也是一个常见的挑战，比如网线踩断或交换机故障。这些小问题在大规模系统中会变成持续不断的问题。</p>
-<p>因此，在设计系统时必须考虑系统的容错性，即使发生错误也要能够继续运行。同时，为了简化应用开发人员的工作，需要构建一个基础架构，能够尽可能屏蔽和掩盖错误。</p>
-<p>容错有多种概念和表述方式，其中一个重要思想是可用性（Availability）。通过精心设计，系统可以在特定类型的错误发生时继续提供服务，就像没有错误一样。某些系统通过多副本的方式实现可用性。比如，构建一个有两个拷贝的多副本系统，其中一个故障了，另一个仍然可以正常运行。可用性意味着在特定的故障范围内，系统仍能提供服务。</p>
-<p>另一种容错特性是自我可恢复性（Recoverability），即在出现问题后系统停止工作，不再响应请求，等待修复，然后恢复正常运行。</p>
-<p>可恢复性是一个重要的需求，尽管它比可用性更弱。在故障发生到修复期间，系统将完全停止工作。但修复后，系统应能正确运行，因此可恢复性至关重要。对于可恢复的系统，通常需要采取一些措施，如将最新数据存储在磁盘中，以便在供电恢复后检索。甚至对于具备可用性的系统，在实际应用中，也需要具备可恢复性。</p>
-<p>为了实现这些特性，有两个关键工具。</p>
-<ul>
-<li>一个是非易失存储（Non-volatile storage），如硬盘或闪存，用于存储系统状态的checkpoint或日志。这样，即使出现电源故障，系统也能从存储中读取最新状态，并继续运行。</li>
-<li>另一个重要工具是复制（Replication），即通过多副本系统实现容错。管理复制的多副本系统可能会面临同步偏移等问题，这在容错系统中是一个挑战。</li>
-</ul>
-<h3 id="一致性" class="heading-element"><span>4.3 一致性</span>
-  <a href="#%e4%b8%80%e8%87%b4%e6%80%a7" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>最后一个很重要的特性是一致性（Consistency）。一致性定义了操作的行为，特别是在分布式系统中。在分布式存储系统中，例如键值（KV）服务，put操作将一个值存储到一个键中，而get操作从键中获取值。在分布式系统中，多个副本可能存在不同版本的数据，因此一致性变得至关重要。</p>
-<p>强一致性（Strong Consistency）要求get请求总是返回最近一次完成的put请求写入的值，这确保了数据的完全一致。然而，实现强一致性需要大量的通信和延迟。弱一致性（Weak Consistency）不保证get请求获取到最新的数据，但通常可以提供更高的性能。</p>
-<p>因此，为了尽可能减少通信，特别是当副本相距很远时，人们会构建弱一致性系统，只需要更新最近的数据副本，并且只需要从最近的副本获取数据，并允许读取旧数据。当然，为了使弱一致性更具实际意义，人们会定义更多的规则。</p>
-<h2 id="mapreduce论文阅读笔记" class="heading-element"><span>5 MapReduce论文阅读笔记</span>
-  <a href="#mapreduce%e8%ae%ba%e6%96%87%e9%98%85%e8%af%bb%e7%ac%94%e8%ae%b0" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p><a href="https://blog.csdn.net/hzf0701/article/details/138770454?spm=1001.2014.3001.5501"target="_blank" rel="external nofollow noopener noreferrer">MapReduce论文阅读笔记<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
-]]></description></item><item><title>【论文阅读笔记】MapReduce: Simplified Data Processing on Large Clusters</title><link>https://hezephyr.github.io/posts/01.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0mapreduce/</link><pubDate>Sun, 12 May 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0mapreduce/</guid><description><![CDATA[<h2 id="概念" class="heading-element"><span>1 概念</span>
-  <a href="#%e6%a6%82%e5%bf%b5" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p><code>MapReduce</code> 是一种用于在大型集群上进行简化数据处理的编程模型和计算框架。它最初由 Google 公司设计用于解决大规模数据处理问题，后来被广泛应用于各种大数据处理场景。</p>
-<p><code>MapReduce</code> 模型的核心思想是将大规模的数据集分解成多个小的数据块，然后分配给集群中的多个计算节点进行并行处理，最终将结果合并成最终的输出。</p>
-<h2 id="编程模型" class="heading-element"><span>2 编程模型</span>
-  <a href="#%e7%bc%96%e7%a8%8b%e6%a8%a1%e5%9e%8b" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p>MapReduce 编程模型由两个主要阶段组成：map 阶段和 reduce 阶段。</p>
-<ul>
-<li><strong>map 阶段</strong>：在 map 阶段，输入数据被分割成若干个数据块，并由不同的计算节点进行并行处理。每个计算节点都会执行用户定义的 map 函数，将输入数据转换为键值对的形式，并发出中间结果。</li>
-<li><strong>reduce 阶段</strong>：在 reduce 阶段，会将中间结果按照键进行分组，并由不同的计算节点进行并行处理。每个计算节点都会执行用户定义的 reduce 函数，对相同键的数据进行合并和处理，最终生成最终的输出结果。</li>
-</ul>
-<p>对于用户(MapReduce的使用者)而言：MapReduce是一种抽象化的编程模型，它隐藏了分布式数据处理的细节，仅对外暴露<code>map</code>和<code>reduce</code>的抽象，用户来实现具体的<code>map</code>和<code>reduce</code>功能。MapReduce自身关注的是并行计算、容错、分布式数据、负载均衡等一系列问题，并且保证分布计算的结果和无错误的串形计算的结果一致。</p>
-<p>形式化地说，由用户提供的 <code>map</code> 函数和 <code>reduce</code> 函数应有如下类型：
-$$
-\begin{align*}
-\text{map} &amp;\quad (k_1, v_1)\quad\quad\quad\rightarrow\quad\text{list}(k_2, v_2)\
-\text{reduce} &amp;\quad (k_2,\text{list}(v_2))\quad\rightarrow\quad\text{list}(v_2)
-\end{align*}
-$$
-其中，输入的 <code>key</code> 和 <code>value</code> 值与输出的 <code>key</code> 和 <code>value</code> 值在类型上推导的域不同。此外，中间结果 <code>key</code> 和 <code>value</code> 值与输出 <code>key</code> 和 <code>value</code> 值在类型上推导的域相同。</p>
-<p>例如，计算一个大的文档集合中每个单词出现的次数，下面是伪代码段：</p>
-<div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
-</span><span class="lnt"> 2
-</span><span class="lnt"> 3
-</span><span class="lnt"> 4
-</span><span class="lnt"> 5
-</span><span class="lnt"> 6
-</span><span class="lnt"> 7
-</span><span class="lnt"> 8
-</span><span class="lnt"> 9
-</span><span class="lnt">10
-</span><span class="lnt">11
-</span><span class="lnt">12
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-fallback" data-lang="fallback"><span class="line"><span class="cl">map(String key, String value):
-</span></span><span class="line"><span class="cl">    // key: document name
-</span></span><span class="line"><span class="cl">    // value: document contents
-</span></span><span class="line"><span class="cl">    for each word w in value:
-</span></span><span class="line"><span class="cl">        EmitIntermediate(w, “1″);
-</span></span><span class="line"><span class="cl">reduce(String key, Iterator values):
-</span></span><span class="line"><span class="cl">    // key: a word
-</span></span><span class="line"><span class="cl">    // values: a list of counts
-</span></span><span class="line"><span class="cl">    int result = 0;
-</span></span><span class="line"><span class="cl">    for each v in values:
-</span></span><span class="line"><span class="cl">        result += ParseInt(v);
-</span></span><span class="line"><span class="cl">    Emit(AsString(result));</span></span></code></pre></td></tr></table>
-</div>
-</div><p><code>map</code> 函数输出文档中的每个词、以及这个词的出现次数(在这个简单的例子里就是 1)。<code>reduce</code> 函数把 <code>map</code> 函数产生的每一个特定的词的计数累加起来。</p>
-<p>值得注意的是，在实际的实现中 <code>MapReduce</code> 框架使用 <code>Iterator</code> 来代表作为输入的集合，主要是为了避免集合过大，无法被完整地放入到内存中。</p>
-<h2 id="实现" class="heading-element"><span>3 实现</span>
-  <a href="#%e5%ae%9e%e7%8e%b0" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><h3 id="mapreduce执行流程" class="heading-element"><span>3.1 MapReduce执行流程</span>
-  <a href="#mapreduce%e6%89%a7%e8%a1%8c%e6%b5%81%e7%a8%8b" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>下图展示了<code>MapReduce</code>操作的全部流程。当用户调用 <code>MapReduce</code> 函数时，将发生下面的一 系列动作（下面的序号和图中的序号一一对应）：</p>
-<p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=small" data-sub-html="<h2>image-20240512144947298</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png" alt="image-20240512144947298" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/MapReduce_Execution_Overview.png?size=large 2x" data-title="image-20240512144947298" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<ol>
-<li>用户程序首先调用的 <code>MapReduce</code> 库将输入文件分成 $M$ 个数据片度，每个数据片段的大小一般从 $16\text{ MB}$ 到$64\text{ MB}$(可以通过可选的参数来控制每个数据片段的大小)。然后用户程序在集群中创建大量的程序副本。</li>
-<li>这些程序副本中的有一个特殊的程序—<code>master</code>。副本中其它的程序都是 <code>worker</code> 程序，由 <code>master</code> 分配 任务。有 $M$ 个 <code>map</code> 任务和 $R$ 个 <code>reduce</code> 任务将被分配，<code>master</code> 将一个 <code>map</code> 任务或 <code>reduce</code> 任务分配给一个空闲的 <code>worker</code>。</li>
-<li>被分配了 <code>map</code> 任务的 worker 程序读取相关的输入数据片段，从输入的数据片段中解析出键值对，然后把键值对传递给用户自定义的 Map 函数，由 Map 函数生成并输出的中间结果键值对，并缓存在内存中。</li>
-<li>缓存中的键值对通过分区函数（可由用户指定，默认为<code>hasy(key) mod R</code>）分成 $R$ 个区域，之后周期性的写入到本地磁盘上。缓存的键值对在本地磁盘上的存储位置将被回传给 <code>master</code>，由 <code>master</code> 负责把这些存储位置再传送给 <code>reduce worker</code>。</li>
-<li>当 <code>reduce worker</code> 程序接收到 <code>master</code> 程序发来的数据存储位置信息后，使用 <code>RPC</code> 从 <code>Map worker</code> 所在主机的磁盘上读取这些缓存数据。当 <code>reduce worker</code> 读取了所有的中间数据后，通过对 <code>key</code> 进行排序后使得具有相同 <code>key</code> 值的数据聚合在一起。由于许多不同的 <code>key</code> 值会映射到相同的 <code>reduce</code> 任务上， 因此必须进行排序。如果中间数据太大无法在内存中完成排序，那么就要在外部进行排序。</li>
-<li><code>reduce worker</code> 程序遍历排序后的中间数据，对于每一个唯一的中间 <code>key</code> 值，<code>reduce worker</code> 程序将这 个 <code>key</code> 值和它相关的中间结果<code>value</code> 值的集合传递给用户自定义的 <code>reduce</code> 函数。<code>reduce</code> 函数的输出被追加到所属分区的输出文件。</li>
-<li>当所有的 <code>map</code> 和 <code>reduce</code> 任务都完成之后，<code>master</code> 唤醒用户程序。在这个时候，在用户程序里的对 <code>MapReduce</code> 调用才返回。</li>
-</ol>
-<p>在成功完成任务之后，<code>MapReduce</code> 的输出存放在 $R$ 个输出文件中（对应每个 <code>reduce</code> 任务产生一个输出文件，文件名由用户指定）。一般情况下，用户不需要将这 $R$ 个输出文件合并成一个文件—他们经常把这些文件作为另外一个 <code>MapReduce</code> 的输入，或者在另外一个可以处理多个分割文件的分布式应用中使用。</p>
-<h3 id="master数据结构" class="heading-element"><span>3.2 master数据结构</span>
-  <a href="#master%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p><code>master</code> 持有一些数据结构，它存储每一个 <code>map</code> 和 <code>reduce</code> 任务的状态（空闲、工作中或完成)，以及 <code>worker</code> 机器(非空闲任务的机器)的标识。</p>
-<p><code>master</code> 就像一个数据管道，中间文件存储区域的位置信息通过这个管道从 <code>map</code> 传递到 <code>reduce</code>。因此， 对于每个已经完成的 <code>map</code> 任务，<code>master</code> 存储了 <code>map</code> 任务产生的 $R$ 个中间文件存储区域的大小和位置。当 <code>map</code> 任务完成时，<code>master</code> 接收到位置和大小的更新信息，这些信息被逐步递增的推送给那些正在工作的 <code>reduce</code> 任务。</p>
-<h3 id="容错机制" class="heading-element"><span>3.3 容错机制</span>
-  <a href="#%e5%ae%b9%e9%94%99%e6%9c%ba%e5%88%b6" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><h4 id="worker故障" class="heading-element"><span>3.3.1 worker故障</span>
-  <a href="#worker%e6%95%85%e9%9a%9c" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><ul>
-<li>
-<p>故障判定</p>
-<p><code>master</code> 周期性的 <code>ping</code> 每个 <code>worker</code>。如果在一个约定的时间范围内没有收到 <code>worker</code> 返回的信息，<code>master</code> 将 把这个 <code>worker</code> 标记为失效。</p>
-</li>
-<li>
-<p>故障处理</p>
-<ul>
-<li>正在运行：正在运行的 <code>map</code> 或 <code>reduce</code> 任务将被重新置为空闲状态，等待重新调度。</li>
-<li>已完成：所有由这个故障的<code>worker</code> 完成的 <code>map</code> 任务也会被重设为初始的空闲状态，等待重新调度，因为该 <code>worker</code> 不可用也意味着存储在该 <code>worker</code> 本地磁盘上的中间结果也不可用了；已经完成的 <code>reduce</code> 任务的输出存储在全局文件系统（eg. Google File System）上，因此不需要重新执行。</li>
-</ul>
-</li>
-</ul>
-<p>当一个 <code>map</code> 任务首先被 <code>worker A</code> 执行，之后由于 <code>worker A</code> 故障了又被调度到 <code>worker B</code> 执行，这个“重新执行”的动作会被通知给所有执行 <code>reduce</code> 任务的 <code>worker</code>。任何还没有从 <code>worker A</code> 读取数据的 <code>reduce</code> 任务 将从 <code>worker B</code>读取数据。</p>
-<h4 id="master故障" class="heading-element"><span>3.3.2 master故障</span>
-  <a href="#master%e6%95%85%e9%9a%9c" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p>一个简单的解决办法是让 <code>master</code> 周期性的将上面描述的master数据结构的写入磁盘，<font color="red">即检查点（checkpoint）</font>。如果这个 master 任务失败了，可以从最后一个检查点（checkpoint）开始启动另一个 <code>master</code> 进程。</p>
-<p>然而，由于只有一个 <code>master</code> 进程，<code>master</code> 失效后再恢复是比较麻烦的，因此现在的实现是如果 <code>master</code> 故障，就中止<code>MapReduce</code> 运算。用户可以检查到这个状态，并且可以根据需要重新执行 <code>MapReduce</code> 操作。</p>
-<h4 id="出现故障时的语义" class="heading-element"><span>3.3.3 出现故障时的语义</span>
-  <a href="#%e5%87%ba%e7%8e%b0%e6%95%85%e9%9a%9c%e6%97%b6%e7%9a%84%e8%af%ad%e4%b9%89" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p>当用户提供的 <code>map</code> 和 <code>reduce</code> 操作是输入确定性函数（即相同的输入产生相同的输出）时，MapReduce保证任何情况下的输出都和所有程序没有出现任何错误、顺序的执行产生的输出是一样的。 这依赖对 <code>map</code> 和 <code>reduce</code> 任务的输出是原子提交的来完成这个特性。</p>
-<ul>
-<li>每个工作中的任务把它的输出写到私有的临时文件中。</li>
-<li>每个 <code>reduce</code> 任务生成一个这样的文件，而每个 <code>map</code> 任务则生成 $R$ 个这样的文件（一 个 <code>reduce</code> 任务对应一个文件）。</li>
-<li>当一个 <code>map</code> 任务完成的时，<code>worker</code> 发送一个包含 <code>R</code> 个临时文件名的完成消息给<code>master</code>。如果 <code>master</code> 从一个已经完成的 <code>map</code> 任务再次接收到到一个完成消息，<code>master</code> 将忽略这个消息；否 则，<code>master</code> 将这 $R$ 个文件的名字记录在数据结构里。</li>
-<li>当 <code>reduce</code> 任务完成时，<code>reduce worker</code> 进程以原子的方式把临时文件重命名为最终的输出文件。如果同一个 <code>reduce</code> 任务在多台机器上执行，针对同一个最终的输出文件将有多个重命名操作执行。这就依赖底层文件系统提供的重命名操作的原子性来保证最终的文件系统状态仅仅包含一个 <code>reduce</code>任务产生的数据。</li>
-</ul>
-<p>使用 MapReduce 模型的程序员可以很容易的理解他们程序的行为，因为我们绝大多数的 <code>map</code> 和 <code>reduce</code> 操作是确定性的，而且存在这样的一个事实：我们的语义（也可以理解为处理机制）等价于一个顺序的执行的操作。</p>
-<p>当 <code>map</code> and/or <code>reduce</code> 操作是不确定性的时候，MapReduce提供虽然较弱但是依然合理的语义。当使用非确定操作的时候， 一个 <code>reduce</code> 任务 $R_1$ 的输出等价于一个非确定性程序顺序执行产生时的输出。但是，另一个 <code>reduce</code> 任务 $R_2$的输出也许符合一个不同的非确定程序顺序执行产生的 $R_2$ 的输出。</p>
-<p>考虑 <code>map</code> 任务 $M$ 和 <code>reduce</code> 任务 $R_1$、$R_2$ 的情况。我们设定 $e(R_i)$是 $R_i$ 已经提交的执行过程（有且仅有一个这样的执行过程）。出现较弱语义是因为 $e(R_1)$可能读取了$M$ 一次执行产生的输出，而 $e(R_2)$可能读取了 $M$ 的另一次执行产生的输出。</p>
-<h3 id="存储位置" class="heading-element"><span>3.4 存储位置</span>
-  <a href="#%e5%ad%98%e5%82%a8%e4%bd%8d%e7%bd%ae" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p><font color="red">核心思想：尽量把输入数据(由 GFS 管理)存储在集群中机器的本地磁盘上来节省网络带宽。</font></p>
-<p>GFS 把每个文件按 64MB 一个 Block 分隔，每个 Block 保存 在多台机器上，环境中就存放了多份拷贝(一般是 3 个拷贝)。MapReduce 的 <code>master</code> 在调度 <code>map</code> 任务时会考虑输入文件的位置信息，尽量将一个 <code>map</code> 任务调度在包含相关输入数据拷贝的机器上执行；</p>
-<p>如果上述努力失败 了，<code>master</code> 将尝试在保存有输入数据拷贝的机器附近的机器上执行 <code>map</code> 任务(例如，分配到一个和包含输入数据的机器在一个 switch 里的 worker 机器上执行)。当在一个足够大的 cluster 集群上运行大型 MapReduce 操作的时候，大部分的输入数据都能从本地机器读取，因此消耗非常少的网络带宽。</p>
-<h3 id="任务粒度" class="heading-element"><span>3.5 任务粒度</span>
-  <a href="#%e4%bb%bb%e5%8a%a1%e7%b2%92%e5%ba%a6" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>理想情况下，$M$ 和 $R$ 应当比集群中 <code>worker</code> 的机器数量要多得多。在每台 <code>worker</code> 机器都执行大量的不同任务能够<strong>提高集群的动态的负载均衡能力</strong>，并且能够加快故障恢复的速度：失效机器上执行的大量 <code>map</code> 任务都可以分布到所有其他的 <code>worker</code> 机器上去执行。</p>
-<p>但是实际上，在具体实现中对 $M$ 和 $R$ 的取值都有一定的客观限制，因为 <code>master</code> 必须执行 $O(M+R) $次调度，并且在内存中保存 $O(M\times R)$个状态（对影响内存使用的因素还是比较小的：$O(M\times R)$块状态，大概每对 <code>map</code> 任务/<code>reduce</code> 任务 1 个字节就可以了）。</p>
-<p>更进一步，$R$ 值通常是由用户指定的，因为每个 <code>reduce</code> 任务最终都会生成一个独立的输出文件。实际使用时我们也倾向于选择合适的 $M$ 值，<font color="red">以使得每一个独立任务都是处理大约 16M 到 64M 的输入数据</font>（这样， 上面描写的输入数据本地存储优化策略才最有效），另外，我们把 $R$ 值设置为我们想使用的 <code>worker</code> 机器数量的小的倍数。</p>
-<p>所以我们通常会用这样的比例来执行 MapReduce：$M=200000$，$R=5000$，使用 $2000$ 台 <code>worker</code> 机器。</p>
-<h3 id="备用任务" class="heading-element"><span>3.6 备用任务</span>
-  <a href="#%e5%a4%87%e7%94%a8%e4%bb%bb%e5%8a%a1" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>如果集群中有某个 <code>worker</code> 花了特别长的时间来完成最后的几个 <code>map</code> 或 <code>reduce</code> 任务，整个 MapReduce 计算任务的耗时就会因此被拖长，这样的 <code>worker</code> 也就成了落后者（Straggler）。</p>
-<p>因此，论文提出一个通用的机制来减少“落伍者”出现的情况。当一个 MapReduce 操作接近完成的时候，<code>master</code> 会调度备用（backup）任务进程来执行剩下的、处于处理中状态（in-progress）的任务。<font color="red">无论是最初的执行、还是备用（backup）任务进程完成了任务，我们都把这个任务标记成为已经完成。</font></p>
-<h2 id="扩展技巧" class="heading-element"><span>4 扩展技巧</span>
-  <a href="#%e6%89%a9%e5%b1%95%e6%8a%80%e5%b7%a7" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><h3 id="分区函数" class="heading-element"><span>4.1 分区函数</span>
-  <a href="#%e5%88%86%e5%8c%ba%e5%87%bd%e6%95%b0" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>MapReduce 的使用者通常会指定 <code>reduce</code> 任务和 <code>reduce</code> 任务输出文件的数量（$R$）。我们在中间结果<code>key</code> 上使用分区函数来对数据进行分区，之后再输入到后续任务执行进程。</p>
-<p>一个缺省的分区函数是使用 <code>hash</code> 方法(比如， <code>hash(key) mod R</code>)进行分区。<code>hash</code> 方法能产生非常平衡的分区。然而，有的时候，其它的一些分区函数对 <code>key</code> 值进行的分区将非常有用。</p>
-<p>比如，输出的 <code>key</code> 值是 URLs，我们希望每个主机的所有条目保持在同一个输出文件中。为了支持类似的情况，MapReduce库的用户需要提供专门的分区函数。例如，使用<code>hash(Hostname(urlkey)) mod R</code>作为分区函数就可以把所有来自同一个主机的 URLs 保存在同一个输出文件中。</p>
-<h3 id="顺序保证" class="heading-element"><span>4.2 顺序保证</span>
-  <a href="#%e9%a1%ba%e5%ba%8f%e4%bf%9d%e8%af%81" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>在给定的分区$R$中，MapReduce保证所有中间键值对数据的处理顺序是按照 <code>key</code> 值增量顺序处理的。</p>
-<h3 id="combiner函数" class="heading-element"><span>4.3 Combiner函数</span>
-  <a href="#combiner%e5%87%bd%e6%95%b0" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>在某些情况下，<code>map</code> 函数产生的中间 <code>key</code> 值的重复数据会占很大的比重，并且，用户自定义的 <code>reduce</code> 函数满足结合律和交换律。词数统计程序是个很好的例子。由于词频率倾向于一个 zipf 分布，每个 <code>map</code> 任务将产生成千上万个这样的记录。所有的这些记录将通过网络被发送到一个单独的 <code>reduce</code> 任务，然后由这个<code>reduce</code> 任务把所有这些记录累加起来产生一个数字。</p>
-<p>MapReduce允许用户指定一个可选的 <code>combiner</code> 函数，<code>combiner</code> 函数首先在本地将这些记录进行一次合并，然后将合并的结果再通过网络发送出 去。 <code>combiner</code> 函数在每台执行 Map 任务的机器上都会被执行一次。一般情况下，<code>combiner</code> 和 <code>reduce</code> 函数是 一样的。<code>combiner</code> 函数和 Reduce 函数之间唯一的区别是 MapReduce 库怎样控制函数的输出。</p>
-<p><code>reduce</code> 函数的输出被保存在最终的输出文件里，而 <code>combiner</code> 函数的输出被写到中间文件里，然后被发送给 <code>reduce</code> 任务。 部分的合并中间结果可以显著的提高一些 MapReduce 操作的速度。</p>
-<h3 id="输入和输出的类型" class="heading-element"><span>4.4 输入和输出的类型</span>
-  <a href="#%e8%be%93%e5%85%a5%e5%92%8c%e8%be%93%e5%87%ba%e7%9a%84%e7%b1%bb%e5%9e%8b" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>MapReduce库支持几种不同的格式的输入数据。比如文本模式中，<code>key</code>是文件的偏移量，<code>value</code>是该行内容。</p>
-<p>程序员可以定义<code>Reader</code>接口来适应不同的输入类型，程序员需要保证必须能把输入数据切分成数据片段，且这些数据片段能够由单独的Map任务来处理就行了。<code>Reader</code>的数据源可能是数据库，可能是文本文件，甚至是内存等。</p>
-<p>同样，用户采用类似添加新的输入数据类型的方式增加新的输出类型（定义<code>Writer</code>接口）。</p>
-<h3 id="副作用" class="heading-element"><span>4.5 副作用</span>
-  <a href="#%e5%89%af%e4%bd%9c%e7%94%a8" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>程序员在写<code>map</code>和/或<code>reduce</code>操作的时候，可能会因为方便，定义很多额外功能，比如增加辅助的输出文件等。但应当时刻记住，<code>map</code>和<code>reduce</code>操作应当保证原子性和幂等性。</p>
-<p>比如，一个任务生成了多个输出文件，但是我们没有原子化多段commit的操作。这就需要程序员自己保证生成多个输出的任务是确定性任务。</p>
-<h3 id="跳过损坏的记录" class="heading-element"><span>4.6 跳过损坏的记录</span>
-  <a href="#%e8%b7%b3%e8%bf%87%e6%8d%9f%e5%9d%8f%e7%9a%84%e8%ae%b0%e5%bd%95" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>有时候，用户程序中的 bug 导致 <code>map</code> 或者 <code>reduce</code> 函数在处理某些记录的时候 crash 掉，MapReduce 操作 无法顺利完成。相较于修复无法执行的 Bug，跳过引发 Bug 的记录可能更为明智。因此，我们希望 MapReduce 检测哪些记录导致确定性的crash， 并且跳过这些记录不处理。</p>
-<p>MapReduce 如何自动检测这种情况呢？首先，每个<code>worker</code>进程都设置了信号处理函数捕获内存段异常（segmentation violation）和总线错误（bus error）。 在执行 <code>map</code> 或者 <code>reduce</code> 操作之前，MapReduce 库通过全局变量保存记录序号。如果用户程序触发了一个系统信号，信号处理函数将用“最后一口气”通过 UDP 包向 <code>master</code> 发送处理的最后一条记录的序号。当 <code>master</code> 看到在处理某条特定记录不止失败一次时，<code>master</code> 就标志这条记录需要被跳过，并且在下次重新执行相关的<code>map</code> 或者 <code>reduce</code> 任务的时候跳过这条记录。</p>
-<h3 id="本地执行" class="heading-element"><span>4.7 本地执行</span>
-  <a href="#%e6%9c%ac%e5%9c%b0%e6%89%a7%e8%a1%8c" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>调试 <code>map</code> 和 <code>reduce</code> 函数的 bug 非常困难，因为它们在分布式系统中执行，并且通常跨多台计算机执行，由 <code>master</code> 动态调度。为了简化调试、性能分析和小规模测试，Google开发了本地版本的 MapReduce 库。这个本地版本可以让 MapReduce 操作在单台计算机上顺序执行。用户可以控制操作的执行，并且可以将其限制在特定的 <code>map</code> 任务上。通过设置特殊标志，用户可以在本地执行他们的程序，并且轻松使用本地调试和测试工具（如 <code>gdb</code>）。</p>
-<h3 id="状态信息" class="heading-element"><span>4.8 状态信息</span>
-  <a href="#%e7%8a%b6%e6%80%81%e4%bf%a1%e6%81%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>在 <code>master</code> 内部，设有一个内置的 HTTP 服务器，用于展示一系列状态信息页面。这些页面会显示计算进度，例如已完成的任务数量、正在执行的任务数量、输入、中间数据和输出的字节数，以及处理速率等。</p>
-<p>这些页面还包含了指向每个任务的<code>stderr</code>和<code>stdout</code>文件的链接。用户可以利用这些数据来预测计算完成所需的时间，以及是否需要增加更多资源。当计算花费的时间超过预期时，这些页面还可以帮助用户找出执行速度缓慢的原因。</p>
-<p>另外，顶层状态页面还会显示出现故障的<code>worker</code>及其故障时正在执行的 <code>map</code> 和 <code>reduce</code> 任务。这些信息对于调试用户代码中的 bug 非常有帮助。</p>
-<p><strong>很多分布式系统架构都会提供可视化监控界面，这是提升分布式系统的可维护性的重要手段</strong>。</p>
-<h3 id="计数器" class="heading-element"><span>4.9 计数器</span>
-  <a href="#%e8%ae%a1%e6%95%b0%e5%99%a8" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><p>MapReduce 库提供计数器机制，用来统计不同操作发生次数。比如，用户可能想统计已经处理了多少个单词、已经索引的多少篇 German 文档等等。</p>
-<p>要想使用这个特性，用户需要创建Counter对象，然后在<code>map</code>和<code>reduce</code>函数中以正确的方式增加<code>counter</code>。这些计数器的值周期性的从各个单独的<code>worker</code>机器上传递给<code>master</code>（附加在ping的应答包中传递）。<code>master</code> 把执行成功的 <code>map</code> 和 <code>reduce</code> 任务的计数器值进行累计，当 MapReduce 操作完成之后，返回给用户代码。 计数器当前的值也会显示在 <code>master</code> 的状态页面上，这样用户就可以看到当前计算的进度。</p>
-<p>当累加这些<code>counter</code>的值时，<code>master</code>会去掉那些重复执行的相同<code>map</code>或者<code>reduce</code>操作的次数，以此避免重复计数（之前提到的备用任务和故障后重新执行任务，这两种情况会导致相同的任务被多次执行）。</p>
-<p>有些<code>counter</code>值是由MapReduce库自动维护的，例如已经处理过的输入键值对的数量以及生成的输出键值对的数量等等。</p>
-<h2 id="应用场景" class="heading-element"><span>5 应用场景</span>
-  <a href="#%e5%ba%94%e7%94%a8%e5%9c%ba%e6%99%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><h3 id="论文中提出的应用场景" class="heading-element"><span>5.1 论文中提出的应用场景</span>
-  <a href="#%e8%ae%ba%e6%96%87%e4%b8%ad%e6%8f%90%e5%87%ba%e7%9a%84%e5%ba%94%e7%94%a8%e5%9c%ba%e6%99%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><ul>
-<li>分布式的 Grep：<code>map</code> 函数输出匹配某个模式的一行，<code>reduce</code> 函数是一个恒等函数，即把中间数据复制到输出。</li>
-<li>计算 URL 访问频率：<code>map</code> 函数处理日志中 web 页面请求的记录，然后输出 (URL,1)。<code>reduce</code> 函数把相同 URL 的 value 值都累加起来，产生 (URL, 记录总数）结果。</li>
-<li>倒转网络链接图：<code>map</code> 函数在源页面（source）中搜索所有的链接目标（target）并输出为(target,source)。 <code>reduce</code> 函数把给定链接目标（target）的链接组合成一个列表，输出(target,list(source))。</li>
-<li>每个主机的检索词向量：检索词向量用一个(词,频率)列表来概述出现在文档或文档集中的最重要的一些词。<code>map</code> 函数为每一个输入文档输出(主机名,检索词向量)，其中主机名来自文档的 URL。<code>reduce</code> 函数接收给定主机的所有文档的检索词向量，并把这些检索词向量加在一起，丢弃掉低频的检索词，输出一个最终的(主机名,检索词向量)。</li>
-<li>倒排索引：<code>map</code> 函数分析每个文档输出一个(词,文档号)的列表，<code>reduce</code> 函数的输入是一个给定词的所有 （词，文档号），排序所有的文档号，输出(词,list(文档号))。所有的输出集合形成一个简单的倒排索引，它以一种简单的算法跟踪词在文档中的位置。</li>
-<li>分布式排序：<code>map</code> 函数从每个记录提取 <code>key</code>，输出(key,record)。<code>reduce</code> 函数不改变任何的值。这个运算依赖<strong>分区机制和排序属性</strong>。</li>
-<li>重建索引系统：重写了 Google 网络搜索服务所使用的索引系统。这个索引系统的输入数据是网络爬虫抓取回来的大量文档，这些文档数据保存在 GFS 文件系统中，其原始内容超过了 20TB。通过一系列的 MapReduce 操作（大约 5 到 10 次），来建立索引。使用 MapReduce（替换上一个特别设计的、分布式处理的索引程序）带来这些好处：
-<ul>
-<li>简化的代码：索引部分的代码变得简单、小巧、易于理解；</li>
-<li>灵活性：MapReduce 库的性能已经足够好，因此可以将概念上不相关的计算步骤分开处理，减少数据传递的额外开销；</li>
-<li>操作管理的简化：因为由机器失效、机器处理速度缓慢、以及网络的瞬间阻塞等引起的绝大部分问题都已经由 MapReduce 库解决了，不再需要操作人员的介入了。另外，我们可以通过在索引系统集群中增加机器的简单方法提高整体处理性能。</li>
-</ul>
-</li>
-</ul>
-<h3 id="其他应用场景" class="heading-element"><span>5.2 其他应用场景</span>
-  <a href="#%e5%85%b6%e4%bb%96%e5%ba%94%e7%94%a8%e5%9c%ba%e6%99%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h3><ul>
-<li>数据清洗和预处理：MapReduce 可以用于处理大规模数据集的清洗和预处理，包括数据去重、数据过滤、数据格式转换等操作；</li>
-<li>日志分析和异常检测：MapReduce 可以用于分析大规模日志数据，检测异常行为、故障事件和系统性能问题；</li>
-<li>图算法和社交网络分析：MapReduce 可以应用于图算法和社交网络分析，包括图的遍历、最短路径计算、社区发现等操作；</li>
-<li>文本挖掘和信息抽取：MapReduce 可以用于处理文本数据，进行信息抽取、实体识别、主题建模等自然语言处理任务。</li>
-</ul>
-<h2 id="faq" class="heading-element"><span>6 FAQ</span>
-  <a href="#faq" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><blockquote>
-<p>当你调用emit时，数据会发生什么变化？emit函数在哪运行？</p>
-<p>首先看，这些函数在哪运行。这里可以看MapReduce论文的图1。现实中，MapReduce运行在大量的服务器之上，我们称之为worker服务器或者worker。同时，也会有一个Master节点来组织整个计算过程。这里实际发生的是，Master服务器知道有多少输入文件，例如5000个输入文件，之后它将Map函数分发到不同的worker。所以，它会向worker服务器发送一条消息说，请对这个输入文件执行Map函数吧。之后，MapReduce框架中的worker进程会读取文件的内容，调用Map函数并将文件名和文件内容作为参数传给Map函数。worker进程还需要实现emit，这样，每次Map函数调用emit，worker进程就会将数据写入到本地磁盘的文件中。所以，Map函数中调用emit的效果是在worker的本地磁盘上创建文件，这些文件包含了当前worker的Map函数生成的所有的key和value。</p>
-<p>所以，Map阶段结束时，我们看到的就是Map函数在worker上生成的一些文件。之后，MapReduce的worker会将这些数据移动到Reduce所需要的位置。对于一个典型的大型运算，Reduce的入参包含了所有Map函数对于特定key的输出。通常来说，每个Map函数都可能生成大量key。所以通常来说，在运行Reduce函数之前。运行在MapReduce的worker服务器上的进程需要与集群中每一个其他服务器交互来询问说，看，我需要对key=a运行Reduce，请看一下你本地磁盘中存储的Map函数的中间输出，找出所有key=a，并通过网络将它们发给我。所以，Reduce worker需要从每一个worker获取特定key的实例。这是通过由Master通知到Reduce worker的一条指令来触发。一旦worker收集完所有的数据，它会调用Reduce函数，Reduce函数运算完了会调用自己的emit，这个emit与Map函数中的emit不一样，它会将输出写入到一个Google使用的共享文件服务中。</p>
-<p>有关输入和输出文件的存放位置，这是我之前没有提到的，它们都存放在文件中，但是因为我们想要灵活的在任意的worker上读取任意的数据，这意味着我们需要某种网络文件系统（network file system）来存放输入数据。所以实际上，MapReduce论文谈到了GFS（Google File System）。GFS是一个共享文件服务，并且它也运行在MapReduce的worker集群的物理服务器上。GFS会自动拆分你存储的任何大文件，并且以64MB的块存储在多个服务器之上。所以，如果你有了10TB的网页数据，你只需要将它们写入到GFS，甚至你写入的时候是作为一个大文件写入的，GFS会自动将这个大文件拆分成64MB的块，并将这些块平均的分布在所有的GFS服务器之上，而这是极好的，这正是我们所需要的。如果我们接下来想要对刚刚那10TB的网页数据运行MapReduce Job，数据已经均匀的分割存储在所有的服务器上了。如果我们有1000台服务器，我们会启动1000个Map worker，每个Map worker会读取1/1000输入数据。这些Map worker可以并行的从1000个GFS文件服务器读取数据，并获取巨大的读取吞吐量，也就是1000台服务器能提供的吞吐量。</p>
-</blockquote>
-<h2 id="参考" class="heading-element"><span>7 参考</span>
-  <a href="#%e5%8f%82%e8%80%83" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h2><p><a href="https://pdos.csail.mit.edu/6.824/papers/mapreduce.pdf"target="_blank" rel="external nofollow noopener noreferrer">paper:MapReduce<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
-<p><a href="https://pdos.csail.mit.edu/6.824/schedule.html"target="_blank" rel="external nofollow noopener noreferrer">MIT 6.824<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
-<p><a href="https://zhuanlan.zhihu.com/p/525032069"target="_blank" rel="external nofollow noopener noreferrer">知乎 【分布式】MapReduce论文笔记<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
-<p><a href="https://zhuanlan.zhihu.com/p/34849261"target="_blank" rel="external nofollow noopener noreferrer">知乎 Google MapReduce 论文详解<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
 ]]></description></item></channel></rss>

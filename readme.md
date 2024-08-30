@@ -1,11 +1,13 @@
 # ZephyrHe
 
-共计 128 篇文章
+共计 130 篇文章
 
 ## 2024
 
-共计 68 篇文章
+共计 70 篇文章
 
+- 08-30 [【论文阅读笔记】Grove: a Separation-Logic Library for Verifying Distributed Systems (Extended Version)](https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/ "2024-08-30 00:00:00")
+- 08-30 [【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现](https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/ "2024-08-30 00:00:00")
 - 08-11 [【论文阅读笔记】ZooKeeper: Wait-free coordination for Internet-scale systems](https://hezephyr.github.io/posts/08.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0zookeeper-wait-free-coordination-for-internet-scale-systems/ "2024-08-11 00:00:00")
 - 08-11 [【MIT 6.5840(6.824) 】Lab3:Raft 设计实现](https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/ "2024-08-11 00:00:00")
 - 08-02 [好用的工具](https://hezephyr.github.io/posts/03.%E7%BD%91%E7%BB%9C%E5%B7%A5%E5%85%B7/ "2024-08-02 00:00:00")
