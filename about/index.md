@@ -25,8 +25,7 @@ int main() {
 ## 关于博客
 
 写博客的初衷不是为了炫耀所知，而是为了记录无知。
-博客内容主要是以系统架构、后端开发为主，分享一些学习笔记、技巧、开发教程等等。如果你对我的博客内容感兴趣或者有任何建议，欢迎与我一起讨论，共同进步。也欢迎关注我的github。
-[![Follow me on GitHub](https://img.shields.io/github/followers/Lruihao.svg?style=social&amp;label=Followers)](https://github.com/Lruihao) 或者通过以下方式关注我的博客。
+博客内容主要是以系统架构、后端开发为主，分享一些学习笔记、技巧、开发教程等等。如果你对我的博客内容感兴趣或者有任何建议，欢迎与我一起讨论，共同进步。也欢迎关注我的Github[![Follow me on GitHub](https://img.shields.io/github/followers/hezephyr)](https://github.com/hezephyr) 或者通过以下方式关注我的博客。
 
 - [RSS](https://hezephyr.github.io/index.xml)
 - [CSDN](https://pursuit.blog.csdn)
