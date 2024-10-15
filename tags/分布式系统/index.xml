@@ -1,5 +1,484 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>分布式系统 - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</link><description>分布式系统 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 30 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现</title><link>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
-  <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>分布式系统 - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/</link><description>分布式系统 - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Mon, 14 Oct 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F/" rel="self" type="application/rss+xml"/><item><title>分布式系统理论详解：CAP、BASE、PACELC</title><link>https://hezephyr.github.io/posts/10.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%90%86%E8%AE%BA/</link><pubDate>Mon, 14 Oct 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/10.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%90%86%E8%AE%BA/</guid><description><![CDATA[<h2 id="cap理论" class="heading-element"><span>1 CAP理论</span>
+  <a href="#cap%e7%90%86%e8%ae%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>CAP理论是分布式系统领域中被广泛讨论的一个理论，由 Eric Brewer 在 2000 年提出，一般系统架构师会把其作为衡量系统设计的准则，其中CAP是一致性（Consistency）、可用性（Availability）和分区容错性（Partition tolerance）的缩写。</p>
+<ul>
+<li><strong>一致性（C）</strong>：这里特指强一致性，即任何时刻都可以读到最近一次成功更新的副本数据。</li>
+<li><strong>可用性（A）</strong>：指系统中一部分节点故障后，系统还能提供服务。</li>
+<li><strong>分区容错性（P）</strong>：指系统能够在网络分区（网络故障导致不同节点分布在不同的子网络，各个子网络内网络正常）的情况下还能提供服务。</li>
+</ul>
+<p>它指出在一个分布式系统中，<font color="red">C、A和P这三个特性不能同时被满足，最多只能同时满足其中的两个</font>。</p>
+<blockquote>
+<p>反证例子：</p>
+<p>该系统由 A、B、C 三个节点构成，因 C 节点故障引发网络分区问题。若要完全满足 CAP 理论中的一致性要求，当客户端进行数据写入时，A 节点必须等待 C 节点同步完成，方可向客户端返回写入成功。</p>
+<p>然而此时 C 节点已故障，数据注定无法写入。在此情况下，若出现读取该数据的请求，仅有两种应对之策：</p>
+<ol>
+<li>放弃可用性，即等待所有节点数据达成一致状态，确保任意节点返回的数据相同，但此时系统必然无法及时响应；</li>
+<li>放弃一致性，向客户端返回已写入 A、B 节点的新数据，不过后续 C 节点恢复后，当请求到达 C 节点时，会出现读取到的数据不一致的情况。</li>
+</ol>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014210027442.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014210027442.png?size=small" data-sub-html="<h2>image-20241014210027442</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014210027442.png" alt="image-20241014210027442" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014210027442.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014210027442.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014210027442.png?size=large 2x" data-title="image-20241014210027442" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</blockquote>
+<p>所以在实际的分布式系统设计中，我们需要根据具体的业务需求来进行取舍。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014205142852.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014205142852.png?size=small" data-sub-html="<h2>image-20241014205142852</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014205142852.png" alt="image-20241014205142852" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014205142852.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014205142852.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014205142852.png?size=large 2x" data-title="image-20241014205142852" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<ol>
+<li><font color="red">选择 AP 意味着舍弃强一致性，以保证高可用性和分区容错性</font>。这种设计在大部分分布式系统中较为常见，在 AP 架构下，系统能够快速响应客户端的请求，即使在网络分区的情况下，也能尽量保证部分节点可用，从而为用户提供不间断的服务。然而，由于放弃了强一致性，可能会导致不同节点上的数据在同一时刻不一致，但可以通过后续的同步过程逐渐达到最终一致性。</li>
+<li><font color="red">选择 CP 意味着舍弃高可用性，以保证强一致性和分区容错性</font>。在这种架构下，系统会优先确保数据的一致性，即使在网络分区的情况下，也会暂停部分节点的服务以保证数据的一致性。例如，一些数据库会在网络分区发生时，停止对不一致数据的读写操作，直到所有节点的数据达成一致。这种架构适用于对数据一致性要求极高的场景，如金融交易系统等。</li>
+<li><font color="red">选择CA意味着舍弃P，以保证高可用性和强一致性</font>。这种情况在分布式系统中几乎不存在，因为网络分区在分布式系统中是必然的，P是分布式系统的前提。</li>
+</ol>
+<blockquote>
+<p>从图中我们可以发现，关系型数据库多为CA架构，<font color="red">因为关系型数据库通常采用集中式或主从复制的架构，在设计上更注重数据的一致性和事务的完整性，对于可用性也有较高的要求</font>，所以传统的关系型数据库通常在单一数据中心或较小规模的环境下运行，网络分区的情况相对较少。而在分布式系统中，由于节点众多且分布在不同的物理位置，网络分区的可能性大大增加，所以很难同时保证高可用性和强一致性，因此在 AP 和 CP 中较少出现关系型数据库。</p>
+</blockquote>
+<h2 id="base-理论" class="heading-element"><span>2 BASE 理论</span>
+  <a href="#base-%e7%90%86%e8%ae%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>BASE理论是由 eBay 的架构师 Dan Pritchett 在 2008 年提出的，能适用于大型高可用可扩展的分布式系统。该理论提出了三个概念：</p>
+<ol>
+<li><code>BA</code>：<code>Basically Available</code>（基本可用）。当系统出现故障或意外情况时，允许放弃掉部分可用性，保证核心功能可用，例如大促时降级策略等。</li>
+<li><code>S</code>：<code>Soft state</code>（软状态）。允许系统存在中间状态，并且该中间状态不会影响系统整体可用性。</li>
+<li><code>E</code>：<code>Eventually consistent</code>（最终一致性）。指系统中的所有数据副本经过一定时间后，最终能够达到一致的状态。<font color="red">即意味着中间状态，只会短暂存在，在一定时间后，肯定会变成最终状态</font>。</li>
+</ol>
+<blockquote>
+<p>在彻底认识BASE理论之前，我们需要回顾传统关系型数据库的<code>ACID</code>理论，即：</p>
+<ul>
+<li><strong>“Atomicity”（原子性）</strong>：将组成事务的多个操作视作一个不可分割的整体，要么全部成功，要么全部失败，不能仅部分生效。</li>
+<li><strong>“Consistency”（一致性）</strong>：事务执行前后，数据库只能从一个一致状态转变为另一个一致状态，即事务执行对整体数据产生的变化是一致的。</li>
+<li><strong>“Isolation”（隔离性）</strong>：多事务并发执行时，各事务之间不能被其他事务干扰，就如同每个事务都在独立的沙箱中执行。</li>
+<li><strong>“Durability”（持久性）</strong>：一旦事务提交，无论发生何种状况（如故障、宕机等），该事务对数据的变更都会永久保存。</li>
+</ul>
+</blockquote>
+<p>BASE不同于ACID的强一致性模型，而是通过牺牲强一致性来获得可用性，并允许数据在一段时间内是不一致的，但最终达到一致状态。</p>
+<blockquote>
+<p>如果<code>ACID</code>为分布式数据库提供了一致性选择，那如何在分布式数据库里保证可用性呢？一个答案就是<code>BASE</code>理论。</p>
+</blockquote>
+<p>所以很多人会认BASE理论是在CAP基础上，满足AP后对C方面的拓展与延伸，但这其实并不完全正确，<font color="red">BASE并非CAP的延伸理论，它是分布式场景中ACID理论的替代品</font>。CAP的一致性，关注的是数据一致性；BASE的一致性，关注的是状态一致性，与ACID中的一致性是相同概念。</p>
+<h2 id="pacelc理论" class="heading-element"><span>3 PACELC理论</span>
+  <a href="#pacelc%e7%90%86%e8%ae%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>PACELC（前者是CAP，后者是ELC，else-&gt;latency or consistency）理论才是CAP理论的扩展，由Daniel J. Abadi提出，进一步拓展了CAP理论。它考虑的是这样一个问题：系统在大部分时间下，分区都是平稳运行的，并不会出错，在这种情况下，系统设计要均衡的其实就是延迟与数据一致性的问题，为了保证数据一致性，写入与读取的延迟就会增高。这就引出了 PACELC 理论。</p>
+<blockquote>
+<p>如果有分区(P)，系统就必须在可用性（A）和一致性（C）之间权衡; 否则当系统运行在无分区情况下,系统需要在延迟（L）和 一致性（C）之间权衡。</p>
+</blockquote>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014231953269.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014231953269.png?size=small" data-sub-html="<h2>image-20241014231953269</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014231953269.png" alt="image-20241014231953269" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014231953269.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014231953269.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241014231953269.png?size=large 2x" data-title="image-20241014231953269" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>如今的分布式系统设计指导理论应该采用PACELC理论，来替代CAP理论，因为它不仅关注网络分区的极端情况，还涵盖了系统在正常运行时的表现。即使没有网络分区，系统设计依然要考虑在延迟和一致性上的取舍。对于现代分布式系统而言，延迟与一致性之间的平衡往往是影响用户体验和系统性能的关键问题。</p>
+]]></description></item><item><title>【论文阅读笔记】Bigtable: A Distributed Storage System for Structured Data</title><link>https://hezephyr.github.io/posts/11.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0bigtable/</link><pubDate>Sun, 13 Oct 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/11.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0bigtable/</guid><description><![CDATA[<h2 id="简介" class="heading-element"><span>1 简介</span>
+  <a href="#%e7%ae%80%e4%bb%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Bigtable 是 Google 设计的用于<font color="red">管理结构化数据</font>的分布式存储系统，可扩展到数千台服务器存储 PB 级数据。<font color="red">它不是关系数据库，而是一种稀疏、分布式、持久性多维排序映射（K/V）</font>。</p>
+<p>Bigtable被 60 多个 Google 产品使用，涵盖不同数据规模和延迟要求的应用，这得益于 BigTable 提供的简单数据模型可以使<strong>客户端动态控制</strong>数据的<strong>布局和格式</strong>。</p>
+<h2 id="数据模型" class="heading-element"><span>2 数据模型</span>
+  <a href="#%e6%95%b0%e6%8d%ae%e6%a8%a1%e5%9e%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>一个 Bigtable 就是一个<strong>稀疏、分布式、持久</strong>的<strong>多维有序</strong>映射表（map），数据通过<strong>行键、列键和一个时间戳</strong>进行索引，表中的每个数据项都是<strong>不作理解的字节数组</strong>。形如：</p>
+<blockquote>
+<p><code>(row:string, column:string, time:int64) -&gt; string</code></p>
+</blockquote>
+<p>假设我们想要拷贝一个可能被很多项目都使用的、很大的网页集合以及相关的信息，让我们把这个特定的表称为Webtable。在Webtable当中，我们用网页的 URL 作为行键，网页某些信息作为列键，将网页内容存储在 <code>contents:</code> 列，并记录抓取网页时对应的时间戳，最终存储布局如下图所示。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_data_model?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_data_model?size=small" data-sub-html="<h2>image-20241013134206507</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_data_model" alt="image-20241013134206507" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_data_model?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_data_model?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_data_model?size=large 2x" data-title="image-20241013134206507" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h3 id="行" class="heading-element"><span>2.1 行</span>
+  <a href="#%e8%a1%8c" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>行键为任意字符串（最大64KB，多数用户使用的在10 - 100字节），<font color="red">单行数据读/写操作是原子的</font>，这里类似Mysql的行锁，锁粒度并没有达到列级别，便于推断并发更新同一行时系统行为。</p>
+<p>Bigtable按行键的字典序组织数据，动态划分行范围，<strong>每个行范围是一个tablet</strong>，作为请求分散和负载均衡的最小单位，这样读取小行范围高效，只需与少量机器通信，而且可以选择合适的行键有效的利用数据的位置相关性。</p>
+<p>例如Webtable中，反转URL的hostname字段，相同域的页面存为连续行，如<code>www.google.com</code>存为<code>com.google.www</code>，可提高主机和域分析效率。</p>
+<h3 id="列族" class="heading-element"><span>2.2 列族</span>
+  <a href="#%e5%88%97%e6%97%8f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>多个列键可以组织成列族，<font color="red">列族是访问控制的基本单位</font>。一般来说，存放在同一列族的数据通常都属于同一类型。</p>
+<p>必须先创建一个列族，才能向这个列族内的列写入数据，创建完成后，就可以使用其中的列键。一张tablet的列族最多几百个，且很少改变，但列的数量没有限制。</p>
+<p><strong>列键的格式</strong>：<code>列族:限定词</code>。例如Webtable中有一个<strong>列族</strong>是<code>anchor</code>，这个列族的每一个列键代表一个锚链接，<code>anchor</code>列族的<strong>限定值</strong>是引用这个网页的站点名，对应的数据项内容是链接的文本。</p>
+<p><strong>访问控制、磁盘和内存记账都是在列族层面做的</strong>。</p>
+<h3 id="时间戳" class="heading-element"><span>2.3 时间戳</span>
+  <a href="#%e6%97%b6%e9%97%b4%e6%88%b3" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><font color="red">Bigtable中的每个数据均可存储多个版本，不同版本通过时间戳索引</font>。 时间戳为64位整数，可由Bigtable指定，此时为毫秒级的真实时间戳；也可由客户端应用指定，为避免冲突，应用必须确保时间戳的唯一性。</p>
+<p>为了减轻多个版本数据的管理负担，我们对每一个列族配有两个设置参数，使Bigtable能够自动进行垃圾回收。</p>
+<ul>
+<li>保留最后的$N$个版本；</li>
+<li>保留最近某段时间内的版本。</li>
+</ul>
+<p>在Webtable中，每个页面的时间戳为该页面被爬取时的时间，我们设置只保留最后的3个版本。</p>
+<h2 id="api" class="heading-element"><span>3 API</span>
+  <a href="#api" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Bigtable API提供了创建和删除表和列族的功能。它还提供用于修改集群、表和列族元数据的功能，比如如访问控制权限。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_API?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_API?size=small" data-sub-html="<h2>image-20241013155434953</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_API" alt="image-20241013155434953" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_API?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_API?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/Bigtable_API?size=large 2x" data-title="image-20241013155434953" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>Bigtable还支持一些其它的特性，利用这些特性，用户可以对数据进行更复杂的处理。</p>
+<ol>
+<li>支持单行上的事务处理。</li>
+<li>允许把数据项做整数计数器：<code>Increment(row_key, column_key, increment)</code>。</li>
+<li>Bigtable允许用户在服务器地址空间上执行脚本程序。</li>
+<li>Bigtable提供一些Wrapper类，其可以作为MapReduce框架的输入输出。</li>
+</ol>
+<h2 id="基础构建" class="heading-element"><span>4 基础构建</span>
+  <a href="#%e5%9f%ba%e7%a1%80%e6%9e%84%e5%bb%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Bigtable 构建在其他几个 Google 的基础设施之上。</p>
+<ul>
+<li>GFS</li>
+<li>SSTable</li>
+<li>Chubby</li>
+</ul>
+<h3 id="gfs" class="heading-element"><span>4.1 GFS</span>
+  <a href="#gfs" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Bigtable使用GFS<strong>存储日志文件和数据文件</strong>，<font color="red">Bigtable集群通常和其他一些分布式应用共享一个服务器资源池</font>，依靠集群管理系统做任务调度、资源管理、故障处理和机器监控等。</p>
+<h3 id="sstable" class="heading-element"><span>4.2 SSTable</span>
+  <a href="#sstable" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Bigtable <strong>内部使用 Google 的 SSTable 格式存储数据</strong>。SSTable是一个持久化、排序的、不可更改的Map结构。从内部看，SSTable是一系列的数据块，并通过块索引（存储在SSTable的末尾）定位，块索引在打开SSTable时加载到内存中，一次查询只需要一次磁盘寻址：首先在<strong>内存</strong>中通过二分查找找到块索引，然后定位到数据块在<strong>磁盘</strong>中的位置，从<strong>磁盘</strong>读取相应的数据。<font color="red">也可以直接将整个SSTable映射到内存</font>，这样查询就不需要磁盘操作了。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013160712962.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013160712962.png?size=small" data-sub-html="<h2>image-20241013160712962</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013160712962.png" alt="image-20241013160712962" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013160712962.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013160712962.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013160712962.png?size=large 2x" data-title="image-20241013160712962" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h3 id="chubby" class="heading-element"><span>4.3 Chubby</span>
+  <a href="#chubby" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Bigtable还依赖一个<strong>高可用的、持久的分布式锁服务Chubby</strong>（类Zookeeper）。Chubby服务维护5个活动副本，其中一个选为Master并对外提供服务，并通过Paxos算法来保证副本一致性。</p>
+<p>另外Chubby提供一个包含<strong>目录和小文件</strong>命名空间，<strong>每个目录或文件都可以作为一个锁</strong>，读或写一个文件是<strong>原子的</strong>。Chubby客户端维护了这些文件的一致性缓存。</p>
+<p>每个 Chubby 客户端都会和 Chubby 服务维持一个 Session。当一个客户端的租约到期 并且无法续约时，这个 Session 就失效了，失效会失去它之前的锁和打开的文件句柄。Chubby 客户端还可以在 Chubby 文件和目录上注册回调函数，当文件/目录有变化或者 Session 过期时，就会收到通知。</p>
+<p>Bigtable使用Chubby来完成几个任务：</p>
+<ol>
+<li>确保任意时间只有一个活动Master副本。</li>
+<li>存储数据的引导位置（根tablet）。</li>
+<li>发现Tablet服务器并最终确定tablet服务器死亡。</li>
+<li>存储Bigtable模式信息（每个表的列族信息）。</li>
+<li>存储访问控制列表等</li>
+</ol>
+<blockquote>
+<p><font color="red">Chubby不可用 = Bigtable不可用</font></p>
+</blockquote>
+<h2 id="实现" class="heading-element"><span>5 实现</span>
+  <a href="#%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Bigtable包括3个主要的组件：</p>
+<ol>
+<li>链接到每个客户端的库。</li>
+<li>1个master服务器。</li>
+<li>多个tablet服务器。</li>
+</ol>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/BigTable_Component?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/BigTable_Component?size=small" data-sub-html="<h2>image-20241013203213146</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/BigTable_Component" alt="image-20241013203213146" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/BigTable_Component?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/BigTable_Component?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/BigTable_Component?size=large 2x" data-title="image-20241013203213146" class="suffix-invalid suffix-invalid__small suffix-invalid__large" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>master服务器职责：</p>
+<ul>
+<li>将tablet分配给tablet服务器。</li>
+<li>检测tablet服务器的过期及添加事件。</li>
+<li>对tablet服务器负载均衡。</li>
+<li>对GFS中的文件的进行垃圾回收。</li>
+<li>处理模式变化，如创建表、创建 / 删除列族。</li>
+</ul>
+<p>tablet服务器职责：</p>
+<ul>
+<li>管理一组tablets（10~1000个tablet）。</li>
+<li>处理对 tablets 的读写请求。</li>
+<li>当 tablets 增长过大（100 - 200MB）时进行分裂。</li>
+</ul>
+<p><font color="red">客户端不依赖master获取 tablet 位置信息，直接与 tablet 服务器进行读写通信</font>，故Master的负载很低。</p>
+<p>每个 Bigtable 集群会有很多张 table，每张 table 会有很多 tablets，每个 tablets 包 含一个行键范围内的全部数据。 初始时每个 table 只包含一个 tablet。当 table 逐渐变大时，它会自动分裂成多个 tablets，<strong>默认情况下每个 tablet 大约 100-200MB</strong>。</p>
+<h3 id="tablet-位置" class="heading-element"><span>5.1 Tablet 位置</span>
+  <a href="#tablet-%e4%bd%8d%e7%bd%ae" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>使用<font color="red">类似B+树的三层结构</font>存储Tablet的位置信息，如下图所示：</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013204350023.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013204350023.png?size=small" data-sub-html="<h2>image-20241013204350023</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013204350023.png" alt="image-20241013204350023" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013204350023.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013204350023.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013204350023.png?size=large 2x" data-title="image-20241013204350023" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<ul>
+<li>第一层：存储在<strong>Chubby 中的文件</strong>，其中包含了根tablet的位置。所以一旦Chubby服务不可用，整个Bigtable丢失了根tablet的位置，整个服务就不可用。</li>
+<li>第二层：<strong>根tablet</strong>，实际上就是元数据表的第一个tablet，保存着元数据表其他tablet的位置信息，根tablet很特殊，为了保证整个树的深度不变，根tablet从不分裂。</li>
+<li>第三层：<strong>其他元数据表的tablet</strong>，每个都包含了一组用户tablet位置信息集合。这些tablet与根tablet共同构成整个元数据表。</li>
+</ul>
+<p>在元数据表内，<font color="red">每个Tablet的位置信息都存储在一个行键下，行键是通过tablet所在表的标识符和最后一行生成的</font>。</p>
+<p>元数据表每一行都存储约1KB内存数据，即在一个128MB的元数据表中，采用这种3层存储结构，可寻址$2^34$个Tablets。</p>
+<p>用户程序使用的库会缓存Tablet的位置信息，如果某个Tablet位置信息没有缓存或缓存失效，那么客户端会在树状存储结构中递归查询tablet位置信息，包括：</p>
+<ol>
+<li>请求Chubby提供根tablet位置。</li>
+<li>请求根tablet提供其他元数据tablet位置。</li>
+<li>请求元数据tablet获取用户tablet位置。</li>
+</ol>
+<p>尽管tablet的位置信息是存放在内存里的，对它的操作不必访问GFS文件系统，但通常还是会预取Tablet地址来进一步减少访问的开销。</p>
+<h3 id="tablet-分配" class="heading-element"><span>5.2 Tablet 分配</span>
+  <a href="#tablet-%e5%88%86%e9%85%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p><strong>每个 tablet 每次只会分配给一个 tablet服务器</strong>。这个由master来控制分配，master会跟踪：</p>
+<ul>
+<li>tablet服务器集的存活状态（通过Chubby跟踪，启动时会在<strong>在特定的 Chubby 目录下创建和获取一个名字唯一的独占锁</strong>。 master 通过<strong>监听这个目录</strong>来发现 tablet服务器集）。</li>
+<li>tablet到tablet服务器的当前分配。</li>
+<li>当前为分配的tablet。</li>
+</ul>
+<p>当某个 Tablet 未分配时，master 通过向可用的tablet服务器发送加载请求，将tablet分配给该tablet服务器。</p>
+<p>当tablet服务器不提供服务时，master会通过<font color="red">轮询Chubby上tablet服务器文件锁的状态</font>检查出来，确认后会删除其在Chubby上的文件锁，使其不再提供服务。删除后，master就把之前分配给它的所有的tablet放入未分配的tablet集合中。</p>
+<p>当集群管理系统启动了一个master服务器之后，master首先要了解当前tablet的分配状态，之后才能够修改分配状态。master服务器在启动的时候执行以下步骤：</p>
+<ol>
+<li>从Chubby获取一个唯一的master锁，保证Chubby只有一个master实例。</li>
+<li>扫描Chubby的<code>servers</code>目录，获取当前正在运行的服务器列表。</li>
+<li>和所有的正在运行的tablet服务器通信，获取每个tablet服务器上tablet的分配信息。</li>
+<li>扫描元数据表获取所有的tablet的集合。在扫描的过程中，如果发现还有未分配的tablet，master就将这个tablet加入未分配的tablet集合并等待合适的时机分配。</li>
+</ol>
+<p><font color="red">一个复杂的情况是在分配元数据tablet之前，无法对元数据表表进行扫描</font>。</p>
+<p>因此，如果在步骤3中发现根tablet还没有被分配出去，那master就要先把它放到未分配的tablet集合，然后去执行步骤4，这样就保证了根tablet会被分配出去。</p>
+<p>由于根tablet包括了所有元数据tablet的名字，因此master服务器扫描完根tablet以后，就得到了所有的元数据表表的Tablet的名字了。</p>
+<p>只有在发生以下情况时，当前的 tablets 集合才会有变化：</p>
+<ol>
+<li>创建或删除一个 table。</li>
+<li>两个 tablets 被合并了</li>
+<li>一个 tablet 分裂成两个小的tablet。</li>
+</ol>
+<p>Master可以跟踪记录所有这些事件，因为除了最后一个事件外的两个事件都是由它启动的。</p>
+<p><font color="red">tablet分裂事件需要特殊处理，因为它是由Tablet服务器启动</font>。在分裂操作完成之后，tablet服务器将新的tablet信息记录到元数据表，然后提交这次分裂。提交后，master会收到通知。如果通知丢失（由于tablet服务器或者master挂掉），master会在它下次要求一个tablet服务器加载tablet时发现，这个 tablet 服务器会将这次分裂信息通知给 master，因为它在元数据表中发现的 tablets 项只覆盖 master 要求它加载的 tablets 一部分。</p>
+<h3 id="为-tablet-提供服务" class="heading-element"><span>5.3 为 tablet 提供服务</span>
+  <a href="#%e4%b8%ba-tablet-%e6%8f%90%e4%be%9b%e6%9c%8d%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>如下图所示，Tablet的持久化状态信息保存在GFS上。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013215922693.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013215922693.png?size=small" data-sub-html="<h2>image-20241013215922693</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013215922693.png" alt="image-20241013215922693" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013215922693.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013215922693.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013215922693.png?size=large 2x" data-title="image-20241013215922693" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>更新会提交到一个提交日志文件，其中保存了redo记录，更新操作分2类：</p>
+<ul>
+<li>最近提交的更新操作会存放在一个排序缓存中，称为<code>memtable</code>。</li>
+<li>其他老一些的更新存储在 SSTable 中，落地在GFS上。</li>
+</ul>
+<p>为了恢复一个tablet，tablet服务器从元数据表当中读取这个tablet的元数据。《这个元数据包含了SSTable列表，<font color="red">其中每个SSTable都包括一个tablet和一个重做点（redo point）的集合，这些redo point是一些指针，它们指向那些可能包含tablet所需数据的重做日志</font>。服务器把SSTable索引读入内存，执行重做点以后的所有已经提交的更新来重建memtable。</p>
+<p>当一个写操作到达tablet服务器时，它会检查写操作是否格式正确且发送者是否有权限执行此操作。鉴权的实现方式是<font color="red">从Chubby文件读取允许的写者列表</font>，这个Chubby文件通常总能够在Chubby客户端缓存中找到。</p>
+<p>一个有效的变更会被写入提交日志中。批量提交是为了优化许多小变更操作的吞吐量。<font color="red">在写操作已经被提交以后，它的内容就会被插入到memtable</font>。</p>
+<p>一次读操作到达 tablet server 时，也会执行类似的格式检查和鉴权。一个有效地读操作是在一系列SSTable和memtable的合并视图上执行的（都是字典序排序，可高效生成合并视图）。</p>
+<p><font color="red">当tablet发生合并或分裂操作时，正在到达的读写操作仍然可以继续进行</font>。</p>
+<h3 id="压缩" class="heading-element"><span>5.4 压缩</span>
+  <a href="#%e5%8e%8b%e7%bc%a9" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>####.1 小压缩</p>
+<p>当<code>memtable</code>大小达到一个阈值时，<code>memtable</code>会被冻结，并创建一个新的<code>memtable</code>，这个冻结的<code>memtable</code>会转换为SSTable并写入GFS，这个过程称为<font color="red">小压缩</font>。</p>
+<p>小压缩过程为了减少tablet服务器的内存使用量，以及减少在灾难恢复时从提交日志读取的数据量。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013221244565.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013221244565.png?size=small" data-sub-html="<h2>image-20241013221244565</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013221244565.png" alt="image-20241013221244565" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013221244565.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013221244565.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013221244565.png?size=large 2x" data-title="image-20241013221244565" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>####.2 主压缩</p>
+<p>每次小压缩都会创建一个新SSTable，如果不加额外处理，SSTable数量过多而影响读操作（需要合并多个SSTable才能读到需要的内容）。所以Bigtable会定期合并SSTable文件来限制其数量，这个过程称为<font color="red">主压缩</font>。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013222419239.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013222419239.png?size=small" data-sub-html="<h2>image-20241013222419239</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013222419239.png" alt="image-20241013222419239" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013222419239.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013222419239.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013222419239.png?size=large 2x" data-title="image-20241013222419239" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>非主压缩所产生的SSTable会包含特殊的删除信息（entry），用于标记其中已经被删除的数据 —— 实际上这些数据还没有被真正删除，只是标记为已删除。而 主压缩产生的 SSTable 不会包含这些删除信息或者已删除的数据。</p>
+<p>BigTable定期检查它的所有tablet，并执行主压缩操作。<font color="red">这些主压缩过程可以允许BigTable及时回收被删除数据占用的资源，并且保证被删除数据在一定时间内就可以及时的从系统中消失</font>，这对于一些存储敏感数据的服务来说是非常重要的。</p>
+<h2 id="优化" class="heading-element"><span>6 优化</span>
+  <a href="#%e4%bc%98%e5%8c%96" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="局部性组" class="heading-element"><span>6.1 局部性组</span>
+  <a href="#%e5%b1%80%e9%83%a8%e6%80%a7%e7%bb%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>客户端可以将多个列族组合成一个局部性组，<font color="red">每个tablet会为每个局部性组生成一个单独的SSTable</font>，将一般不会一起访问的列族划分到不同的局部性组能提高读取效率。</p>
+<p>此外，可以基于局部性组<strong>专门设定一些调优参数</strong>，如是否存储于内存等。</p>
+<h3 id="压缩-1" class="heading-element"><span>6.2 压缩</span>
+  <a href="#%e5%8e%8b%e7%bc%a9-1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>客户端可以控制某个局部性组的SSTable 是否需要压缩，以及用什么格式压缩。很多客户端都使用一种自定义的双通压缩算法：</p>
+<ul>
+<li>先使用 Bentley-Mcilroy 算法压缩大窗口内的长公共前缀。</li>
+<li>再使用一个快速算法压缩 16KB 窗口内的重复字符串。</li>
+</ul>
+<h3 id="缓存" class="heading-element"><span>6.3 缓存</span>
+  <a href="#%e7%bc%93%e5%ad%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>tablet服务器可以使用二级缓存策略来提高读操作性能。两级的缓存针对性不同：</p>
+<ul>
+<li>第一级缓存为<strong>扫描缓存</strong>：缓存tablet服务器通过SSTable接口获取的Key-Value对（时间局部性：适用于<strong>频繁访问相同数据</strong>的应用）</li>
+<li>第二级缓存为<strong>块缓存</strong>：缓存从GFS读取的SSTable块（空间局部性：适用于<strong>连续访问相邻（相近）数据</strong>的应用。）</li>
+</ul>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013224524700.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013224524700.png?size=small" data-sub-html="<h2>image-20241013224524700</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013224524700.png" alt="image-20241013224524700" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013224524700.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013224524700.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013224524700.png?size=large 2x" data-title="image-20241013224524700" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<h3 id="布隆过滤器" class="heading-element"><span>6.4 布隆过滤器</span>
+  <a href="#%e5%b8%83%e9%9a%86%e8%bf%87%e6%bb%a4%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>一个读操作必须读取构成tablet状态的所有SSTable数据，故如果这些SSTable不在内存便需多次访问磁盘。我们通过允许客户端对特定局部性组的SSTable指定布隆过滤器来降低访问次数。<strong>Bloom 过滤器可以判断一个 SSTable 是否包含指定行/列对对应的 数据</strong>。对于特定的应用来说，给 tablet服务器增加少量内存用于存储 Bloom 过滤器，就 可以<strong>极大地减少读操作的磁盘访问</strong>。</p>
+<p>使用Bloom过滤器也可以隐式的达到了当查询的行和列不存在时，不需要访问磁盘。</p>
+<h3 id="commit日志实现" class="heading-element"><span>6.5 Commit日志实现</span>
+  <a href="#commit%e6%97%a5%e5%bf%97%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>如果每个tablet操作的Commit日志单独写一个文件，会导致日志文件数过多，会导致底层 GFS 大量文件的并发写。另外，每个 tablet 一个 log 文件的设计还会降低组提交（group commit，批量提交）优化的有效性，因为每个组都会很小。</p>
+<p>因此，为了克服以上问题，<font color="red">我们为每个 tablet服务器维护一个commit log，将属于这个 tablet服务器的不同的 tablet 操作都写入这同一个物理上的 log 文件</font>。</p>
+<p>这种方式使得常规操作的性能得到了很大提升，但是，它使 tablet 恢复过程变得复杂。当一台tablet服务器挂了，需要将其上面的tablet均匀恢复到其他Tablet服务器，则其他服务器都得读取完整的Commit日志。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013225806000.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013225806000.png?size=small" data-sub-html="<h2>image-20241013225806000</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013225806000.png" alt="image-20241013225806000" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013225806000.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013225806000.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241013225806000.png?size=large 2x" data-title="image-20241013225806000" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>为了避免多次读Commit日志，我们将日志按关键字<code>(table; row name; log sequence number)</code>排序，让同一个tablet的操作日志连续存放。</p>
+<h3 id="tablet恢复提速" class="heading-element"><span>6.6 Tablet恢复提速</span>
+  <a href="#tablet%e6%81%a2%e5%a4%8d%e6%8f%90%e9%80%9f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>master转移Tablet时，源tablet服务器会对这个Tablet做一次小压缩，在此压缩后，源tablet服务器停止为tablet服务。在卸载tablet之前，源tablet服务器会执行另一个（非常快）的小压缩，<font color="red">以消除在第一个小压缩时到达的tablet服务器日志中任何未经压缩的状态</font>。然后tablet就可以装载到新的tablet服务器上了，并且不需要从日志中进行恢复。</p>
+<h3 id="利用不变性" class="heading-element"><span>6.7 利用不变性</span>
+  <a href="#%e5%88%a9%e7%94%a8%e4%b8%8d%e5%8f%98%e6%80%a7" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>由于生成的所有SSTables都是不可变的，因此Bigtable系统的各个部分都得到了简化。</p>
+<ul>
+<li>从SStable读取时无需同步$\rightarrow$对行进行简单的并发控制。</li>
+<li>读取和写入访问的唯一可变数据结构是<code>memtable</code>$\rightarrow$每个<code>memtable</code>行使用写时复制并允许读取和写入并行进行。</li>
+<li>每个 tablet 的 SSTable 会注册到元数据表。master 会对过期的 SSTable 进行先标记后清除，其中元数据表记录了这些 SSTable 的对应的 tablet 的 root。</li>
+<li>最后，<strong>SSTable 的不可变性使得 tablet 分裂过程更快</strong>。我们直接让子 tablet 共享父 tablet 的 SSTable ，而不是为每个子 tablet 分别创建一个新的 SSTable。</li>
+</ul>
+]]></description></item><item><title>【论文阅读笔记】The Chubby lock service for loosely-coupled distributed systems</title><link>https://hezephyr.github.io/posts/10.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0chubby/</link><pubDate>Sun, 13 Oct 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/10.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0chubby/</guid><description><![CDATA[<h2 id="简介" class="heading-element"><span>1 简介</span>
+  <a href="#%e7%ae%80%e4%bb%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Chubby是一个<strong>面向松耦合分布式</strong>系统的锁服务，被广泛应用于Google内部的多个关键系统中，如GFS（Google文件系统）和Bigtable。在GFS中，Chubby用于指定主服务器；而在Bigtable中，它不仅支持主服务器选举、帮助主服务器发现其所管理的子服务器以及协助客户端定位主服务器，还充当了少量元数据存储的角色。
+Chubby允许客户端同步活动并就环境基本信息达成一致。主要目标包括可靠性、对大量客户端的可用性以及易于理解的语义，吞吐量和存储容量是次要考虑因素。
+值得注意的是，Chubby并非基于全新的算法理论构建而成，而是将已有的Paxos一致性算法作为实现基础，通过工程上的优化来满足实际应用场景下的需求。
+Chubby向用户暴露了一套类似于UNIX文件系统的API接口，应用不仅能对Chubby服务器上的整个文件进行读写操作，还可以添加对文件节点的锁控制。此外，Chubby还引入了事件订阅机制，允许客户端注册监听某些类型的数据变更通知，一旦相关文件或目录发生更新，则会立即接收到由服务端推送的通知消息。</p>
+<h2 id="设计目标" class="heading-element"><span>2 设计目标</span>
+  <a href="#%e8%ae%be%e8%ae%a1%e7%9b%ae%e6%a0%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Chubby最初的设计者并没有将它实现为一个包含Paxos算法的协议库，而是将Chubby设计成一个需要访问中心节点（Master）的分布式锁服务，这一决策基于以下几个优势：
+能像插件一样增加到现有系统中。开发者一开始可能未对高可用性做规划，锁服务器更易维护现有程序结构和通信模式。
+许多服务需要一种机制来公布选举主服务器或划分数据的结果，想比name service，基于所服务的一致性客户端缓存更适合存储和获取少量数据。
+基于锁的接口对程序员更熟悉。
+分布式共识算法需多个副本实现高可用性，而锁服务嵌入到客户端，只需要一个机器，就能达成共识。
+为了满足实际需求，Chubby设定了以下设计目标：
+提供一个完整的、独立运作的分布式锁服务，而不仅仅是一个一致性协议的客户端实现。
+提供粗粒度的锁服务。
+除了基本的锁服务外，还支持对小文件进行读写操作。
+具备高可用性和可靠性，保证即使在网络分区或硬件故障的情况下也能持续稳定运行。
+引入了一种高效的事件订阅模型，允许客户端实时接收关于所关注文件变更的通知信息。这样不仅增强了系统的响应速度，也使得应用程序能够更好地适应动态变化的环境。</p>
+<h2 id="chubby设计" class="heading-element"><span>3 Chubby设计</span>
+  <a href="#chubby%e8%ae%be%e8%ae%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="系统结构" class="heading-element"><span>3.1 系统结构</span>
+  <a href="#%e7%b3%bb%e7%bb%9f%e7%bb%93%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Chubby包含两个基本组件，一个服务器和客户端应用链接的库，通过 RPC 通信，还有第三个可选组件——代理服务器。Chubby 单元由少量服务器（通常为 5 个）组成，这些服务器称为副本，使用分布式共识协议选举Master。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012144319063.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012144319063.png?size=small" data-sub-html="<h2>image-20241012144319063</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012144319063.png" alt="image-20241012144319063" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012144319063.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012144319063.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012144319063.png?size=large 2x" data-title="image-20241012144319063" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>集群中每个服务器都维护一份服务端数据库的副本，但只有Master负责读写数据库，其他副本复制主服务器的更新。客户端通过 DNS 找到Master，Master故障时其他副本重新选举。副本故障可由替换系统选择新机器替换。</p>
+<h3 id="文件目录句柄" class="heading-element"><span>3.2 文件、目录、句柄</span>
+  <a href="#%e6%96%87%e4%bb%b6%e7%9b%ae%e5%bd%95%e5%8f%a5%e6%9f%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Chubby 的文件系统接口类似 UNIX 但更简单，是严格的文件和目录树结构，有特定命名规则。与 UNIX 不同之处在于便于分布，不暴露某些操作，不维护部分时间信息，命名空间只有文件和目录（节点），无符号或硬链接。</p>
+<p>节点分永久（需显式删除）和临时（无引用则删，可检测 client 存活），可作读写锁，有相关元数据和访问控制列表（ACLs），用于控制节点的读、写和更改ACL权限。除非被覆盖，否则节点在创建时将继承其父目录的ACL名称。每个节点的元数据包含四个单调递增的 64 位数字，便于客户端轻松检测变化：</p>
+<ul>
+<li>
+<p><strong>实例编号</strong>：用于标识创建该数据节点的顺序</p>
+</li>
+<li>
+<p><strong>文件内容编号</strong>：用于标识文件内容的变化情况，该编号会在文件内容被写入时增加</p>
+</li>
+<li>
+<p><strong>锁编号</strong>：用于标识节点锁状态变更情况，该编号会在节点锁从自由状态转换到被持有状态时增加</p>
+</li>
+<li>
+<p><strong>ACL编号</strong>：用于标识节点的ACL信息变更情况，该编号会在节点的ACL配置信息被写入时增加</p>
+</li>
+</ul>
+<p>同时，Chubby还会标识一个64位的文件内容校验码，以便客户端能够识别出文件是否变更。</p>
+<p>客户端打开节点可获取类似 UNIX 文件描述符的句柄，具有以下特点：</p>
+<ul>
+<li>通过句柄数字，防止在创建期间的操作，只有在创建节点时才会检查，而UNIX是在打开时检查，读/写不检查</li>
+<li>允许master 能够判断句柄是自身生成还是其他 master 生成。</li>
+<li>若旧句柄在新 master 打开节点时出现，master 会重新创建该句柄。</li>
+</ul>
+<h3 id="锁和序列器" class="heading-element"><span>3.3 锁和序列器</span>
+  <a href="#%e9%94%81%e5%92%8c%e5%ba%8f%e5%88%97%e5%99%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Chubby 提供两种锁：写锁（排斥模式）和读锁（共享模式）。强制锁会使未持有锁的对象无法访问锁定对象，但 Chubby 未采用，而是使用建议锁，也就是说，它们只与获取同一把锁的其他尝试发生冲突：持有一个名为F的锁既不是访问文件F所必需的，也不会阻止其他客户端这样做。因为 Chubby 经常保护其他服务实现的资源，不只是与锁关联的文件，且在用户调试或管理文件时，不希望强制用户关闭应用，同时开发人员可以通过传统断言检查锁持有情况，强制检查价值不大。</p>
+<p><font color="red">在分布式系统中，由于网络通信的不确定性，导致在分布式系统中锁机制变得非常复杂，消息的延迟或是乱序都有可能会引起锁的失效</font>。目前可通过虚拟时间、虚拟同步解决，但 Chubby 未采用这些复杂方式。</p>
+<p>Chubby采用了序列器和锁延迟两种机制来解决上述问题，序列器指锁的持有者向Chubby服务端请求一个序列器（是一个不透明的字节串，包括锁的名称、锁的模式以及锁的生成号），然后之后在需要使用锁的时候将该序列器一并发给 Chubby 服务器，服务端检查序列器的有效性。虽然序列器机制只需要向受影响的消息添加字符串，但重要的协议发展缓慢。</p>
+<p>而延迟就是客户端在非正常情况下释放锁的话，那么Chubby服务器会允许该客户端在锁延迟时间内一直持有不释放这个锁，在这段时间内，其他客户端无法获取到这个锁，可以减少由网络延迟造成的问题。</p>
+<h3 id="事件通知机制和缓存" class="heading-element"><span>3.4 事件通知机制和缓存</span>
+  <a href="#%e4%ba%8b%e4%bb%b6%e9%80%9a%e7%9f%a5%e6%9c%ba%e5%88%b6%e5%92%8c%e7%bc%93%e5%ad%98" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>为了避免大量客户端轮询Chubby服务端状态所带来的压力，Chubby提供了事件通知机制。客户端可以向服务端注册事件通知，当触发这些事件时，服务端就会异步地向客户端发送对应的事件通知。常见的Chubby事件如下：</p>
+<ul>
+<li><strong>文件内容变更</strong>：监视通过文件发布的服务的位置。</li>
+<li><strong>节点的增加、删除、修改</strong>：用于实现镜像，发现新文件以及监视临时文件。</li>
+<li><strong>Master失败</strong>：警告客户端其他事件可能已经丢失，因此需要重新扫描数据。</li>
+<li><strong>句柄、或者锁变得无效了</strong>：这通常表明存在通信问题。</li>
+<li><strong>锁获取成功</strong>：可用于确定Master何时被选举。</li>
+<li><strong>锁获取冲突</strong>：允许锁缓存。</li>
+</ul>
+<p>为了减少网络I/O，Chubby的客户端使用了缓存，可以缓存文件数据和元数据。<font color="red">Chubby借助租约来保证客户端和服务端缓存的一致性</font>，每个客户端的缓存都有一个租约，一旦该租约到期，客户端就需要向服务端续订租约才能够保证缓存的有效性。</p>
+<p>当文件数据或者元数据被修改时，Chubby服务端首先会阻塞该修改操作，然后由Master通知所有缓存了该信息的客户端，等到Master收到了客户端对该过期消息的应答后，再进行修改操作。Chubby通过缓存机制保证了数据的强一致性，在缓存机制下，Chubby就能够保证可回单要么从缓存中会总访问到一致的数据，要么访问出错。</p>
+<h3 id="session-和-keepalive" class="heading-element"><span>3.5 Session 和 KeepAlive</span>
+  <a href="#session-%e5%92%8c-keepalive" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>一个Chubby Session是Chubby Cell和客户端通过定期的KeepAlive握手维护的一个关系，当Session有效时，除非客户端通知Master，客户端的句柄、锁、缓存都是有效的。</p>
+<p><font color="red">Master在收到一个KeepAlive RPC时，通常会阻塞该RPC直到该Client的前一个租约接近过期，然后Master再允许该RPC返回给客户端，同时告知客户端新的租约过期时间</font>。Master可以任意地延长过期时间，默认的演唱时间时12s。</p>
+<p>但是一个负载过高的Master可能会使用一个更高的值来减少它所需要处理的KeepAlive RPC调用。客户端在收到响应后，就会马上发起一个新的KeepAlive，因此几乎总是有一个KeepAlive被阻塞在Master。这个KeepAlive 回复也可以用来给客户端传递事件和过期缓存，如果事件或者缓存失效发生了，Master则允许KeepAlive立即返回，同时客户端维护了一个本地租约过期时间，是Master租约过期时间的近似（为了防止Master已经关闭Session了），如果客户端本地缓存租约过期了，但此时无法确定Master是否已经结束了这个Session，客户端就需要清空并禁用它的缓存，此时Session处于jeopardy状态，客户端则会继续等待一个称为宽限期的时长，默认为45s。如果在宽限期结束之前，客户端和Master又完成了一次成功的KeepAlive交互，那么客户端就会再次使它的缓存有效，否则，客户端就假设Session已过期。</p>
+<h3 id="故障转移" class="heading-element"><span>3.6 故障转移</span>
+  <a href="#%e6%95%85%e9%9a%9c%e8%bd%ac%e7%a7%bb" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>一旦Master挂了或者失去Master身份时，它就会丢掉关于它的Session，在内存中的句柄、锁、状态都没了， 转而运行一个Session本地租约计时器，等待新的Master选举出来，如果一个Master选举很快完成，客户端就可以在租约计时器过期之前联系新的Master，否则，客户端的本地超时过期后，客户端可以利用宽限期来让Session在故障转移期间得到维持，其宽限期增加了客户端的租约超时时间。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012231123862.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012231123862.png?size=small" data-sub-html="<h2>image-20241012231123862</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012231123862.png" alt="image-20241012231123862" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012231123862.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012231123862.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241012231123862.png?size=large 2x" data-title="image-20241012231123862" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>新的Master需重建其前任Master的内存状态，这一过程部分通过硬盘上存储的数据实现，部分从客户端获取状态，还有部分通过保守估计完成。数据库会记录每个Session、持有的锁以及临时文件。新当选的Master需按以下流程操作：</p>
+<ol>
+<li>采用一个新的epoch编号并反馈给客户端，拒绝来自旧epoch编号的客户端请求，以防新Master对发送给旧Master的陈旧数据包做出响应。</li>
+<li>新Master可响应Master定位请求，但不会处理与Session相关的请求。</li>
+<li>依据数据库重建Session状态和锁信息等，并延长最大的Session时间，即进行故障转移。</li>
+<li>接收客户端的KeepAlive，但不响应其他操作。</li>
+<li>向所有客户端发送故障转移事件，客户端会因此清空缓存（因可能已过期），并警示应用程序可能丢失了其他事件。</li>
+<li>Master等待每个客户端确认故障转移事件，或者客户端Session超时。</li>
+<li>Master允许所有操作正常进行。</li>
+<li>若客户端使用旧句柄，新Master会在内存中重建新句柄；若重建的句柄已关闭，Master会保存该句柄，确保在其任期内无法再次重建相同句柄。</li>
+<li>经过一段时间，Master会删除无句柄打开的临时文件，所以客户端需在此期间刷新临时文件的句柄。若文件上最后一个客户端在故障转移过程中丢失Session，则该文件不会立即被删除。</li>
+</ol>
+<h3 id="数据库实现" class="heading-element"><span>3.7 数据库实现</span>
+  <a href="#%e6%95%b0%e6%8d%ae%e5%ba%93%e5%ae%9e%e7%8e%b0" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>最初使用的是Berkeley DB的复制版本，它采用B +树机制，其中键为字节字符串，值可以是任意二进制数据。在Berkeley DB之上，添加了一个用于对路径名称数量进行排序的比较函数，从而使相邻节点紧密排列。Berkeley DB使用分布式共识算法来复制数据库日志。</p>
+<p>后来由于维护风险等因素，自行编写了简单数据库，运用了预写日志（WAL）和快照技术。</p>
+<h3 id="备份和镜像" class="heading-element"><span>3.8 备份和镜像</span>
+  <a href="#%e5%a4%87%e4%bb%bd%e5%92%8c%e9%95%9c%e5%83%8f" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>每个 Chubby 单元的主服务器每隔几小时将数据库快照写入不同建筑的 GFS 文件服务器，用于灾难恢复和初始化新替换副本的数据库。</p>
+<p>Chubby允许文件集合从一个单元镜像到另一个单元，利用事件机制快速更新，常用于复制配置文件到全球各地的计算集群。</p>
+<h2 id="扩展机制" class="heading-element"><span>4 扩展机制</span>
+  <a href="#%e6%89%a9%e5%b1%95%e6%9c%ba%e5%88%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>单个Master可以服务9W个客户端，因为每个单元只有一个Master，所以Master的压力会很大。因此，最有效的扩展机制在很大程序上能减少与主机的通信，有以下几种方法：</p>
+<ul>
+<li>
+<p>可创建任意数量的 Chubby 单元，客户端通常使用附近单元，减少对远程机器的依赖。</p>
+</li>
+<li>
+<p>主服务器在负载重时可增加租约时间，减少需处理的KeepAlive RPC 数量。</p>
+</li>
+</ul>
+<ul>
+<li>
+<p>Chubby客户端缓存文件数据、元数据、文件缺失情况和打开句柄，减少对服务器的调用。</p>
+</li>
+<li>
+<p>使用协议转换服务器将 Chubby 协议转换为较简单的协议，如 DNS 等。</p>
+</li>
+</ul>
+<p>还有以下两种机制，代理和分区。</p>
+<h3 id="代理" class="heading-element"><span>4.1 代理</span>
+  <a href="#%e4%bb%a3%e7%90%86" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>可由受信任进程代理 Chubby 协议，代理连接了客户端和Chubby Master，两边保持一致即可。这样可以减少服务器负载，主要处理KeepAlive和读请求，对写流量影响小。代理增加了写和首次读的 RPC，但可显著增加客户端数量，同时也带来一些潜在问题，如增加单元不可用的频率，原故障转移策略对代理不理想。</p>
+<h3 id="分区" class="heading-element"><span>4.2 分区</span>
+  <a href="#%e5%88%86%e5%8c%ba" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Chubby 的接口设计允许按目录对单元的命名空间进行分区，每个分区有自己的副本和主服务器。但元数据不会划分，分区旨在实现大型 Chubby 单元且分区之间通信少，虽有一些操作需跨分区通信，但影响预计不大。</p>
+<p>分区可减少给定分区上的读写流量，但不一定减少KeepAlive流量。如果要支持更多客户端，策略是代理、分区一起使用。</p>
+]]></description></item><item><title>【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现</title><link>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</guid><description><![CDATA[<h2 id="实验要求" class="heading-element"><span>1 实验要求</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p><font color="red">本实验旨在利用lab 3中的Raft库，构建一个具备容错能力的键值存储服务</font>。服务将作为一个复制状态机，由多个服务器组成，各服务器通过Raft协议同步数据库状态。即使在部分故障或网络隔离的情况下，只要大多数服务器正常，服务仍需继续响应客户端请求。在lab 4完成后，你将实现图中Raft交互的所有部分（Clerk、Service和Raft）。</p>
@@ -9,12 +488,12 @@
 <p>实验分为两个阶段：A阶段实现基于Raft的键值服务，不使用快照；B阶段则集成快照功能，优化日志管理。</p>
 <p>我的实验代码仓库：https://github.com/HeZephyr/MIT6.5840/tree/main/src/kvraft，已通过压力测试，代码严格遵守上述按要求实现。</p>
 <p><font color="red">注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库。</font></p>
-<h2 id="2-实验设计" class="heading-element"><span>2 2 实验设计</span>
-  <a href="#2-%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
+<h2 id="实验设计" class="heading-element"><span>2 实验设计</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h3 id="21-思路" class="heading-element"><span>2.1 2.1 思路</span>
-  <a href="#21-%e6%80%9d%e8%b7%af" class="heading-mark">
+</h2><h3 id="思路" class="heading-element"><span>2.1 思路</span>
+  <a href="#%e6%80%9d%e8%b7%af" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>lab4需要我们基于lab3实现的Raft，实现一个可用的KV服务，这意味着我们需要保证线性一致性（要求从外部观察者的角度来看，所有操作都按照某个全局顺序执行，并且结果与这些操作按该顺序串行执行的结果相同）。尽管 Raft 共识算法本身支持线性化语义，但要真正保证线性化语义在整个系统中生效，仍然需要上层服务的配合。</p>
@@ -44,17 +523,14 @@
 </ul>
 </li>
 </ol>
-<h3 id="22-lab4a无快照" class="heading-element"><span>2.2 2.2 lab4A：无快照</span>
-  <a href="#22-lab4a%e6%97%a0%e5%bf%ab%e7%85%a7" class="heading-mark">
+<h3 id="lab4a无快照" class="heading-element"><span>2.2 lab4A：无快照</span>
+  <a href="#lab4a%e6%97%a0%e5%bf%ab%e7%85%a7" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>整体的时序图如下所示：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small" data-sub-html="<h2>image-20240829224033039</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png" alt="image-20240829224033039" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large 2x" data-title="image-20240829224033039" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<h4 id="221-客户端" class="heading-element"><span>2.2.1 2.2.1 客户端</span>
-  <a href="#221-%e5%ae%a2%e6%88%b7%e7%ab%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p>对于客户端，需要有<code>(clientId, commandId)</code>来标识唯一命令，对于<code>clientId</code>，通过lab提供的随机数生成器<code>nrand</code>生成即可，对于<code>commandId</code>，可以采用递增的方式进行管理。这意味着每当客户端发送一个新的命令时，<code>commandId</code>都会递增一次，从而确保每个命令都有一个唯一的标识符，这样也需要保证如果这条命令没处理完（请求的server不是leader或者请求超时）需重复执行的时候，不能改变commandId。</p>
+<p>####.1 客户端</p>
+<p>对于客户端，需要有<code>(clientId, commandId)</code>来标识唯一命令，对于<code>clientId</code>，通过lab提供的随机数生成器<code>nrand</code>生成即可，对于<code>commandId</code>，可以采用递增的方式进行管理。这意味着每当客户端发送一个新的命令时，<code>commandId</code>都会递增一次，从而确保每个命令都有一个唯一的标识符，这样也需要保证如果这条命令没处理完（请求的server不是leader或者请求超时）需重复执行的时候，不能改变commandId。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -150,11 +626,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h4 id="222-服务端" class="heading-element"><span>2.2.2 2.2.2 服务端</span>
-  <a href="#222-%e6%9c%8d%e5%8a%a1%e7%ab%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p><code>KVServer</code>结构体被设计成一个基于Raft一致性协议实现的键值存储服务。为了确保客户端请求的幂等性，并且能够正确地处理来自客户端的重复请求，<code>lastOperations</code>映射表用于跟踪每个客户端（由<code>clientId</code>标识）的最后已应用的<code>commandId</code>以及相应的<code>reply</code>。这使得服务器能够在接收到重复请求时返回之前的结果而无需再次执行相同的命令。</p>
+</div><p>####.2 服务端</p>
+<p><code>KVServer</code>结构体被设计成一个基于Raft一致性协议实现的键值存储服务。为了确保客户端请求的幂等性，并且能够正确地处理来自客户端的重复请求，<code>lastOperations</code>映射表用于跟踪每个客户端（由<code>clientId</code>标识）的最后已应用的<code>commandId</code>以及相应的<code>reply</code>。这使得服务器能够在接收到重复请求时返回之前的结果而无需再次执行相同的命令。</p>
 <p>状态机<code>stateMachine</code>在此处被实现为内存中的键值对存储<code>MemoryKV</code>，这意味着所有的键值对数据都保存在内存中，这对于快速读写操作是非常有效的，但可能不是持久化存储的最佳选择，因为如果服务器重启或崩溃，所有数据都会丢失。</p>
 <p><code>lastApplied</code>字段被用来记录最后应用到状态机的日志条目的索引，以此来避免处理那些已经被应用过的过期日志条目。</p>
 <p><code>notifyChs</code>是一个映射，它的键是日志条目的索引，值是一个<code>channel</code>。用于通知Raft的处理结果（机即复制到大多数副本并且应用到状态机之后）。</p>
@@ -279,11 +752,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}()</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h4 id="223-applier" class="heading-element"><span>2.2.3 2.2.3 applier</span>
-  <a href="#223-applier" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p><code>applier</code>协程实现如下，主要是监控<code>applyCh</code>，根据Raft的应用结果来进行响应处理，需要注意的就是检测是否为重复的命令，如果不是，则需要应用到状态机，并保存最近的响应结果。最后，如果当前节点是领导者，并且该日志条目属于当前任期，则通知相关的客户端。</p>
+</div><p>####.3 applier</p>
+<p><code>applier</code>协程实现如下，主要是监控<code>applyCh</code>，根据Raft的应用结果来进行响应处理，需要注意的就是检测是否为重复的命令，如果不是，则需要应用到状态机，并保存最近的响应结果。最后，如果当前节点是领导者，并且该日志条目属于当前任期，则通知相关的客户端。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -367,8 +837,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="22-lab4b有快照" class="heading-element"><span>2.3 2.2 lab4B：有快照</span>
-  <a href="#22-lab4b%e6%9c%89%e5%bf%ab%e7%85%a7" class="heading-mark">
+</div><h3 id="lab4b有快照" class="heading-element"><span>2.3 lab4B：有快照</span>
+  <a href="#lab4b%e6%9c%89%e5%bf%ab%e7%85%a7" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>实现了lab4A，lab4B就好做了，只需要修改<code>applier</code>，每次应用了<code>command</code>之后，都需要检查是否达到<code>maxraftstate</code>，如果达到，则调用<code>snapshot</code>来制作快照，需要注意，快照中，不仅需要保存状态机的状态，还需要包含用来去重的<code>lastOperations</code>，这也是为了防止应用快照后的节点成为leader后，由于没有<code>lastOperations</code>导致重复执行命令。</p>
@@ -482,14 +952,14 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="3-压测结果" class="heading-element"><span>3 3 压测结果</span>
-  <a href="#3-%e5%8e%8b%e6%b5%8b%e7%bb%93%e6%9e%9c" class="heading-mark">
+</div><h2 id="压测结果" class="heading-element"><span>3 压测结果</span>
+  <a href="#%e5%8e%8b%e6%b5%8b%e7%bb%93%e6%9e%9c" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>网上提供了一个<a href="https://gist.github.com/JJGO/0d73540ef7cc2f066cb535156b7cbdab"target="_blank" rel="external nofollow noopener noreferrer">测试脚本<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，功能强大。我的压测结果如下所示：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small" data-sub-html="<h2>image-20240820095009785</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png" alt="image-20240820095009785" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large 2x" data-title="image-20240820095009785" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-]]></description></item><item><title>【论文阅读笔记】Grove: a Separation-Logic Library for Verifying Distributed Systems (Extended Version)</title><link>https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/</guid><description><![CDATA[<h2 id="1-介绍" class="heading-element"><span>1 1 介绍</span>
-  <a href="#1-%e4%bb%8b%e7%bb%8d" class="heading-mark">
+]]></description></item><item><title>【论文阅读笔记】Grove: a Separation-Logic Library for Verifying Distributed Systems (Extended Version)</title><link>https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/</guid><description><![CDATA[<h2 id="介绍" class="heading-element"><span>1 介绍</span>
+  <a href="#%e4%bb%8b%e7%bb%8d" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>大型应用在分布式系统中遭遇多重挑战，如并发控制、故障恢复、网络不稳定及服务器时钟异步等。形式化验证则是一种严格确立系统正确性的方法，帮助处理边缘情况。</p>
@@ -503,17 +973,17 @@
 <li><strong>抽象机制</strong>：提供工具集，支持对仅附加日志及单调时钟计数器的精准推理，增强系统的时间一致性。</li>
 </ol>
 <p><a href="https://github.com/mit-pdos/perennial"target="_blank" rel="external nofollow noopener noreferrer">Grove code<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
-<h2 id="2-常见组件-grove案例研究" class="heading-element"><span>2 2 常见组件-Grove案例研究</span>
-  <a href="#2-%e5%b8%b8%e8%a7%81%e7%bb%84%e4%bb%b6-grove%e6%a1%88%e4%be%8b%e7%a0%94%e7%a9%b6" class="heading-mark">
+<h2 id="常见组件-grove案例研究" class="heading-element"><span>2 常见组件-Grove案例研究</span>
+  <a href="#%e5%b8%b8%e8%a7%81%e7%bb%84%e4%bb%b6-grove%e6%a1%88%e4%be%8b%e7%a0%94%e7%a9%b6" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h3 id="21-rpc库" class="heading-element"><span>2.1 2.1 RPC库</span>
-  <a href="#21-rpc%e5%ba%93" class="heading-mark">
+</h2><h3 id="rpc库" class="heading-element"><span>2.1 RPC库</span>
+  <a href="#rpc%e5%ba%93" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>RPC是分布式系统的重要构建模块，它允许客户端在远程服务器上调用过程。例如，客户端调用<code>rpcClient.Call(&quot;f&quot;, args)</code>将在与<code>rpcClient</code>相连的服务器上调用<code>f(args)</code>。RPC库提供的是不可靠的RPC，意味着客户端的一次调用可能导致服务器运行对应的函数一次、零次或多于一次。这是因为底层网络可能会丢弃、重排或复制数据包。应用程序通常不会直接调用RPC，而是使用各种代理（clerk），它们封装了RPC并附加额外的处理（如添加请求ID、重试等）。</p>
-<h3 id="22-复制状态机库" class="heading-element"><span>2.2 2.2 复制状态机库</span>
-  <a href="#22-%e5%a4%8d%e5%88%b6%e7%8a%b6%e6%80%81%e6%9c%ba%e5%ba%93" class="heading-mark">
+<h3 id="复制状态机库" class="heading-element"><span>2.2 复制状态机库</span>
+  <a href="#%e5%a4%8d%e5%88%b6%e7%8a%b6%e6%80%81%e6%9c%ba%e5%ba%93" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>vRSM复制由应用程序提供的状态机，具体的接口如下图所示：</p>
@@ -863,8 +1333,8 @@
 </ul>
 </li>
 </ol>
-<h3 id="23-vrsm上层应用" class="heading-element"><span>2.3 2.3 vRSM上层应用</span>
-  <a href="#23-vrsm%e4%b8%8a%e5%b1%82%e5%ba%94%e7%94%a8" class="heading-mark">
+<h3 id="vrsm上层应用" class="heading-element"><span>2.3 vRSM上层应用</span>
+  <a href="#vrsm%e4%b8%8a%e5%b1%82%e5%ba%94%e7%94%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><ol>
@@ -943,8 +1413,8 @@
 </ul>
 </li>
 </ol>
-<h2 id="3-grove性能评估" class="heading-element"><span>3 3 Grove性能评估</span>
-  <a href="#3-grove%e6%80%a7%e8%83%bd%e8%af%84%e4%bc%b0" class="heading-mark">
+<h2 id="grove性能评估" class="heading-element"><span>3 Grove性能评估</span>
+  <a href="#grove%e6%80%a7%e8%83%bd%e8%af%84%e4%bc%b0" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><ol>
@@ -972,12 +1442,12 @@
 <p><strong>租约对读取性能的影响</strong>：<strong>写入密集型工作负载</strong>（50%或100%写入），增加副本会降低性能，因为写入在主服务器遇到更多开销，且其它副本处理的读取不足以抵消成本。对于<strong>读取密集型工作负载</strong>，增加副本可以提升性能，例如，YCSB 5%和0%写入情况下，3台服务器分别达到单服务器1.7倍和2.3倍的吞吐量。</p>
 </li>
 </ol>
-<h2 id="4-总结" class="heading-element"><span>4 4 总结</span>
-  <a href="#4-%e6%80%bb%e7%bb%93" class="heading-mark">
+<h2 id="总结" class="heading-element"><span>4 总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h3 id="41-grovekv系统" class="heading-element"><span>4.1 4.1 GroveKV系统</span>
-  <a href="#41-grovekv%e7%b3%bb%e7%bb%9f" class="heading-mark">
+</h2><h3 id="grovekv系统" class="heading-element"><span>4.1 GroveKV系统</span>
+  <a href="#grovekv%e7%b3%bb%e7%bb%9f" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>GroveKV特点：</p>
@@ -993,8 +1463,8 @@
 <li>重配置：封闭当前的服务器组，从中获取状态副本，安装到新服务器。使用epoch编号处理并发重配置。</li>
 <li>基于租约的读取：服务器不跟任何人协调回复<code>Get</code>请求。</li>
 </ol>
-<h3 id="42-grove核心" class="heading-element"><span>4.2 4.2 Grove核心</span>
-  <a href="#42-grove%e6%a0%b8%e5%bf%83" class="heading-mark">
+<h3 id="grove核心" class="heading-element"><span>4.2 Grove核心</span>
+  <a href="#grove%e6%a0%b8%e5%bf%83" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>在正式验证领域，Grove 的核心在于证明代码在所有可能场景下均能表现得当，这一过程要求对代码执行的数学模型有深刻理解，以及对系统行为“正确”的明确定义。通过引入机械证明检查器，Grove 大幅降低了开发者在证明过程中犯错的可能性。</p>
@@ -1002,8 +1472,8 @@
 <p>Concurrent Separation Logic（CSL）是一种针对并发程序的形式化验证方法，Grove 对其进行了创新性的拓展，使之适用于分布式系统。CSL 强调基于资源所有权的代码分析，其中“堆指向”是一个典型的例子，它确保了数据的一致性不受并发访问的影响。</p>
 <p>在 Grove 中，不变量指的是系统运行中必须始终保持为真的属性，而时间有界不变量（tinv）则进一步限制了特定资源的有效期。例如，<code>GetTimeRange</code> 函数允许在租约未到期的情况下，临时访问底层资源，这在处理基于租约的读取时尤为关键。</p>
 <p>尽管正式验证能够显著减少某些类型的错误，但它并非万能药。验证不能保证所有实际中可能遇到的问题都被解决，特别是那些涉及系统活性性的问题，如死锁或饥饿。此外，编写高质量的证明和测试同样需要大量时间和精力，与开发代码无异，甚至有时还需经历重构的过程。</p>
-]]></description></item><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
-  <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+]]></description></item><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="实验要求" class="heading-element"><span>1 实验要求</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>在本实验中，要求实现Raft，这是一种复制状态机协议，用于构建一个容错的键/值存储系统。实验的具体要求如下：</p>
@@ -1029,12 +1499,12 @@
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small" data-sub-html="<h2>image-20240811160802518</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png" alt="image-20240811160802518" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large 2x" data-title="image-20240811160802518" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>我的实验代码仓库：https://github.com/HeZephyr/MIT6.5840/tree/main/src/raft，已通过压力测试，代码严格遵守上述按要求实现。</p>
 <p><font color="red">注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库</font>。</p>
-<h2 id="2-实验设计" class="heading-element"><span>2 2 实验设计</span>
-  <a href="#2-%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
+<h2 id="实验设计" class="heading-element"><span>2 实验设计</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h3 id="21-整体结构" class="heading-element"><span>2.1 2.1 整体结构</span>
-  <a href="#21-%e6%95%b4%e4%bd%93%e7%bb%93%e6%9e%84" class="heading-mark">
+</h2><h3 id="整体结构" class="heading-element"><span>2.1 整体结构</span>
+  <a href="#%e6%95%b4%e4%bd%93%e7%bb%93%e6%9e%84" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>此Raft结构体基于论文图2，基本上都是其中介绍的字段以及lab自带的字段，其中其他属性论文中也间接简述和支持，以确保Raft节点能够高效、稳定地运作。如选举定时器和心跳定时器，被明确地纳入了Raft结构体中。这些定时器对于触发关键的系统行为至关重要——选举定时器确保在必要时发起选举过程，而心跳定时器则维持着领导者与跟随者之间的连接，防止不必要的选举。</p>
@@ -1185,8 +1655,8 @@
 </span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">rf</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="22-lab3a领导者选举" class="heading-element"><span>2.2 2.2 lab3A：领导者选举</span>
-  <a href="#22-lab3a%e9%a2%86%e5%af%bc%e8%80%85%e9%80%89%e4%b8%be" class="heading-mark">
+</div><h3 id="lab3a领导者选举" class="heading-element"><span>2.2 lab3A：领导者选举</span>
+  <a href="#lab3a%e9%a2%86%e5%af%bc%e8%80%85%e9%80%89%e4%b8%be" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>此任务需要实现Raft领导人选举和心跳（通过不附加日志条目的RPC）。对于这个要求，论文中其实给出了状态转移图，指导我们怎么去做。这个选举流程逻辑如下：</p>
@@ -1378,8 +1848,8 @@
 </span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">VoteGranted</span> <span class="p">=</span> <span class="nx">rf</span><span class="p">.</span><span class="nx">currentTerm</span><span class="p">,</span> <span class="kc">true</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="23-lab3b日志" class="heading-element"><span>2.3 2.3 lab3B：日志</span>
-  <a href="#23-lab3b%e6%97%a5%e5%bf%97" class="heading-mark">
+</div><h3 id="lab3b日志" class="heading-element"><span>2.3 lab3B：日志</span>
+  <a href="#lab3b%e6%97%a5%e5%bf%97" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>在Lab3B阶段，我们的目标转向实现Raft协议中至关重要的日志复制机制。其中入口是<code>Start</code>函数（应用程序与Raft的接口）。具体的日志复制流程：</p>
@@ -1723,8 +2193,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="24-lab3c持久化" class="heading-element"><span>2.4 2.4 lab3C：持久化</span>
-  <a href="#24-lab3c%e6%8c%81%e4%b9%85%e5%8c%96" class="heading-mark">
+</div><h3 id="lab3c持久化" class="heading-element"><span>2.4 lab3C：持久化</span>
+  <a href="#lab3c%e6%8c%81%e4%b9%85%e5%8c%96" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>如果基于 Raft 的服务器重新启动，它应该从中断处恢复服务。这要求 Raft 保持在重启后仍然存在的持久状态。论文的图 2 提到了哪种状态应该是持久的，即<code>logs</code>、<code>currentTerm</code>和<code>votedFor</code>。在Lab3C中，我们的任务便是实现<code>persist()</code>和<code>readPersist()</code>这两个核心函数，前者负责保存Raft的状态，后者则是在Raft启动时恢复之前保存的数据。</p>
@@ -1798,8 +2268,8 @@
 <li><strong>任期变更</strong>：当<code>currentTerm</code>发生变化，比如在选举期间或接收到更高任期的领导者信息时。</li>
 <li><strong>投票行为</strong>：当<code>votedFor</code>字段被更新，意味着节点投出了新的一票或取消了之前的投票。</li>
 </ul>
-<h3 id="25-lab3d日志压缩" class="heading-element"><span>2.5 2.5 lab3D：日志压缩</span>
-  <a href="#25-lab3d%e6%97%a5%e5%bf%97%e5%8e%8b%e7%bc%a9" class="heading-mark">
+<h3 id="lab3d日志压缩" class="heading-element"><span>2.5 lab3D：日志压缩</span>
+  <a href="#lab3d%e6%97%a5%e5%bf%97%e5%8e%8b%e7%bc%a9" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>按照目前的情况，重新启动的服务器会重放完整的 Raft 日志以恢复其状态。然而，对于一个长期运行的服务来说，永远记录完整的 Raft 日志是不切实际的。需要使用快照服务配合，此时Raft会丢弃快照之前的日志条目。lab3D就是需要我们实现日志压缩，具体来说是核心是<code>Snapshot</code>（快照保存函数）以及<code>InstallSnapshot</code>RPC，快照压缩的流程：</p>
@@ -1963,8 +2433,8 @@
 </span></span><span class="line"><span class="cl">	<span class="nx">rf</span><span class="p">.</span><span class="nx">persister</span><span class="p">.</span><span class="nf">SaveStateAndSnapshot</span><span class="p">(</span><span class="nx">rf</span><span class="p">.</span><span class="nf">encodeState</span><span class="p">(),</span> <span class="nx">snapshot</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="3-压测脚本" class="heading-element"><span>3 3 压测脚本</span>
-  <a href="#3-%e5%8e%8b%e6%b5%8b%e8%84%9a%e6%9c%ac" class="heading-mark">
+</div><h2 id="压测脚本" class="heading-element"><span>3 压测脚本</span>
+  <a href="#%e5%8e%8b%e6%b5%8b%e8%84%9a%e6%9c%ac" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>我自己实现了一个压测脚本：</p>
@@ -2038,7 +2508,7 @@
 </span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="o">((</span><span class="nv">i</span><span class="o">=</span>1<span class="p">;</span> i&lt;<span class="o">=</span>iterations<span class="p">;</span> i++<span class="o">))</span>
 </span></span><span class="line"><span class="cl"><span class="k">do</span>
 </span></span><span class="line"><span class="cl">  <span class="nb">echo</span> <span class="s2">&#34;Running test iteration </span><span class="nv">$i</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">  <span class="nv">output</span><span class="o">=</span><span class="k">$(</span>go <span class="nb">test</span> -run <span class="nv">$test_type</span> 2&gt;<span class="p">&amp;</span>1<span class="k">)</span> <span class="c1"># 2&gt;&amp;1 redirects stderr to stdout</span>
+</span></span><span class="line"><span class="cl">  <span class="nv">output</span><span class="o">=</span><span class="k">$(</span>go <span class="nb">test</span> -run <span class="nv">$test_type</span> 2&gt;<span class="p">&amp;</span>1<span class="k">)</span> <span class="c1">#&gt;&amp;1 redirects stderr to stdout</span>
 </span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="o">[[</span> <span class="nv">$?</span> -ne <span class="m">0</span> <span class="o">]]</span><span class="p">;</span> <span class="k">then</span>
 </span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;Error in iteration </span><span class="nv">$i</span><span class="s2">:&#34;</span>
 </span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;</span><span class="nv">$output</span><span class="s2">&#34;</span>
@@ -2047,8 +2517,8 @@
 </div>
 </div><p>网上也提供了一个<a href="https://gist.github.com/JJGO/0d73540ef7cc2f066cb535156b7cbdab"target="_blank" rel="external nofollow noopener noreferrer">测试脚本<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，功能更为强大。压测结果如下所示：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=small" data-sub-html="<h2>image-20240811175403947</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png" alt="image-20240811175403947" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=large 2x" data-title="image-20240811175403947" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<h2 id="4-优化" class="heading-element"><span>4 4 优化</span>
-  <a href="#4-%e4%bc%98%e5%8c%96" class="heading-mark">
+<h2 id="优化" class="heading-element"><span>4 优化</span>
+  <a href="#%e4%bc%98%e5%8c%96" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><ol>
@@ -2087,8 +2557,8 @@
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>这篇论文介绍了ZooKeeper，一个用于协调分布式应用进程的服务。<font color="red">ZooKeeper旨在提供一个简单且高性能的内核，用于构建更复杂的客户端协调原语。</font>它整合了组消息传递、共享寄存器和分布式锁服务的元素，形成了一个复制的、集中式的服务。Zookeeper提供了一个接口，具有共享寄存器的无等待特性和类似分布式文件系统缓存失效的事件驱动机制，以提供简单而强大的协调服务。ZooKeeper还保证了每个客户端请求的FIFO执行和所有更改ZooKeeper状态的请求的线性化。</p>
-<h2 id="1-介绍" class="heading-element"><span>2 1 介绍</span>
-  <a href="#1-%e4%bb%8b%e7%bb%8d" class="heading-mark">
+<h2 id="介绍" class="heading-element"><span>2 介绍</span>
+  <a href="#%e4%bb%8b%e7%bb%8d" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p><strong>分布式系统中的基本协调机制</strong>：</p>
@@ -2106,8 +2576,8 @@
 </ol>
 <p>Zookeeper实现了一个API，用于操作<strong>像文件系统那样层次化组织</strong>的简单无等待数据对象。ZooKeeper服务由一组使用复制来实现高可用性和高性能的服务器组成，并且使用流水线架构实现，该架构支持大量未完成请求，保持低延迟。这样的流水线自然地支持了单个客户端按FIFO顺序执行操作。保证FIFO客户端顺序使得客户端可以异步提交操作。通过异步操作，客户端可以同时有多个未完成的操作。</p>
 <p>为了保证更新操作满足可线性化，作者实现了一个基于领导者的原子广播协议，称为Zab。<font color="red">然而，Zookeeper应用程序的典型工作负载主要是读操作，因此需要进行读操作优化，即不使用Zab对它们进行全序排序，而是本地处理读操作，利用客户端缓存和监视机制（只缓存不直接管理）提高性能。</font>Chubby直接管理客户端缓存，其使用租约来防止故障客户端无限期地阻塞系统。然而，租约只能限制慢或故障客户端的影响，而ZooKeeper的监视机制则完全避免了这个问题。</p>
-<h2 id="2-zookeeper服务" class="heading-element"><span>3 2 Zookeeper服务</span>
-  <a href="#2-zookeeper%e6%9c%8d%e5%8a%a1" class="heading-mark">
+<h2 id="zookeeper服务" class="heading-element"><span>3 Zookeeper服务</span>
+  <a href="#zookeeper%e6%9c%8d%e5%8a%a1" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>客户端通过ZooKeeper客户端库的API向ZooKeeper服务提交请求，该库不仅提供了服务接口，还负责管理客户端与服务器之间的网络连接。客户端在连接ZooKeeper时建立<strong>会话</strong>，并通过会话句柄发送请求。</p>
@@ -2118,8 +2588,8 @@
 <li><strong>znode</strong>：ZooKeeper数据中的内存数据节点，该数据节点组织在称为<strong>数据树</strong>的分层命名空间中</li>
 <li><strong>&ldquo;update&quot;和&quot;write&rdquo;</strong>：来指代任何修改数据树状态的操作。</li>
 </ul>
-<h3 id="21-服务概述" class="heading-element"><span>3.1 2.1 服务概述</span>
-  <a href="#21-%e6%9c%8d%e5%8a%a1%e6%a6%82%e8%bf%b0" class="heading-mark">
+<h3 id="服务概述" class="heading-element"><span>3.1 服务概述</span>
+  <a href="#%e6%9c%8d%e5%8a%a1%e6%a6%82%e8%bf%b0" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>ZooKeeper服务为客户端提供了数据节点（znodes）的抽象概念，这些节点在层次命名空间中组织，类似于文件系统（如/A/B/C表示znode C的路径，其中C父节点是B），便于用户理解和组织数据。每个znode都存储数据，除了临时znode外，都可以有子节点。客户端可以创建两种类型znode：</p>
@@ -2133,8 +2603,8 @@
 <p>例如，在下图中，有两个子树，一个用于app1（<code>/app1</code>），另一个用于app2（<code>/app2</code>）。app1的子树实现了一个简单的组成员协议：每个客户端进程<code>p_i</code>在<code>/app1</code>下创建一个znode <code>p_i</code>，该znode在进程运行期间持续存在。ZooKeeper允许客户端用znode存储一些可以用于分布式计算的元数据或配置的信息（例如当前领导者信息）。znode还包含时间戳和版本计数器，使客户端能够追踪变更并执行条件更新。</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=small" data-sub-html="<h2>image-20240811214958210</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png" alt="image-20240811214958210" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811214958210.png?size=large 2x" data-title="image-20240811214958210" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>客户端与ZooKeeper的会话具有超时机制，超时未收到信息即认为客户端故障。当客户端显式关闭会话句柄或ZooKeeper检测到客户端故障时，会话结束。<font color="red">会话期间，客户端可以跨服务器透明迁移，保持状态连续性</font>。</p>
-<h3 id="22-客户端api" class="heading-element"><span>3.2 2.2 客户端API</span>
-  <a href="#22-%e5%ae%a2%e6%88%b7%e7%ab%afapi" class="heading-mark">
+<h3 id="客户端api" class="heading-element"><span>3.2 客户端API</span>
+  <a href="#%e5%ae%a2%e6%88%b7%e7%ab%afapi" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>以下是ZooKeeper API的相关子集：</p>
@@ -2151,8 +2621,8 @@
 <blockquote>
 <p>ZooKeeper不使用句柄访问znode。每个请求都包括被操作的znode的完整路径。这不仅简化了API（没有<code>open()</code>或<code>close()</code>方法），还消除了服务器需要维护的额外状态。每个更新方法都接受一个预期版本号，如果znode的实际版本号与预期版本号不匹配，更新将失败并返回版本错误。<font color="red">如果版本号为-1，则不进行版本检查。</font></p>
 </blockquote>
-<h3 id="23-zookeeper保证" class="heading-element"><span>3.3 2.3 Zookeeper保证</span>
-  <a href="#23-zookeeper%e4%bf%9d%e8%af%81" class="heading-mark">
+<h3 id="zookeeper保证" class="heading-element"><span>3.3 Zookeeper保证</span>
+  <a href="#zookeeper%e4%bf%9d%e8%af%81" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>ZooKeeper通过两项基本的顺序保证来确保操作的一致性和可预测性：</p>
@@ -2164,8 +2634,8 @@
 <p>这种顺序保证对于分布式系统中的领导者选举和配置更新至关重要。例如，当新领导者需要更新大量配置参数时，可以利用ZooKeeper的顺序保证来确保配置的一致性和完整性。新领导者通过创建一个<code>ready</code> znode来控制配置的更新，其他进程只有在该znode存在时才会采用新的配置。新领导者通过删除<code>ready</code>、更新各种配置znode和创建<code>ready</code>来进行配置更改。<font color="red">所有这些更改可以流水线处理，并异步发布，以快速更新配置状态</font>。</p>
 <p>此外，ZooKeeper的通知机制确保了客户端能够及时接收到变更通知，而sync操作则允许客户端在需要时强制更新读取，以获取最新的系统状态。</p>
 <p>ZooKeeper的设计允许它在保持高吞吐量的同时，也保证了系统的<strong>活性和持久性</strong>。只要大多数服务器处于活动状态并能够通信，服务就能保持可用。<font color="red">而且，一旦服务成功响应了更改请求，那么只要法定数量的服务器能够恢复，这些更改能在任何数量的故障中持久化</font>。</p>
-<h3 id="24-原语示例" class="heading-element"><span>3.4 2.4 原语示例</span>
-  <a href="#24-%e5%8e%9f%e8%af%ad%e7%a4%ba%e4%be%8b" class="heading-mark">
+<h3 id="原语示例" class="heading-element"><span>3.4 原语示例</span>
+  <a href="#%e5%8e%9f%e8%af%ad%e7%a4%ba%e4%be%8b" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>ZooKeeper API提供了实现复杂原语的能力，这些原语完全在客户端实现，服务端并不感知。无论是配置管理、汇合点、组成员关系还是锁机制，ZooKeeper都能通过其API提供支持。ZooKeeper的顺序保证允许高效地推理系统状态，而监视则允许高效地等待。</p>
@@ -2303,8 +2773,8 @@
 <p>为了确保进程高效等待进入与退出条件的达成，Zookeeper巧妙地运用了监视器。在进程寻求进入屏障时，它会设置监视器以监听 $b$ 的某个子 znode 的存在状态——这个子 znode 是由导致子节点数量首次超越屏障阈值的那个进程创建的。如此一来，进程得以实时知晓屏障开启的瞬间。相反，在进程意欲退出屏障之际，它将监视某个特定的子 znode 的消失，只有当这个标记着屏障即将解除的子 znode 被移除后，进程才检查是否满足退出条件，进而安全有序地脱离屏障环境。</p>
 </li>
 </ul>
-<h2 id="3-zookeeper应用" class="heading-element"><span>4 3 ZooKeeper应用</span>
-  <a href="#3-zookeeper%e5%ba%94%e7%94%a8" class="heading-mark">
+<h2 id="zookeeper应用" class="heading-element"><span>4 ZooKeeper应用</span>
+  <a href="#zookeeper%e5%ba%94%e7%94%a8" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>ZooKeeper作为一种强大的协调服务，在多种应用程序中发挥着关键作用。</p>
@@ -2313,8 +2783,8 @@
 <li>Katta作为一个非Yahoo!的分布式索引器，使用ZooKeeper进行协调，通过分片来分配索引工作。Katta使用ZooKeeper来跟踪主从服务器的状态（<strong>组成员关系</strong>），并处理主服务器的故障转移（<strong>领导者选举</strong>）。Katta还使用ZooKeeper来跟踪和管理分片分配给从服务器的分配（<strong>配置管理</strong>）。</li>
 <li>Yahoo!消息代理（YMB）是一个分布式发布-订阅系统。该系统管理数千个主题，客户端可以发布消息并接收消息。为了提供可扩展性，主题分布在一组服务器中。每个主题都使用主-备方案进行复制，确保消息被复制到两台机器上，以确保可靠地消息传递。构成YMB的服务器使用无共享分布式架构，这使得协调对于正确操作至关重要。<font color="red">YMB使用ZooKeeper来管理主题的分配（配置元数据），处理系统中机器的故障（故障检测和组成员关系），以及控制系统操作</font>。YMB的znode数据布局显示了如何通过ZooKeeper实现对活跃服务器的负载和状态信息的监控，以及如何通过集中控制实现对服务的管理和协调。</li>
 </ul>
-<h2 id="4-zookeeper实现" class="heading-element"><span>5 4 Zookeeper实现</span>
-  <a href="#4-zookeeper%e5%ae%9e%e7%8e%b0" class="heading-mark">
+<h2 id="zookeeper实现" class="heading-element"><span>5 Zookeeper实现</span>
+  <a href="#zookeeper%e5%ae%9e%e7%8e%b0" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>ZooKeeper通过在构成其服务的每台服务器上进行数据复制来保障高可用性。这一设计考虑到了服务器可能发生的故障，同时假设故障服务器在后期能够恢复。为了维持服务的连续性和一致性，ZooKeeper采用了所下图所展示的一系列关键组件，确保了即使在单个服务器故障的情况下，整体服务仍能继续运行。</p>
@@ -2322,13 +2792,13 @@
 <p>当ZooKeeper服务器接收到请求时，首先通过请求处理器进行预处理。如果请求涉及服务器间的协作（如写操作），则会启动一个基于原子广播协议的共识机制。这种机制确保所有服务器最终将请求导致的变更同步至完全复制的数据库中，从而维护数据的一致性。对于只读请求，则可以直接从服务器本地的数据库副本中获取数据并形成响应，无需触发复杂的共识过程，这大大提升了读取操作的效率。</p>
 <p>数据库是内存中的，包含整个数据树，每个znode默认存储最大1MB的数据，但此值可配置。为了确保可恢复性，更新高效地记录到磁盘，且在应用于内存数据库前，强制写入磁盘。<font color="red">如同Chubby，我们维护一个重播日志，即写前日志，记录已提交的操作，并定期生成内存数据库的快照</font>。</p>
 <p>每个ZooKeeper服务器服务于客户端，客户端连接至某一台服务器提交请求。读请求从各服务器本地数据库的副本中服务，而写请求则通过共识协议处理。作为共识协议的一部分，写请求被转发至被称为领导者的单一服务器。其余服务器，即跟随者，接收来自领导者的状态变更提议，并对状态变更达成一致。</p>
-<h3 id="41-请求处理" class="heading-element"><span>5.1 4.1 请求处理</span>
-  <a href="#41-%e8%af%b7%e6%b1%82%e5%a4%84%e7%90%86" class="heading-mark">
+<h3 id="请求处理" class="heading-element"><span>5.1 请求处理</span>
+  <a href="#%e8%af%b7%e6%b1%82%e5%a4%84%e7%90%86" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>由于消息层的原子性，Zookeeper保证本地副本不会分歧，尽管任一时刻某些服务器可能应用了更多事务。不同于客户端发出的请求，事务是幂等的。当领导者接收到写请求时，它计算出写操作应用后的系统状态，并转换为捕捉新状态的事务。必须计算未来状态，因为可能有尚未应用到数据库的待处理事务。例如，客户端执行条件<code>setData</code>操作，如果请求中的版本号与待更新znode的未来版本号匹配，服务生成包含新数据、新版本号和更新时间戳的<code>setDataTXN</code>。若出现错误，如版本号不匹配或待更新的znode不存在，将生成<code>errorTXN</code>。</p>
-<h3 id="42-原子广播" class="heading-element"><span>5.2 4.2 原子广播</span>
-  <a href="#42-%e5%8e%9f%e5%ad%90%e5%b9%bf%e6%92%ad" class="heading-mark">
+<h3 id="原子广播" class="heading-element"><span>5.2 原子广播</span>
+  <a href="#%e5%8e%9f%e5%ad%90%e5%b9%bf%e6%92%ad" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>所有更新ZooKeeper状态的请求均转发至领导者。领导者执行请求并通过Zab，一种原子广播协议，广播状态变更。接收客户端请求的服务器在交付相应状态变更时响应客户端。<font color="red">Zab默认使用简单多数票机制决定提案，因此Zab和ZooKeeper仅在多数服务器正常（即在$2f+1$服务器中可容忍$f$次故障）时工作</font>。</p>
@@ -2338,8 +2808,8 @@
 <li>所有来自之前领导者的变更在新领导者广播自身变更前交付。</li>
 </ul>
 <p><font color="red">使用TCP作为传输层简化了实施，因为消息顺序由网络维护</font>。Zab选出的领导者同时也是ZooKeeper的领导者，创建事务的同时也提议事务。使用日志作为内存数据库的写前日志，避免了两次写磁盘。Zab在常规操作中确实按顺序和恰好一次交付所有消息，但由于Zab未持久记录每个已交付消息的ID，因此在恢复过程中可能重传消息。由于使用了幂等事务，只要按顺序交付，多次交付是可以接受的。</p>
-<h3 id="43-复制数据库" class="heading-element"><span>5.3 4.3 复制数据库</span>
-  <a href="#43-%e5%a4%8d%e5%88%b6%e6%95%b0%e6%8d%ae%e5%ba%93" class="heading-mark">
+<h3 id="复制数据库" class="heading-element"><span>5.3 复制数据库</span>
+  <a href="#%e5%a4%8d%e5%88%b6%e6%95%b0%e6%8d%ae%e5%ba%93" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>每个副本在内存中保存一份ZooKeeper状态的拷贝。当服务器从崩溃中恢复，需要恢复此内部状态。重放所有已交付的消息以恢复状态可能耗时过长，故ZooKeeper使用周期性快照，仅要求重传自快照开始以来的消息。<font color="red">我们称ZooKeeper快照为模糊快照，因为不锁定ZooKeeper状态来生成快照；相反，进行深搜，原子读取每个znode的数据和元数据，写入磁盘</font>。但是，由于快照的生成并非瞬时完成，这意味着在快照生成的过程中，新的状态变更可能会发生。因此，最终的快照可能包含了部分已提交但未被快照捕获的状态变更，导致快照中的数据并不完全反映某个时间点的系统状态。<font color="red">然而，由于状态变更是幂等的，我们可以按顺序重复应用它们。</font></p>
@@ -2351,15 +2821,15 @@
 </ul>
 <p>处理这些状态变更后，<code>/foo</code>和<code>/goo</code>的值分别为<code>f3</code>和<code>g2</code>，版本为$3$和$2$。然而，模糊快照可能记录了<code>/foo</code>和<code>/goo</code>的值为<code>f3</code>和<code>g1</code>，版本为$3$和$1$，即第一个变更和第三个变更被快照捕获，但第二个变更之前快照生成完成，这不是ZooKeeper数据树的有效状态。</p>
 <p><font color="red">当服务器崩溃并重新启动时，它会从最近的快照恢复，然后重放自该快照之后的所有事务日志。由于事务是幂等的，即使快照中的状态与实际的某时刻状态不完全一致，重放事务日志也能确保服务器恢复到最后一致的状态</font>。</p>
-<h3 id="44-客户端-服务器交互" class="heading-element"><span>5.4 4.4 客户端-服务器交互</span>
-  <a href="#44-%e5%ae%a2%e6%88%b7%e7%ab%af-%e6%9c%8d%e5%8a%a1%e5%99%a8%e4%ba%a4%e4%ba%92" class="heading-mark">
+<h3 id="客户端-服务器交互" class="heading-element"><span>5.4 客户端-服务器交互</span>
+  <a href="#%e5%ae%a2%e6%88%b7%e7%ab%af-%e6%9c%8d%e5%8a%a1%e5%99%a8%e4%ba%a4%e4%ba%92" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>ZooKeeper通过客户端-服务器交互实现高效的分布式协调。服务器在处理写请求时，会发送并清除相关监视通知，保证通知的顺序性。服务器顺序处理写请求，而读请求则在本地服务器上独立处理，每个读请求都会标记一个zxid，代表服务器已看到的最后事务，从而确保读写请求的部分顺序性。</p>
 <p>本地处理读请求带来了出色的读取性能，因为它仅仅是本地服务器上的内存操作，无需磁盘活动或运行协议。然而，这种快速读取可能不保证读操作的顺序性，可能会返回过时的数据。为了解决这个问题，<font color="red">ZooKeeper提供了同步操作<code>sync()</code>，通过领导者异步执行并排序，客户端只需读取后立即调用<code>sync()</code>，确保读操作能够返回最新（<code>sync</code>之前所有的变更）的数据</font>。</p>
 <p>ZooKeeper服务器使用FIFO顺序处理客户端请求，并在响应中包含相关的zxid，确保客户端即使在服务器间切换时也能看到最新的数据（需要检查zxid）。此外，<font color="red">ZooKeeper使用超时机制来检测客户端会话故障，客户端通过发送心跳消息（包含最后一个zxid）来维持会话，如果无法与当前服务器通信，会自动切换到其他服务器</font>。</p>
-<h2 id="5-评估" class="heading-element"><span>6 5 评估</span>
-  <a href="#5-%e8%af%84%e4%bc%b0" class="heading-mark">
+<h2 id="评估" class="heading-element"><span>6 评估</span>
+  <a href="#%e8%af%84%e4%bc%b0" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>ZooKeeper展现出了卓越的性能，其<strong>高吞吐量和低请求延迟</strong>在多个基准测试中得到了证明。在模仿Chubby基准的测试中，即使处理的数据量增加，ZooKeeper的吞吐量也达到了Chubby的三倍以上。具体来说，单个工作进程在三个服务器上的平均请求延迟仅为1.2毫秒，在九个服务器上为1.4毫秒。</p>

@@ -1,6 +1,6 @@
 # 【MIT 6.5840(6.824) 】Lab3:Raft 设计实现
 
-## 1 实验要求
+## 实验要求
 
 在本实验中，要求实现Raft，这是一种复制状态机协议，用于构建一个容错的键/值存储系统。实验的具体要求如下：
 
@@ -25,9 +25,9 @@ Raft交互图：
 
 &lt;font color=&#34;red&#34;&gt;注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库&lt;/font&gt;。
 
-## 2 实验设计
+## 实验设计
 
-### 2.1 整体结构
+### 整体结构
 
 此Raft结构体基于论文图2，基本上都是其中介绍的字段以及lab自带的字段，其中其他属性论文中也间接简述和支持，以确保Raft节点能够高效、稳定地运作。如选举定时器和心跳定时器，被明确地纳入了Raft结构体中。这些定时器对于触发关键的系统行为至关重要——选举定时器确保在必要时发起选举过程，而心跳定时器则维持着领导者与跟随者之间的连接，防止不必要的选举。
 
@@ -108,7 +108,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 }
 ```
 
-### 2.2 lab3A：领导者选举
+### lab3A：领导者选举
 
 此任务需要实现Raft领导人选举和心跳（通过不附加日志条目的RPC）。对于这个要求，论文中其实给出了状态转移图，指导我们怎么去做。这个选举流程逻辑如下：
 
@@ -218,7 +218,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 }
 ```
 
-### 2.3 lab3B：日志
+### lab3B：日志
 
 在Lab3B阶段，我们的目标转向实现Raft协议中至关重要的日志复制机制。其中入口是`Start`函数（应用程序与Raft的接口）。具体的日志复制流程：
 
@@ -407,7 +407,7 @@ func (rf *Raft) applier() {
 }
 ```
 
-### 2.4 lab3C：持久化
+### lab3C：持久化
 
 如果基于 Raft 的服务器重新启动，它应该从中断处恢复服务。这要求 Raft 保持在重启后仍然存在的持久状态。论文的图 2 提到了哪种状态应该是持久的，即`logs`、`currentTerm`和`votedFor`。在Lab3C中，我们的任务便是实现`persist()`和`readPersist()`这两个核心函数，前者负责保存Raft的状态，后者则是在Raft启动时恢复之前保存的数据。
 
@@ -453,7 +453,7 @@ func (rf *Raft) persist() {
 - **任期变更**：当`currentTerm`发生变化，比如在选举期间或接收到更高任期的领导者信息时。
 - **投票行为**：当`votedFor`字段被更新，意味着节点投出了新的一票或取消了之前的投票。
 
-### 2.5 lab3D：日志压缩
+### lab3D：日志压缩
 
 按照目前的情况，重新启动的服务器会重放完整的 Raft 日志以恢复其状态。然而，对于一个长期运行的服务来说，永远记录完整的 Raft 日志是不切实际的。需要使用快照服务配合，此时Raft会丢弃快照之前的日志条目。lab3D就是需要我们实现日志压缩，具体来说是核心是`Snapshot`（快照保存函数）以及`InstallSnapshot`RPC，快照压缩的流程：
 
@@ -549,7 +549,7 @@ func (rf *Raft) CondInstallSnapshot(lastIncludedTerm int, lastIncludedIndex int,
 }
 ```
 
-## 3 压测脚本
+## 压测脚本
 
 我自己实现了一个压测脚本：
 
@@ -584,7 +584,7 @@ echo &#34;go test -run $test_type&#34;
 for ((i=1; i&lt;=iterations; i&#43;&#43;))
 do
   echo &#34;Running test iteration $i&#34;
-  output=$(go test -run $test_type 2&gt;&amp;1) # 2&gt;&amp;1 redirects stderr to stdout
+  output=$(go test -run $test_type 2&gt;&amp;1) #&gt;&amp;1 redirects stderr to stdout
   if [[ $? -ne 0 ]]; then
     echo &#34;Error in iteration $i:&#34;
     echo &#34;$output&#34;
@@ -596,7 +596,7 @@ done
 
 ![image-20240811175403947](https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png)
 
-## 4 优化
+## 优化
 
 1. 如果我们使用的空间少于数组的一半，我们就替换该数组。这个数字是相当任意的，选择它是为了平衡内存使用与分配数量，这个数字可能还可以改进。
 

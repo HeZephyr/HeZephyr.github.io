@@ -144,45 +144,45 @@ session 2
 <li>
 <p>常用会话操作快捷键。</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">前缀</th>
-<th style="text-align:center">指令</th>
-<th style="text-align:center">功能</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">d     |</td>
-<td style="text-align:center">断开当前会话        |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">D     |</td>
-<td style="text-align:center">选择要断开的会话      |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">$     |</td>
-<td style="text-align:center">重命名当前会话       |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">s     |</td>
-<td style="text-align:center">��出当前会话用于选择并切换 |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">r     |</td>
-<td style="text-align:center">强制重载当前会话      |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">trl + z |</td>
-<td style="text-align:center">挂起当前会话        |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">前缀</th>
+          <th style="text-align: center">指令</th>
+          <th style="text-align: center">功能</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">d     |</td>
+          <td style="text-align: center">断开当前会话        |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">D     |</td>
+          <td style="text-align: center">选择要断开的会话      |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">$     |</td>
+          <td style="text-align: center">重命名当前会话       |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">s     |</td>
+          <td style="text-align: center">��出当前会话用于选择并切换 |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">r     |</td>
+          <td style="text-align: center">强制重载当前会话      |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">trl + z |</td>
+          <td style="text-align: center">挂起当前会话        |</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 <li>
@@ -210,60 +210,60 @@ session 2
 <li>
 <p>常用窗口操作快捷键。</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">前缀</th>
-<th style="text-align:center">指令</th>
-<th style="text-align:center">功能</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">c       |</td>
-<td style="text-align:center">新建窗口               |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">&amp;       |</td>
-<td style="text-align:center">关闭当前窗口，需要输入<code>y or n</code>确认  |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">number&gt;编号 |</td>
-<td style="text-align:center">切换到指定编号的窗口         |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">p       |</td>
-<td style="text-align:center">切换到上一个窗口           |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">n       |</td>
-<td style="text-align:center">切换到下一个窗口           |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">w       |</td>
-<td style="text-align:center">显示窗口列表用于切换。        |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">,（逗号）   |</td>
-<td style="text-align:center">重命名当前窗口            |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">.       |</td>
-<td style="text-align:center">修改当前窗口编号（适用于窗口排序）  |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">f       |</td>
-<td style="text-align:center">��速定位到窗口（输入关键字匹配窗口） |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">前缀</th>
+          <th style="text-align: center">指令</th>
+          <th style="text-align: center">功能</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">c       |</td>
+          <td style="text-align: center">新建窗口               |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">&amp;       |</td>
+          <td style="text-align: center">关闭当前窗口，需要输入<code>y or n</code>确认  |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">number&gt;编号 |</td>
+          <td style="text-align: center">切换到指定编号的窗口         |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">p       |</td>
+          <td style="text-align: center">切换到上一个窗口           |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">n       |</td>
+          <td style="text-align: center">切换到下一个窗口           |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">w       |</td>
+          <td style="text-align: center">显示窗口列表用于切换。        |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">,（逗号）   |</td>
+          <td style="text-align: center">重命名当前窗口            |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">.       |</td>
+          <td style="text-align: center">修改当前窗口编号（适用于窗口排序）  |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">f       |</td>
+          <td style="text-align: center">��速定位到窗口（输入关键字匹配窗口） |</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 </ul>
@@ -343,100 +343,100 @@ session 2
 <li>
 <p>常用面板操作快捷键。</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">前缀</th>
-<th style="text-align:center">指令</th>
-<th style="text-align:center">描述</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>&quot;</code>            |</td>
-<td style="text-align:center">当前面板上下一分为二，下侧新建面板              |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>%</code>            |</td>
-<td style="text-align:center">当前面板左右一分为二，右侧新建面板              |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>x</code>            |</td>
-<td style="text-align:center">关闭当前面板（关闭前需输入<code>y</code> or <code>n</code>确认）          |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>z</code>            |</td>
-<td style="text-align:center">最大化当前面板，再重复一次按键后恢复正常（v1.8版本新增）   |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>!</code>            |</td>
-<td style="text-align:center">��当前面板移动到新的窗口打开（原窗口中存在两个及以上面板有效） |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>;</code>            |</td>
-<td style="text-align:center">切换到最后一次使用的面板                   |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>q</code>            |</td>
-<td style="text-align:center">显示面板编号，在编号消失前输入对应的数字可切换到相应的面板  |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>方向键</code>         |</td>
-<td style="text-align:center">移动光标切换面板                       |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center">hjkl(分别代表左下上右)` |</td>
-<td style="text-align:center">移动光标切换面板                       |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>{</code>            |</td>
-<td style="text-align:center">向前置换当前面板                       |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>}</code>            |</td>
-<td style="text-align:center">向后置换当前面板                       |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>Ctrl+o</code>         |</td>
-<td style="text-align:center">顺时针旋转当前窗口中的所有面板                |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>o</code>            |</td>
-<td style="text-align:center">选择下一面板                         |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>空格键</code>         |</td>
-<td style="text-align:center">在自带的面板布局中循环切换                  |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>Alt+方向键</code>       |</td>
-<td style="text-align:center">以5个单元格为单位调整当前面板边缘               |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>Ctrl+方向键</code>       |</td>
-<td style="text-align:center">以1个单元格为单位调整当前面板边缘（Mac下被系统快捷键覆盖）  |</td>
-</tr>
-<tr>
-<td style="text-align:center">Ctrl+b` |</td>
-<td style="text-align:center"><code>t</code>            |</td>
-<td style="text-align:center">显示时钟                           |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">前缀</th>
+          <th style="text-align: center">指令</th>
+          <th style="text-align: center">描述</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>&quot;</code>            |</td>
+          <td style="text-align: center">当前面板上下一分为二，下侧新建面板              |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>%</code>            |</td>
+          <td style="text-align: center">当前面板左右一分为二，右侧新建面板              |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>x</code>            |</td>
+          <td style="text-align: center">关闭当前面板（关闭前需输入<code>y</code> or <code>n</code>确认）          |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>z</code>            |</td>
+          <td style="text-align: center">最大化当前面板，再重复一次按键后恢复正常（v1.8版本新增）   |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>!</code>            |</td>
+          <td style="text-align: center">��当前面板移动到新的窗口打开（原窗口中存在两个及以上面板有效） |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>;</code>            |</td>
+          <td style="text-align: center">切换到最后一次使用的面板                   |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>q</code>            |</td>
+          <td style="text-align: center">显示面板编号，在编号消失前输入对应的数字可切换到相应的面板  |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>方向键</code>         |</td>
+          <td style="text-align: center">移动光标切换面板                       |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center">hjkl(分别代表左下上右)` |</td>
+          <td style="text-align: center">移动光标切换面板                       |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>{</code>            |</td>
+          <td style="text-align: center">向前置换当前面板                       |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>}</code>            |</td>
+          <td style="text-align: center">向后置换当前面板                       |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>Ctrl+o</code>         |</td>
+          <td style="text-align: center">顺时针旋转当前窗口中的所有面板                |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>o</code>            |</td>
+          <td style="text-align: center">选择下一面板                         |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>空格键</code>         |</td>
+          <td style="text-align: center">在自带的面板布局中循环切换                  |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>Alt+方向键</code>       |</td>
+          <td style="text-align: center">以5个单元格为单位调整当前面板边缘               |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>Ctrl+方向键</code>       |</td>
+          <td style="text-align: center">以1个单元格为单位调整当前面板边缘（Mac下被系统快捷键覆盖）  |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">Ctrl+b` |</td>
+          <td style="text-align: center"><code>t</code>            |</td>
+          <td style="text-align: center">显示时钟                           |</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 </ul>

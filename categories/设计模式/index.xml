@@ -1,29 +1,29 @@
 <rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>设计模式 - 分类 | ZephyrHe</title><link>https://hezephyr.github.io/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/</link><description>设计模式 - 分类 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Thu, 14 Dec 2023 17:21:13 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/categories/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="self" type="application/rss+xml"/><item><title>遵循最佳实践，各种语言实现设计模式的模版</title><link>https://hezephyr.github.io/posts/02.%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%A8%A1%E7%89%88/</link><pubDate>Thu, 14 Dec 2023 17:21:13 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/02.%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%AE%9E%E7%8E%B0%E6%A8%A1%E7%89%88/</guid><description><![CDATA[<p>23种设计模式分类如下：</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center"><strong>模式类型</strong></th>
-<th style="text-align:center"><strong>描述</strong></th>
-<th style="text-align:center"><strong>包括的模式</strong></th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">创建型模式</td>
-<td style="text-align:center">这些设计模式提供了一种在创建对象的同时隐藏创建逻辑的方式，而不是使用 <code>new</code> 运算符直接实例化对象。这使得程序在判断针对某个给定实例需要创建哪些对象时更加灵活。</td>
-<td style="text-align:center">工厂模式（Factory Pattern）<br>抽象工厂模式（Abstract Factory Pattern）<br>单例模式（Singleton Pattern）<br>建造者模式（Builder Pattern）<br>原型模式（Prototype Pattern）</td>
-</tr>
-<tr>
-<td style="text-align:center">结构型模式</td>
-<td style="text-align:center">这些设计模式关注类和对象的组合。继承的概念被用来组合接口和定义组合对象获得新功能的方式。</td>
-<td style="text-align:center">适配器模式（Adapter Pattern）<br>桥接模式（Bridge Pattern）<br>过滤器模式（Filter、Criteria Pattern）<br>组合模式（Composite Pattern）<br>装饰器模式（Decorator Pattern）<br>外观模式（Facade Pattern）<br>享元模式（Flyweight Pattern）<br>代理模式（Proxy Pattern）</td>
-</tr>
-<tr>
-<td style="text-align:center">行为型模式</td>
-<td style="text-align:center">这些设计模式特别关注对象之间的通信，即对象之间的行为。</td>
-<td style="text-align:center">责任链模式（Chain of Responsibility Pattern）<br>命令模式（Command Pattern）<br>解释器模式（Interpreter Pattern）<br>迭代器模式（Iterator Pattern）<br>中介者模式（Mediator Pattern）<br>备忘录模式（Memento Pattern）<br>观察者模式（Observer Pattern）<br>状态模式（State Pattern）<br>空对象模式（Null Object Pattern）<br>策略模式（Strategy Pattern）<br>模板模式（Template Pattern）<br>访问者模式（Visitor Pattern）</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center"><strong>模式类型</strong></th>
+          <th style="text-align: center"><strong>描述</strong></th>
+          <th style="text-align: center"><strong>包括的模式</strong></th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">创建型模式</td>
+          <td style="text-align: center">这些设计模式提供了一种在创建对象的同时隐藏创建逻辑的方式，而不是使用 <code>new</code> 运算符直接实例化对象。这使得程序在判断针对某个给定实例需要创建哪些对象时更加灵活。</td>
+          <td style="text-align: center">工厂模式（Factory Pattern）<br>抽象工厂模式（Abstract Factory Pattern）<br>单例模式（Singleton Pattern）<br>建造者模式（Builder Pattern）<br>原型模式（Prototype Pattern）</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">结构型模式</td>
+          <td style="text-align: center">这些设计模式关注类和对象的组合。继承的概念被用来组合接口和定义组合对象获得新功能的方式。</td>
+          <td style="text-align: center">适配器模式（Adapter Pattern）<br>桥接模式（Bridge Pattern）<br>过滤器模式（Filter、Criteria Pattern）<br>组合模式（Composite Pattern）<br>装饰器模式（Decorator Pattern）<br>外观模式（Facade Pattern）<br>享元模式（Flyweight Pattern）<br>代理模式（Proxy Pattern）</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">行为型模式</td>
+          <td style="text-align: center">这些设计模式特别关注对象之间的通信，即对象之间的行为。</td>
+          <td style="text-align: center">责任链模式（Chain of Responsibility Pattern）<br>命令模式（Command Pattern）<br>解释器模式（Interpreter Pattern）<br>迭代器模式（Iterator Pattern）<br>中介者模式（Mediator Pattern）<br>备忘录模式（Memento Pattern）<br>观察者模式（Observer Pattern）<br>状态模式（State Pattern）<br>空对象模式（Null Object Pattern）<br>策略模式（Strategy Pattern）<br>模板模式（Template Pattern）<br>访问者模式（Visitor Pattern）</td>
+      </tr>
+  </tbody>
 </table>
 <p>设计模式的六大原则是软件设计中的基石，它们为构建灵活、易于维护和升级的软件系统提供了指导。以下是对这六大原则的简要说明：</p>
 <ol>

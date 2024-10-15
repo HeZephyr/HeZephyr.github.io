@@ -1,5 +1,5 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MIT 6.5840 - 合集 | ZephyrHe</title><link>https://hezephyr.github.io/collections/mit-6.5840/</link><description>MIT 6.5840 - 合集 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 30 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/collections/mit-6.5840/" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现</title><link>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
-  <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>MIT 6.5840 - 合集 | ZephyrHe</title><link>https://hezephyr.github.io/collections/mit-6.5840/</link><description>MIT 6.5840 - 合集 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 30 Aug 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/collections/mit-6.5840/" rel="self" type="application/rss+xml"/><item><title>【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现</title><link>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</link><pubDate>Fri, 30 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/</guid><description><![CDATA[<h2 id="实验要求" class="heading-element"><span>1 实验要求</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p><font color="red">本实验旨在利用lab 3中的Raft库，构建一个具备容错能力的键值存储服务</font>。服务将作为一个复制状态机，由多个服务器组成，各服务器通过Raft协议同步数据库状态。即使在部分故障或网络隔离的情况下，只要大多数服务器正常，服务仍需继续响应客户端请求。在lab 4完成后，你将实现图中Raft交互的所有部分（Clerk、Service和Raft）。</p>
@@ -9,12 +9,12 @@
 <p>实验分为两个阶段：A阶段实现基于Raft的键值服务，不使用快照；B阶段则集成快照功能，优化日志管理。</p>
 <p>我的实验代码仓库：https://github.com/HeZephyr/MIT6.5840/tree/main/src/kvraft，已通过压力测试，代码严格遵守上述按要求实现。</p>
 <p><font color="red">注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库。</font></p>
-<h2 id="2-实验设计" class="heading-element"><span>2 2 实验设计</span>
-  <a href="#2-%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
+<h2 id="实验设计" class="heading-element"><span>2 实验设计</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h3 id="21-思路" class="heading-element"><span>2.1 2.1 思路</span>
-  <a href="#21-%e6%80%9d%e8%b7%af" class="heading-mark">
+</h2><h3 id="思路" class="heading-element"><span>2.1 思路</span>
+  <a href="#%e6%80%9d%e8%b7%af" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>lab4需要我们基于lab3实现的Raft，实现一个可用的KV服务，这意味着我们需要保证线性一致性（要求从外部观察者的角度来看，所有操作都按照某个全局顺序执行，并且结果与这些操作按该顺序串行执行的结果相同）。尽管 Raft 共识算法本身支持线性化语义，但要真正保证线性化语义在整个系统中生效，仍然需要上层服务的配合。</p>
@@ -44,17 +44,14 @@
 </ul>
 </li>
 </ol>
-<h3 id="22-lab4a无快照" class="heading-element"><span>2.2 2.2 lab4A：无快照</span>
-  <a href="#22-lab4a%e6%97%a0%e5%bf%ab%e7%85%a7" class="heading-mark">
+<h3 id="lab4a无快照" class="heading-element"><span>2.2 lab4A：无快照</span>
+  <a href="#lab4a%e6%97%a0%e5%bf%ab%e7%85%a7" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>整体的时序图如下所示：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small" data-sub-html="<h2>image-20240829224033039</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png" alt="image-20240829224033039" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png?size=large 2x" data-title="image-20240829224033039" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<h4 id="221-客户端" class="heading-element"><span>2.2.1 2.2.1 客户端</span>
-  <a href="#221-%e5%ae%a2%e6%88%b7%e7%ab%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p>对于客户端，需要有<code>(clientId, commandId)</code>来标识唯一命令，对于<code>clientId</code>，通过lab提供的随机数生成器<code>nrand</code>生成即可，对于<code>commandId</code>，可以采用递增的方式进行管理。这意味着每当客户端发送一个新的命令时，<code>commandId</code>都会递增一次，从而确保每个命令都有一个唯一的标识符，这样也需要保证如果这条命令没处理完（请求的server不是leader或者请求超时）需重复执行的时候，不能改变commandId。</p>
+<p>####.1 客户端</p>
+<p>对于客户端，需要有<code>(clientId, commandId)</code>来标识唯一命令，对于<code>clientId</code>，通过lab提供的随机数生成器<code>nrand</code>生成即可，对于<code>commandId</code>，可以采用递增的方式进行管理。这意味着每当客户端发送一个新的命令时，<code>commandId</code>都会递增一次，从而确保每个命令都有一个唯一的标识符，这样也需要保证如果这条命令没处理完（请求的server不是leader或者请求超时）需重复执行的时候，不能改变commandId。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -150,11 +147,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h4 id="222-服务端" class="heading-element"><span>2.2.2 2.2.2 服务端</span>
-  <a href="#222-%e6%9c%8d%e5%8a%a1%e7%ab%af" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p><code>KVServer</code>结构体被设计成一个基于Raft一致性协议实现的键值存储服务。为了确保客户端请求的幂等性，并且能够正确地处理来自客户端的重复请求，<code>lastOperations</code>映射表用于跟踪每个客户端（由<code>clientId</code>标识）的最后已应用的<code>commandId</code>以及相应的<code>reply</code>。这使得服务器能够在接收到重复请求时返回之前的结果而无需再次执行相同的命令。</p>
+</div><p>####.2 服务端</p>
+<p><code>KVServer</code>结构体被设计成一个基于Raft一致性协议实现的键值存储服务。为了确保客户端请求的幂等性，并且能够正确地处理来自客户端的重复请求，<code>lastOperations</code>映射表用于跟踪每个客户端（由<code>clientId</code>标识）的最后已应用的<code>commandId</code>以及相应的<code>reply</code>。这使得服务器能够在接收到重复请求时返回之前的结果而无需再次执行相同的命令。</p>
 <p>状态机<code>stateMachine</code>在此处被实现为内存中的键值对存储<code>MemoryKV</code>，这意味着所有的键值对数据都保存在内存中，这对于快速读写操作是非常有效的，但可能不是持久化存储的最佳选择，因为如果服务器重启或崩溃，所有数据都会丢失。</p>
 <p><code>lastApplied</code>字段被用来记录最后应用到状态机的日志条目的索引，以此来避免处理那些已经被应用过的过期日志条目。</p>
 <p><code>notifyChs</code>是一个映射，它的键是日志条目的索引，值是一个<code>channel</code>。用于通知Raft的处理结果（机即复制到大多数副本并且应用到状态机之后）。</p>
@@ -279,11 +273,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}()</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h4 id="223-applier" class="heading-element"><span>2.2.3 2.2.3 applier</span>
-  <a href="#223-applier" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><p><code>applier</code>协程实现如下，主要是监控<code>applyCh</code>，根据Raft的应用结果来进行响应处理，需要注意的就是检测是否为重复的命令，如果不是，则需要应用到状态机，并保存最近的响应结果。最后，如果当前节点是领导者，并且该日志条目属于当前任期，则通知相关的客户端。</p>
+</div><p>####.3 applier</p>
+<p><code>applier</code>协程实现如下，主要是监控<code>applyCh</code>，根据Raft的应用结果来进行响应处理，需要注意的就是检测是否为重复的命令，如果不是，则需要应用到状态机，并保存最近的响应结果。最后，如果当前节点是领导者，并且该日志条目属于当前任期，则通知相关的客户端。</p>
 <div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
@@ -367,8 +358,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="22-lab4b有快照" class="heading-element"><span>2.3 2.2 lab4B：有快照</span>
-  <a href="#22-lab4b%e6%9c%89%e5%bf%ab%e7%85%a7" class="heading-mark">
+</div><h3 id="lab4b有快照" class="heading-element"><span>2.3 lab4B：有快照</span>
+  <a href="#lab4b%e6%9c%89%e5%bf%ab%e7%85%a7" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>实现了lab4A，lab4B就好做了，只需要修改<code>applier</code>，每次应用了<code>command</code>之后，都需要检查是否达到<code>maxraftstate</code>，如果达到，则调用<code>snapshot</code>来制作快照，需要注意，快照中，不仅需要保存状态机的状态，还需要包含用来去重的<code>lastOperations</code>，这也是为了防止应用快照后的节点成为leader后，由于没有<code>lastOperations</code>导致重复执行命令。</p>
@@ -482,14 +473,14 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="3-压测结果" class="heading-element"><span>3 3 压测结果</span>
-  <a href="#3-%e5%8e%8b%e6%b5%8b%e7%bb%93%e6%9e%9c" class="heading-mark">
+</div><h2 id="压测结果" class="heading-element"><span>3 压测结果</span>
+  <a href="#%e5%8e%8b%e6%b5%8b%e7%bb%93%e6%9e%9c" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>网上提供了一个<a href="https://gist.github.com/JJGO/0d73540ef7cc2f066cb535156b7cbdab"target="_blank" rel="external nofollow noopener noreferrer">测试脚本<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，功能强大。我的压测结果如下所示：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small" data-sub-html="<h2>image-20240820095009785</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png" alt="image-20240820095009785" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240820095009785.png?size=large 2x" data-title="image-20240820095009785" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-]]></description></item><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="1-实验要求" class="heading-element"><span>1 1 实验要求</span>
-  <a href="#1-%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+]]></description></item><item><title>【MIT 6.5840(6.824) 】Lab3:Raft 设计实现</title><link>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</link><pubDate>Sun, 11 Aug 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/08.mit-6.58406.824-lab3-raft/</guid><description><![CDATA[<h2 id="实验要求" class="heading-element"><span>1 实验要求</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>在本实验中，要求实现Raft，这是一种复制状态机协议，用于构建一个容错的键/值存储系统。实验的具体要求如下：</p>
@@ -515,12 +506,12 @@
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small" data-sub-html="<h2>image-20240811160802518</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png" alt="image-20240811160802518" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811160802518.png?size=large 2x" data-title="image-20240811160802518" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>我的实验代码仓库：https://github.com/HeZephyr/MIT6.5840/tree/main/src/raft，已通过压力测试，代码严格遵守上述按要求实现。</p>
 <p><font color="red">注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库</font>。</p>
-<h2 id="2-实验设计" class="heading-element"><span>2 2 实验设计</span>
-  <a href="#2-%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
+<h2 id="实验设计" class="heading-element"><span>2 实验设计</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h3 id="21-整体结构" class="heading-element"><span>2.1 2.1 整体结构</span>
-  <a href="#21-%e6%95%b4%e4%bd%93%e7%bb%93%e6%9e%84" class="heading-mark">
+</h2><h3 id="整体结构" class="heading-element"><span>2.1 整体结构</span>
+  <a href="#%e6%95%b4%e4%bd%93%e7%bb%93%e6%9e%84" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>此Raft结构体基于论文图2，基本上都是其中介绍的字段以及lab自带的字段，其中其他属性论文中也间接简述和支持，以确保Raft节点能够高效、稳定地运作。如选举定时器和心跳定时器，被明确地纳入了Raft结构体中。这些定时器对于触发关键的系统行为至关重要——选举定时器确保在必要时发起选举过程，而心跳定时器则维持着领导者与跟随者之间的连接，防止不必要的选举。</p>
@@ -671,8 +662,8 @@
 </span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">rf</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="22-lab3a领导者选举" class="heading-element"><span>2.2 2.2 lab3A：领导者选举</span>
-  <a href="#22-lab3a%e9%a2%86%e5%af%bc%e8%80%85%e9%80%89%e4%b8%be" class="heading-mark">
+</div><h3 id="lab3a领导者选举" class="heading-element"><span>2.2 lab3A：领导者选举</span>
+  <a href="#lab3a%e9%a2%86%e5%af%bc%e8%80%85%e9%80%89%e4%b8%be" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>此任务需要实现Raft领导人选举和心跳（通过不附加日志条目的RPC）。对于这个要求，论文中其实给出了状态转移图，指导我们怎么去做。这个选举流程逻辑如下：</p>
@@ -864,8 +855,8 @@
 </span></span><span class="line"><span class="cl">	<span class="nx">reply</span><span class="p">.</span><span class="nx">Term</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">VoteGranted</span> <span class="p">=</span> <span class="nx">rf</span><span class="p">.</span><span class="nx">currentTerm</span><span class="p">,</span> <span class="kc">true</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="23-lab3b日志" class="heading-element"><span>2.3 2.3 lab3B：日志</span>
-  <a href="#23-lab3b%e6%97%a5%e5%bf%97" class="heading-mark">
+</div><h3 id="lab3b日志" class="heading-element"><span>2.3 lab3B：日志</span>
+  <a href="#lab3b%e6%97%a5%e5%bf%97" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>在Lab3B阶段，我们的目标转向实现Raft协议中至关重要的日志复制机制。其中入口是<code>Start</code>函数（应用程序与Raft的接口）。具体的日志复制流程：</p>
@@ -1209,8 +1200,8 @@
 </span></span><span class="line"><span class="cl">	<span class="p">}</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h3 id="24-lab3c持久化" class="heading-element"><span>2.4 2.4 lab3C：持久化</span>
-  <a href="#24-lab3c%e6%8c%81%e4%b9%85%e5%8c%96" class="heading-mark">
+</div><h3 id="lab3c持久化" class="heading-element"><span>2.4 lab3C：持久化</span>
+  <a href="#lab3c%e6%8c%81%e4%b9%85%e5%8c%96" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>如果基于 Raft 的服务器重新启动，它应该从中断处恢复服务。这要求 Raft 保持在重启后仍然存在的持久状态。论文的图 2 提到了哪种状态应该是持久的，即<code>logs</code>、<code>currentTerm</code>和<code>votedFor</code>。在Lab3C中，我们的任务便是实现<code>persist()</code>和<code>readPersist()</code>这两个核心函数，前者负责保存Raft的状态，后者则是在Raft启动时恢复之前保存的数据。</p>
@@ -1284,8 +1275,8 @@
 <li><strong>任期变更</strong>：当<code>currentTerm</code>发生变化，比如在选举期间或接收到更高任期的领导者信息时。</li>
 <li><strong>投票行为</strong>：当<code>votedFor</code>字段被更新，意味着节点投出了新的一票或取消了之前的投票。</li>
 </ul>
-<h3 id="25-lab3d日志压缩" class="heading-element"><span>2.5 2.5 lab3D：日志压缩</span>
-  <a href="#25-lab3d%e6%97%a5%e5%bf%97%e5%8e%8b%e7%bc%a9" class="heading-mark">
+<h3 id="lab3d日志压缩" class="heading-element"><span>2.5 lab3D：日志压缩</span>
+  <a href="#lab3d%e6%97%a5%e5%bf%97%e5%8e%8b%e7%bc%a9" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p>按照目前的情况，重新启动的服务器会重放完整的 Raft 日志以恢复其状态。然而，对于一个长期运行的服务来说，永远记录完整的 Raft 日志是不切实际的。需要使用快照服务配合，此时Raft会丢弃快照之前的日志条目。lab3D就是需要我们实现日志压缩，具体来说是核心是<code>Snapshot</code>（快照保存函数）以及<code>InstallSnapshot</code>RPC，快照压缩的流程：</p>
@@ -1449,8 +1440,8 @@
 </span></span><span class="line"><span class="cl">	<span class="nx">rf</span><span class="p">.</span><span class="nx">persister</span><span class="p">.</span><span class="nf">SaveStateAndSnapshot</span><span class="p">(</span><span class="nx">rf</span><span class="p">.</span><span class="nf">encodeState</span><span class="p">(),</span> <span class="nx">snapshot</span><span class="p">)</span>
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
-</div><h2 id="3-压测脚本" class="heading-element"><span>3 3 压测脚本</span>
-  <a href="#3-%e5%8e%8b%e6%b5%8b%e8%84%9a%e6%9c%ac" class="heading-mark">
+</div><h2 id="压测脚本" class="heading-element"><span>3 压测脚本</span>
+  <a href="#%e5%8e%8b%e6%b5%8b%e8%84%9a%e6%9c%ac" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p>我自己实现了一个压测脚本：</p>
@@ -1524,7 +1515,7 @@
 </span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="o">((</span><span class="nv">i</span><span class="o">=</span>1<span class="p">;</span> i&lt;<span class="o">=</span>iterations<span class="p">;</span> i++<span class="o">))</span>
 </span></span><span class="line"><span class="cl"><span class="k">do</span>
 </span></span><span class="line"><span class="cl">  <span class="nb">echo</span> <span class="s2">&#34;Running test iteration </span><span class="nv">$i</span><span class="s2">&#34;</span>
-</span></span><span class="line"><span class="cl">  <span class="nv">output</span><span class="o">=</span><span class="k">$(</span>go <span class="nb">test</span> -run <span class="nv">$test_type</span> 2&gt;<span class="p">&amp;</span>1<span class="k">)</span> <span class="c1"># 2&gt;&amp;1 redirects stderr to stdout</span>
+</span></span><span class="line"><span class="cl">  <span class="nv">output</span><span class="o">=</span><span class="k">$(</span>go <span class="nb">test</span> -run <span class="nv">$test_type</span> 2&gt;<span class="p">&amp;</span>1<span class="k">)</span> <span class="c1">#&gt;&amp;1 redirects stderr to stdout</span>
 </span></span><span class="line"><span class="cl">  <span class="k">if</span> <span class="o">[[</span> <span class="nv">$?</span> -ne <span class="m">0</span> <span class="o">]]</span><span class="p">;</span> <span class="k">then</span>
 </span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;Error in iteration </span><span class="nv">$i</span><span class="s2">:&#34;</span>
 </span></span><span class="line"><span class="cl">    <span class="nb">echo</span> <span class="s2">&#34;</span><span class="nv">$output</span><span class="s2">&#34;</span>
@@ -1533,8 +1524,8 @@
 </div>
 </div><p>网上也提供了一个<a href="https://gist.github.com/JJGO/0d73540ef7cc2f066cb535156b7cbdab"target="_blank" rel="external nofollow noopener noreferrer">测试脚本<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>，功能更为强大。压测结果如下所示：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=small" data-sub-html="<h2>image-20240811175403947</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png" alt="image-20240811175403947" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240811175403947.png?size=large 2x" data-title="image-20240811175403947" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<h2 id="4-优化" class="heading-element"><span>4 4 优化</span>
-  <a href="#4-%e4%bc%98%e5%8c%96" class="heading-mark">
+<h2 id="优化" class="heading-element"><span>4 优化</span>
+  <a href="#%e4%bc%98%e5%8c%96" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><ol>

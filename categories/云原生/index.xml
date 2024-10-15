@@ -26,40 +26,40 @@ Docker可以在任何环境、任意时间让应用正常运行。在开发和�
 <li><strong>Docker与虚拟机的比较</strong></li>
 </ul>
 <table>
-<thead>
-<tr>
-<th>特性</th>
-<th>容器</th>
-<th>虚拟机</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>启动速度</td>
-<td>秒级</td>
-<td>分钟级</td>
-</tr>
-<tr>
-<td>硬盘使用</td>
-<td>一般为MB</td>
-<td>一般为GB</td>
-</tr>
-<tr>
-<td>性能</td>
-<td>接近原生</td>
-<td>弱于</td>
-</tr>
-<tr>
-<td>系统支持量</td>
-<td>单机支持上千个容器</td>
-<td>一般为几十个</td>
-</tr>
-<tr>
-<td>隔离性</td>
-<td>安全隔离</td>
-<td>完全隔离</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: left">特性</th>
+          <th style="text-align: left">容器</th>
+          <th style="text-align: left">虚拟机</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">启动速度</td>
+          <td style="text-align: left">秒级</td>
+          <td style="text-align: left">分钟级</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">硬盘使用</td>
+          <td style="text-align: left">一般为MB</td>
+          <td style="text-align: left">一般为GB</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">性能</td>
+          <td style="text-align: left">接近原生</td>
+          <td style="text-align: left">弱于</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">系统支持量</td>
+          <td style="text-align: left">单机支持上千个容器</td>
+          <td style="text-align: left">一般为几十个</td>
+      </tr>
+      <tr>
+          <td style="text-align: left">隔离性</td>
+          <td style="text-align: left">安全隔离</td>
+          <td style="text-align: left">完全隔离</td>
+      </tr>
+  </tbody>
 </table>
 <h3 id="docker的核心概念" class="heading-element"><span>1.4 Docker的核心概念</span>
   <a href="#docker%e7%9a%84%e6%a0%b8%e5%bf%83%e6%a6%82%e5%bf%b5" class="heading-mark">

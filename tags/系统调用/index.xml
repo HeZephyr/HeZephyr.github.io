@@ -52,11 +52,8 @@
   <a href="#fork%e5%ae%9e%e4%be%8b" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h3><h4 id="121多个fork返回值" class="heading-element"><span>1.2.1 1.2.1多个fork返回值</span>
-  <a href="#121%e5%a4%9a%e4%b8%aafork%e8%bf%94%e5%9b%9e%e5%80%bc" class="heading-mark">
-    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
-  </a>
-</h4><div class="highlight"><div class="chroma">
+</h3><p>####.1多个fork返回值</p>
+<div class="highlight"><div class="chroma">
 <table class="lntable"><tr><td class="lntd">
 <pre tabindex="0" class="chroma"><code><span class="lnt"> 1
 </span><span class="lnt"> 2
@@ -88,7 +85,7 @@
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312193151556.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312193151556.png?size=small" data-sub-html="<h2>image-20240312193151556</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312193151556.png" alt="image-20240312193151556" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312193151556.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312193151556.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312193151556.png?size=large 2x" data-title="image-20240312193151556" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>我们画个状态机来理解它们的输出，假设最初的父进程PID为291871：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fork_information.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fork_information.png?size=small" data-sub-html="<h2>fork_information</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fork_information.png" alt="fork_information" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fork_information.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fork_information.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/fork_information.png?size=large 2x" data-title="fork_information" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<h4 id="c语言-fork与输出" class="heading-element"><span>1.2.2 C语言 fork与输出</span>
+<h4 id="c语言-fork与输出" class="heading-element"><span>1.2.1 C语言 fork与输出</span>
   <a href="#c%e8%af%ad%e8%a8%80-fork%e4%b8%8e%e8%be%93%e5%87%ba" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -170,7 +167,7 @@
 </span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
 </div>
 </div><p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312201140424.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312201140424.png?size=small" data-sub-html="<h2>image-20240312201140424</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312201140424.png" alt="image-20240312201140424" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312201140424.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312201140424.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/image-20240312201140424.png?size=large 2x" data-title="image-20240312201140424" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<h4 id="fork-" class="heading-element"><span>1.2.3 fork 💣</span>
+<h4 id="fork-" class="heading-element"><span>1.2.2 fork 💣</span>
   <a href="#fork-" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -382,54 +379,54 @@
 <p><code>flags</code>可以设置新进程的属性（通过二进制位设置），包括是否与原进程共享地址空间（CLONE_VM）、是否共享文件描述符表（CLONE_FILES）、是否共享信号处理器（CLONE_SIGHAND）等等；</p>
 <p><code>int flags = CLONE_VM | CLONE_FS | CLONE_FILES | CLONE_SIGHAND | CLONE_THREAD | CLONE_SYSVSEM | CLONE_SETTLS;</code></p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">标志</th>
-<th style="text-align:center">含义</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">CLONE_PARENT</td>
-<td style="text-align:center">创建的子进程的父进程是调用者的父进程，新进程与创建它的进程成了“兄弟”而不是“父子”</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_FS</td>
-<td style="text-align:center">子进程与父进程共享相同的文件系统，包括root、当前目录、umask</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_FILES</td>
-<td style="text-align:center">子进程与父进程共享相同的文件描述符（file descriptor）表</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_NEWNS</td>
-<td style="text-align:center">在新的namespace启动子进程，namespace描述了进程的文件hierarchy</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_SIGHAND</td>
-<td style="text-align:center">子进程与父进程共享相同的信号处理（signal handler）表</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_PTRACE</td>
-<td style="text-align:center">若父进程被trace，子进程也被trace</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_VFORK</td>
-<td style="text-align:center">父进程被挂起，直至子进程释放虚拟内存资源</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_VM</td>
-<td style="text-align:center">子进程与父进程运行于相同的内存空间</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_PID</td>
-<td style="text-align:center">子进程在创建时PID与父进程一致</td>
-</tr>
-<tr>
-<td style="text-align:center">CLONE_THREAD</td>
-<td style="text-align:center">Linux 2.4中增加以支持POSIX线程标准，子进程与父进程共享相同的线程群</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">标志</th>
+          <th style="text-align: center">含义</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">CLONE_PARENT</td>
+          <td style="text-align: center">创建的子进程的父进程是调用者的父进程，新进程与创建它的进程成了“兄弟”而不是“父子”</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_FS</td>
+          <td style="text-align: center">子进程与父进程共享相同的文件系统，包括root、当前目录、umask</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_FILES</td>
+          <td style="text-align: center">子进程与父进程共享相同的文件描述符（file descriptor）表</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_NEWNS</td>
+          <td style="text-align: center">在新的namespace启动子进程，namespace描述了进程的文件hierarchy</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_SIGHAND</td>
+          <td style="text-align: center">子进程与父进程共享相同的信号处理（signal handler）表</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_PTRACE</td>
+          <td style="text-align: center">若父进程被trace，子进程也被trace</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_VFORK</td>
+          <td style="text-align: center">父进程被挂起，直至子进程释放虚拟内存资源</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_VM</td>
+          <td style="text-align: center">子进程与父进程运行于相同的内存空间</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_PID</td>
+          <td style="text-align: center">子进程在创建时PID与父进程一致</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">CLONE_THREAD</td>
+          <td style="text-align: center">Linux 2.4中增加以支持POSIX线程标准，子进程与父进程共享相同的线程群</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 <li>

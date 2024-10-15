@@ -3526,60 +3526,60 @@ $$
 <p><strong>状态寄存器</strong></p>
 <p>Address 0x1F7</p>
 <table>
-<thead>
-<tr>
-<th>7</th>
-<th>6</th>
-<th>5</th>
-<th>4</th>
-<th>3</th>
-<th>2</th>
-<th>1</th>
-<th>0</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>USY |</td>
-<td>EADY |</td>
-<td>AULT |</td>
-<td>EEK |</td>
-<td>RQ  |</td>
-<td>ORR |</td>
-<td>DX/EX |</td>
-<td>RROR |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: left">7</th>
+          <th style="text-align: left">6</th>
+          <th style="text-align: left">5</th>
+          <th style="text-align: left">4</th>
+          <th style="text-align: left">3</th>
+          <th style="text-align: left">2</th>
+          <th style="text-align: left">1</th>
+          <th style="text-align: left">0</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">USY |</td>
+          <td style="text-align: left">EADY |</td>
+          <td style="text-align: left">AULT |</td>
+          <td style="text-align: left">EEK |</td>
+          <td style="text-align: left">RQ  |</td>
+          <td style="text-align: left">ORR |</td>
+          <td style="text-align: left">DX/EX |</td>
+          <td style="text-align: left">RROR |</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 <li>
 <p><strong>错误寄存器</strong></p>
 <p>Address 0x1F1</p>
 <table>
-<thead>
-<tr>
-<th>7</th>
-<th>6</th>
-<th>5</th>
-<th>4</th>
-<th>3</th>
-<th>2</th>
-<th>1</th>
-<th>0</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>BK  |</td>
-<td>NC  |</td>
-<td>C   |</td>
-<td>DNF |</td>
-<td>CR  |</td>
-<td>BRT |</td>
-<td>0NF |</td>
-<td>MNF |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: left">7</th>
+          <th style="text-align: left">6</th>
+          <th style="text-align: left">5</th>
+          <th style="text-align: left">4</th>
+          <th style="text-align: left">3</th>
+          <th style="text-align: left">2</th>
+          <th style="text-align: left">1</th>
+          <th style="text-align: left">0</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: left">BK  |</td>
+          <td style="text-align: left">NC  |</td>
+          <td style="text-align: left">C   |</td>
+          <td style="text-align: left">DNF |</td>
+          <td style="text-align: left">CR  |</td>
+          <td style="text-align: left">BRT |</td>
+          <td style="text-align: left">0NF |</td>
+          <td style="text-align: left">MNF |</td>
+      </tr>
+  </tbody>
 </table>
 <ul>
 <li>BBK: Bad Block</li>
@@ -4446,61 +4446,61 @@ $$
 </h3><p>在某些情况下，避免死锁比预防死锁更可取。避免死锁需要一些全局知识，了解各个线程在执行期间可能会获取哪些锁，并随后以保证不会发生死锁的方式调度所述线程。</p>
 <p>例如，假设我们有两个处理器和四个线程，必须在它们上进行调度。进一步假设我们知道线程 1 (<code>T1</code>) 获取锁 <code>L1</code> 和 <code>L2</code>（以某种顺序，在执行期间的某个时刻），<code>T2</code> 也获取 <code>L1</code> 和 <code>L2</code>，<code>T3</code> 仅获取 <code>L2</code>，而 <code>T4</code> 根本不获取锁。我们可以以表格形式展示线程的这些锁获取需求：</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center"></th>
-<th style="text-align:center">T1</th>
-<th style="text-align:center">T2</th>
-<th style="text-align:center">T3</th>
-<th style="text-align:center">T4</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">L1</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">no</td>
-<td style="text-align:center">no</td>
-</tr>
-<tr>
-<td style="text-align:center">L2</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">no</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center"></th>
+          <th style="text-align: center">T1</th>
+          <th style="text-align: center">T2</th>
+          <th style="text-align: center">T3</th>
+          <th style="text-align: center">T4</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">L1</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">no</td>
+          <td style="text-align: center">no</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">L2</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">no</td>
+      </tr>
+  </tbody>
 </table>
 <p>因此，智能调度程序可以计算出，只要 <code>T1</code> 和 <code>T2</code> 不同时运行，就不会出现死锁。下面就是这样一个调度程序：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example.png?size=small" data-sub-html="<h2>image-20240411195407552</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example.png" alt="image-20240411195407552" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example.png?size=large 2x" data-title="image-20240411195407552" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>请注意，（<code>T3</code> 和 <code>T1</code>）或（<code>T3</code> 和 <code>T2</code>）是可以重叠的。即使 <code>T3</code> 抓住了锁 <code>L2</code>，它也不会因为与其他线程同时运行而导致死锁，因为它只抓住了一个锁。让我们再看一个例子。在这个例子中，对相同资源（同样是锁 <code>L1</code> 和 <code>L2</code>）的争用更多，如下面的争用表所示：</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center"></th>
-<th style="text-align:center">T1</th>
-<th style="text-align:center">T2</th>
-<th style="text-align:center">T3</th>
-<th style="text-align:center">T4</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">L1</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">Yes</td>
-<td style="text-align:center">no</td>
-</tr>
-<tr>
-<td style="text-align:center">L2</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">yes</td>
-<td style="text-align:center">no</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center"></th>
+          <th style="text-align: center">T1</th>
+          <th style="text-align: center">T2</th>
+          <th style="text-align: center">T3</th>
+          <th style="text-align: center">T4</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">L1</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">Yes</td>
+          <td style="text-align: center">no</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">L2</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">yes</td>
+          <td style="text-align: center">no</td>
+      </tr>
+  </tbody>
 </table>
 <p>其中，线程 <code>T1</code>、<code>T2</code> 和 <code>T3</code> 都需要在执行过程中的某个时刻同时抓住锁 <code>L1</code> 和 <code>L2</code>。下面是一个可以保证不发生死锁的调度表：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example_2.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example_2.png?size=small" data-sub-html="<h2>image-20240411195925218</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example_2.png" alt="image-20240411195925218" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example_2.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example_2.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/CPU_Scheduler_Example_2.png?size=large 2x" data-title="image-20240411195925218" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>

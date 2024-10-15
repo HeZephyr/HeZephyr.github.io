@@ -36,7 +36,7 @@ pid_t fork(void)
 
 ### fork实例
 
-#### 1.2.1多个fork返回值
+####.1多个fork返回值
 
 ```c
 #include &lt;stdio.h&gt;

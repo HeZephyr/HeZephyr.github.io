@@ -11,38 +11,38 @@
 <li>
 <p>宏定义 #define 和 const 常量</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">宏定义 #define</th>
-<th style="text-align:center">const 常量</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">宏定义，相当于字符替换         |</td>
-<td style="text-align:center">常量声明    |</td>
-</tr>
-<tr>
-<td style="text-align:center"><font color="red">预处理器处理</font> |</td>
-<td style="text-align:center">编译器处理   |</td>
-</tr>
-<tr>
-<td style="text-align:center">无类型安全检查             |</td>
-<td style="text-align:center">有类型安全检查 |</td>
-</tr>
-<tr>
-<td style="text-align:center">不分配内存               |</td>
-<td style="text-align:center">要分配内存   |</td>
-</tr>
-<tr>
-<td style="text-align:center"><font color="red">存储在代码段</font> |</td>
-<td style="text-align:center">存储在数据段  |</td>
-</tr>
-<tr>
-<td style="text-align:center">可通过 <code>#undef</code> 取消          |</td>
-<td style="text-align:center">不可取消    |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">宏定义 #define</th>
+          <th style="text-align: center">const 常量</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">宏定义，相当于字符替换         |</td>
+          <td style="text-align: center">常量声明    |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><font color="red">预处理器处理</font> |</td>
+          <td style="text-align: center">编译器处理   |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">无类型安全检查             |</td>
+          <td style="text-align: center">有类型安全检查 |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">不分配内存               |</td>
+          <td style="text-align: center">要分配内存   |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><font color="red">存储在代码段</font> |</td>
+          <td style="text-align: center">存储在数据段  |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">可通过 <code>#undef</code> 取消          |</td>
+          <td style="text-align: center">不可取消    |</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 <li>
@@ -685,146 +685,146 @@
 <li>
 <p>STL容器</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">容器</th>
-<th style="text-align:center">底层数据结构</th>
-<th style="text-align:center">时间复杂度</th>
-<th style="text-align:center">有无序</th>
-<th style="text-align:center">可不可重复</th>
-<th style="text-align:center">其他</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">array</td>
-<td style="text-align:center">数组</td>
-<td style="text-align:center">随机读改 O(1)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">支持随机访问，大小固定，不能动态调整</td>
-</tr>
-<tr>
-<td style="text-align:center">vector</td>
-<td style="text-align:center">数组</td>
-<td style="text-align:center">随机读改、尾部插入、尾部删除 O(1) 头部插入、头部删除 O(n)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">支持随机访问，动态调整大小，使用连续内存存储，插入删除效率视位置而定</td>
-</tr>
-<tr>
-<td style="text-align:center">deque</td>
-<td style="text-align:center">双端队列</td>
-<td style="text-align:center">头尾插入、头尾删除 O(1)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">一个中央控制器 + 多个缓冲区，支持首尾快速增删，支持随机访问，但随机访问效率略低于vector</td>
-</tr>
-<tr>
-<td style="text-align:center">forward_list</td>
-<td style="text-align:center">单向链表</td>
-<td style="text-align:center">插入、删除 O(1)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">不支持随机访问，只能单向遍历，适用于只需前向访问和修改的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">list</td>
-<td style="text-align:center">双向链表</td>
-<td style="text-align:center">插入、删除 O(1)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">不支持随机访问，支持双向遍历，适用于频繁插入和删除的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">stack</td>
-<td style="text-align:center">deque / list</td>
-<td style="text-align:center">顶部插入、顶部删除 O(1)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">适用于后进先出（LIFO）的场景，使用deque或list实现，不用vector的原因是扩容耗时</td>
-</tr>
-<tr>
-<td style="text-align:center">queue</td>
-<td style="text-align:center">deque / list</td>
-<td style="text-align:center">尾部插入、头部删除 O(1)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">适用于先进先出（FIFO）的场景，使用deque或list实现，不用vector的原因是扩容耗时</td>
-</tr>
-<tr>
-<td style="text-align:center">priority_queue</td>
-<td style="text-align:center">vector + max-heap</td>
-<td style="text-align:center">插入、删除 O(log2n)</td>
-<td style="text-align:center">有序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">使用最大堆实现，适用于需要动态获取最大元素的场景，底层使用vector存储</td>
-</tr>
-<tr>
-<td style="text-align:center">set</td>
-<td style="text-align:center">红黑树</td>
-<td style="text-align:center">插入、删除、查找 O(log2n)</td>
-<td style="text-align:center">有序</td>
-<td style="text-align:center">不可重复</td>
-<td style="text-align:center">自动排序且元素唯一，适用于需要有序且无重复元素的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">multiset</td>
-<td style="text-align:center">红黑树</td>
-<td style="text-align:center">插入、删除、查找 O(log2n)</td>
-<td style="text-align:center">有序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">自动排序，允许重复元素，适用于需要有序且可重复元素的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">map</td>
-<td style="text-align:center">红黑树</td>
-<td style="text-align:center">插入、删除、查找 O(log2n)</td>
-<td style="text-align:center">有序</td>
-<td style="text-align:center">不可重复</td>
-<td style="text-align:center">键值对存储，键唯一，自动按键排序，适用于需要按键有序访问且键唯一的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">multimap</td>
-<td style="text-align:center">红黑树</td>
-<td style="text-align:center">插入、删除、查找 O(log2n)</td>
-<td style="text-align:center">有序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">键值对存储，键可重复，自动按键排序，适用于需要按键有序访问且键可重复的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">unordered_set</td>
-<td style="text-align:center">哈希表</td>
-<td style="text-align:center">插入、删除、查找 O(1) 最差 O(n)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">不可重复</td>
-<td style="text-align:center">使用哈希表实现，元素唯一，无序存储，适用于快速查找和插入的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">unordered_multiset</td>
-<td style="text-align:center">哈希表</td>
-<td style="text-align:center">插入、删除、查找 O(1) 最差 O(n)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">使用哈希表实现，允许重复元素，无序存储，适用于需要快速查找和插入且元素可重复的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">unordered_map</td>
-<td style="text-align:center">哈希表</td>
-<td style="text-align:center">插入、删除、查找 O(1) 最差 O(n)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">不可重复</td>
-<td style="text-align:center">键值对存储，键唯一，使用哈希表实现，无序存储，适用于需要快速按键查找和插入的场景</td>
-</tr>
-<tr>
-<td style="text-align:center">unordered_multimap</td>
-<td style="text-align:center">哈希表</td>
-<td style="text-align:center">插入、删除、查找 O(1) 最差 O(n)</td>
-<td style="text-align:center">无序</td>
-<td style="text-align:center">可重复</td>
-<td style="text-align:center">键值对存储，键可重复，使用哈希表实现，无序存储，适用于需要快速按键查找和插入且键可重复的场景</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">容器</th>
+          <th style="text-align: center">底层数据结构</th>
+          <th style="text-align: center">时间复杂度</th>
+          <th style="text-align: center">有无序</th>
+          <th style="text-align: center">可不可重复</th>
+          <th style="text-align: center">其他</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">array</td>
+          <td style="text-align: center">数组</td>
+          <td style="text-align: center">随机读改 O(1)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">支持随机访问，大小固定，不能动态调整</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">vector</td>
+          <td style="text-align: center">数组</td>
+          <td style="text-align: center">随机读改、尾部插入、尾部删除 O(1) 头部插入、头部删除 O(n)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">支持随机访问，动态调整大小，使用连续内存存储，插入删除效率视位置而定</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">deque</td>
+          <td style="text-align: center">双端队列</td>
+          <td style="text-align: center">头尾插入、头尾删除 O(1)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">一个中央控制器 + 多个缓冲区，支持首尾快速增删，支持随机访问，但随机访问效率略低于vector</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">forward_list</td>
+          <td style="text-align: center">单向链表</td>
+          <td style="text-align: center">插入、删除 O(1)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">不支持随机访问，只能单向遍历，适用于只需前向访问和修改的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">list</td>
+          <td style="text-align: center">双向链表</td>
+          <td style="text-align: center">插入、删除 O(1)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">不支持随机访问，支持双向遍历，适用于频繁插入和删除的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">stack</td>
+          <td style="text-align: center">deque / list</td>
+          <td style="text-align: center">顶部插入、顶部删除 O(1)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">适用于后进先出（LIFO）的场景，使用deque或list实现，不用vector的原因是扩容耗时</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">queue</td>
+          <td style="text-align: center">deque / list</td>
+          <td style="text-align: center">尾部插入、头部删除 O(1)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">适用于先进先出（FIFO）的场景，使用deque或list实现，不用vector的原因是扩容耗时</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">priority_queue</td>
+          <td style="text-align: center">vector + max-heap</td>
+          <td style="text-align: center">插入、删除 O(log2n)</td>
+          <td style="text-align: center">有序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">使用最大堆实现，适用于需要动态获取最大元素的场景，底层使用vector存储</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">set</td>
+          <td style="text-align: center">红黑树</td>
+          <td style="text-align: center">插入、删除、查找 O(log2n)</td>
+          <td style="text-align: center">有序</td>
+          <td style="text-align: center">不可重复</td>
+          <td style="text-align: center">自动排序且元素唯一，适用于需要有序且无重复元素的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">multiset</td>
+          <td style="text-align: center">红黑树</td>
+          <td style="text-align: center">插入、删除、查找 O(log2n)</td>
+          <td style="text-align: center">有序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">自动排序，允许重复元素，适用于需要有序且可重复元素的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">map</td>
+          <td style="text-align: center">红黑树</td>
+          <td style="text-align: center">插入、删除、查找 O(log2n)</td>
+          <td style="text-align: center">有序</td>
+          <td style="text-align: center">不可重复</td>
+          <td style="text-align: center">键值对存储，键唯一，自动按键排序，适用于需要按键有序访问且键唯一的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">multimap</td>
+          <td style="text-align: center">红黑树</td>
+          <td style="text-align: center">插入、删除、查找 O(log2n)</td>
+          <td style="text-align: center">有序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">键值对存储，键可重复，自动按键排序，适用于需要按键有序访问且键可重复的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">unordered_set</td>
+          <td style="text-align: center">哈希表</td>
+          <td style="text-align: center">插入、删除、查找 O(1) 最差 O(n)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">不可重复</td>
+          <td style="text-align: center">使用哈希表实现，元素唯一，无序存储，适用于快速查找和插入的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">unordered_multiset</td>
+          <td style="text-align: center">哈希表</td>
+          <td style="text-align: center">插入、删除、查找 O(1) 最差 O(n)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">使用哈希表实现，允许重复元素，无序存储，适用于需要快速查找和插入且元素可重复的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">unordered_map</td>
+          <td style="text-align: center">哈希表</td>
+          <td style="text-align: center">插入、删除、查找 O(1) 最差 O(n)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">不可重复</td>
+          <td style="text-align: center">键值对存储，键唯一，使用哈希表实现，无序存储，适用于需要快速按键查找和插入的场景</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">unordered_multimap</td>
+          <td style="text-align: center">哈希表</td>
+          <td style="text-align: center">插入、删除、查找 O(1) 最差 O(n)</td>
+          <td style="text-align: center">无序</td>
+          <td style="text-align: center">可重复</td>
+          <td style="text-align: center">键值对存储，键可重复，使用哈希表实现，无序存储，适用于需要快速按键查找和插入且键可重复的场景</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 </ol>

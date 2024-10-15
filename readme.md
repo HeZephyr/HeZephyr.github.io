@@ -1,11 +1,16 @@
 # ZephyrHe
 
-共计 130 篇文章
+共计 135 篇文章
 
 ## 2024
 
-共计 70 篇文章
+共计 75 篇文章
 
+- 10-14 [分布式系统理论详解：CAP、BASE、PACELC](https://hezephyr.github.io/posts/10.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%90%86%E8%AE%BA/ "2024-10-14 00:00:00")
+- 10-13 [【论文阅读笔记】The Chubby lock service for loosely-coupled distributed systems](https://hezephyr.github.io/posts/10.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0chubby/ "2024-10-13 00:00:00")
+- 10-13 [【论文阅读笔记】Bigtable: A Distributed Storage System for Structured Data](https://hezephyr.github.io/posts/11.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0bigtable/ "2024-10-13 00:00:00")
+- 09-20 [Prometheus使用Pushgateway推送数据](https://hezephyr.github.io/posts/02.prometheus%E4%BD%BF%E7%94%A8pushgateway%E6%8E%A8%E9%80%81%E6%95%B0%E6%8D%AE/ "2024-09-20 10:02:04")
+- 09-19 [Prometheus架构详解](https://hezephyr.github.io/posts/01.prometheus%E6%9E%B6%E6%9E%84%E8%AF%A6%E8%A7%A3/ "2024-09-19 10:00:00")
 - 08-30 [【论文阅读笔记】Grove: a Separation-Logic Library for Verifying Distributed Systems (Extended Version)](https://hezephyr.github.io/posts/09.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0grove/ "2024-08-30 00:00:00")
 - 08-30 [【MIT 6.5840(6.824)】 Lab 4:Fault-tolerant KVService 设计实现](https://hezephyr.github.io/posts/09.mit-6.58406.824-lab4-fault-tolerant-kvservice/ "2024-08-30 00:00:00")
 - 08-11 [【论文阅读笔记】ZooKeeper: Wait-free coordination for Internet-scale systems](https://hezephyr.github.io/posts/08.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0zookeeper-wait-free-coordination-for-internet-scale-systems/ "2024-08-11 00:00:00")

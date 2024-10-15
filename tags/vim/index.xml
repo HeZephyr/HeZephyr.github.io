@@ -1,8 +1,286 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Vim - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/vim/</link><description>Vim - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 21 Jan 2022 10:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/vim/" rel="self" type="application/rss+xml"/><item><title>Vim教程</title><link>https://hezephyr.github.io/posts/02.vim%E6%95%99%E7%A8%8B/</link><pubDate>Fri, 21 Jan 2022 10:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/02.vim%E6%95%99%E7%A8%8B/</guid><description><![CDATA[<h2 id="1-vim" class="heading-element"><span>1 1. Vim</span>
-  <a href="#1-vim" class="heading-mark">
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>Vim - 标签 | ZephyrHe</title><link>https://hezephyr.github.io/tags/vim/</link><description>Vim - 标签 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Fri, 20 Sep 2024 10:02:04 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/tags/vim/" rel="self" type="application/rss+xml"/><item><title>Prometheus使用Pushgateway推送数据</title><link>https://hezephyr.github.io/posts/02.prometheus%E4%BD%BF%E7%94%A8pushgateway%E6%8E%A8%E9%80%81%E6%95%B0%E6%8D%AE/</link><pubDate>Fri, 20 Sep 2024 10:02:04 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/02.prometheus%E4%BD%BF%E7%94%A8pushgateway%E6%8E%A8%E9%80%81%E6%95%B0%E6%8D%AE/</guid><description><![CDATA[<h2 id="pushgateway简介" class="heading-element"><span>1 Pushgateway简介</span>
+  <a href="#pushgateway%e7%ae%80%e4%bb%8b" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
-</h2><h3 id="vim简介" class="heading-element"><span>1.1 Vim简介</span>
+</h2><p>Prometheus 的 Pushgateway 是一个简单的 HTTP 服务器，它允许数据被推送到该服务器，而不是通过拉取的方式获取。它的存在是为了让临时和批处理作业能够将其指标暴露给 Prometheus。由于这类作业可能存在的时长不足以被主动抓取，因此它们可以将指标推送到 Pushgateway。随后，Pushgateway 会将这些指标暴露给 Prometheus。</p>
+<p>Pushgateway 作为中间件，保存推送的数据直到 Prometheus 抓取。它支持从多个来源推送指标，<strong>每个来源都通过唯一的 <code>job</code> 标签来标识，并且可以选择性地附加额外的标签</strong>。</p>
+<p>Pushgateway GitHub 地址：<a href="https://github.com/prometheus/pushgateway"target="_blank" rel="external nofollow noopener noreferrer">https://github.com/prometheus/pushgateway<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+<h2 id="安装" class="heading-element"><span>2 安装</span>
+  <a href="#%e5%ae%89%e8%a3%85" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>要安装 Pushgateway，你可以下载二进制包或使用包管理器，但更推荐使用 Docker。你可以在任何机器上安装 Pushgateway，通常只需要一台 Pushgateway 服务器即可处理来自所有来源的指标。以下是使用 Docker 设置 Pushgateway 的方法：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">docker pull prom/pushgateway
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">docker run -d -p 9091:9091 prom/pushgateway</span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="向-pushgateway-推送指标" class="heading-element"><span>3 向 Pushgateway 推送指标</span>
+  <a href="#%e5%90%91-pushgateway-%e6%8e%a8%e9%80%81%e6%8c%87%e6%a0%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>向 Pushgateway 推送指标时，你可以使用 <code>curl</code> 命令行工具或者开发自定义应用程序发送 HTTP 请求。此外，还有适用于多种编程语言的第三方库，可简化向 Pushgateway 发送指标的过程。</p>
+<h3 id="使用-curl" class="heading-element"><span>3.1 使用 <code>curl</code></span>
+  <a href="#%e4%bd%bf%e7%94%a8-curl" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>以下是一个向 Pushgateway 推送单个指标的例子：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-shell" data-lang="shell"><span class="line"><span class="cl">curl -X POST http://<span class="o">{</span>pushgateway_server<span class="o">}</span>:<span class="o">{</span>port<span class="o">}</span>/metrics/job/myjob/instance/myinstance <span class="se">\
+</span></span></span><span class="line"><span class="cl"><span class="se"></span>     --data <span class="s1">&#39;my_metric{label=&#34;value&#34;} 1.0&#39;</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>此命令推送了一个名为 <code>my_metric</code> 的指标，其值为 <code>1.0</code> 并带有一个 <code>label</code> 设置为 <code>value</code> 的标签。</p>
+<h3 id="使用第三方库" class="heading-element"><span>3.2 使用第三方库</span>
+  <a href="#%e4%bd%bf%e7%94%a8%e7%ac%ac%e4%b8%89%e6%96%b9%e5%ba%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>有若干第三方库可以帮助你将 Pushgateway 的功能整合到你的应用程序中。这些库提供了一个更高层次的 API 来发送指标，使得与 Pushgateway 的交互更加容易管理。</p>
+<p>例如，在 Python 中，你可以使用 <code>prometheus_client</code> 库，下面是一段实现代码：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-python" data-lang="python"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">csv</span>
+</span></span><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">prometheus_client</span> <span class="kn">import</span> <span class="n">CollectorRegistry</span><span class="p">,</span> <span class="n">Gauge</span><span class="p">,</span> <span class="n">push_to_gateway</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">class</span> <span class="nc">PrometheusPusher</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metric_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">job_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">pushgateway_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;localhost:9091&#39;</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">        Initialize an instance of PrometheusPusher.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :param metric_name: The name of the metric.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :param description: A description of the metric.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :param job_name: Job name used to identify the source.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :param pushgateway_url: URL of the Pushgateway service, default is localhost:9091.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span> <span class="o">=</span> <span class="n">metric_name</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">job_name</span> <span class="o">=</span> <span class="n">job_name</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">pushgateway_url</span> <span class="o">=</span> <span class="n">pushgateway_url</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">registry</span> <span class="o">=</span> <span class="n">CollectorRegistry</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">gauge</span> <span class="o">=</span> <span class="kc">None</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">create_gauge</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_names</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">        Create a gauge metric with labels.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :param label_names: List of label names.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">gauge</span> <span class="o">=</span> <span class="n">Gauge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">metric_name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span><span class="p">,</span> <span class="n">label_names</span><span class="p">,</span> <span class="n">registry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">push_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">label_values</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">        Push the metric value to the Pushgateway.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :param label_values: List of label values.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauge</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Error: Gauge is not created&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">return</span>
+</span></span><span class="line"><span class="cl">        <span class="bp">self</span><span class="o">.</span><span class="n">gauge</span><span class="o">.</span><span class="n">labels</span><span class="p">(</span><span class="o">*</span><span class="n">label_values</span><span class="p">)</span><span class="o">.</span><span class="n">set</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">try</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">push_to_gateway</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">pushgateway_url</span><span class="p">,</span> <span class="n">job</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">job_name</span><span class="p">,</span> <span class="n">registry</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">registry</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Successfully pushed metrics for </span><span class="si">{</span><span class="n">label_values</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to push metrics for </span><span class="si">{</span><span class="n">label_values</span><span class="si">}</span><span class="s1">. Error: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    
+</span></span><span class="line"><span class="cl">    <span class="k">def</span> <span class="nf">push_metrics_from_csv</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">csv_file_path</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">        Read data from a CSV file and push metrics.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        
+</span></span></span><span class="line"><span class="cl"><span class="s2">        :param csv_file_path: Path to the CSV file.
+</span></span></span><span class="line"><span class="cl"><span class="s2">        &#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl">        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">csv_file_path</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">            <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="c1"># Get the label names (first row)</span>
+</span></span><span class="line"><span class="cl">            <span class="n">label_names</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="n">reader</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="bp">self</span><span class="o">.</span><span class="n">create_gauge</span><span class="p">(</span><span class="n">label_names</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">row</span><span class="p">)</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">label_names</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&#34;Warning: Ignoring row with incorrect number of columns: </span><span class="si">{</span><span class="n">row</span><span class="si">}</span><span class="s2">&#34;</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">                    <span class="k">continue</span>
+</span></span><span class="line"><span class="cl">                <span class="bp">self</span><span class="o">.</span><span class="n">push_metrics</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Example CSV file format:</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># label1, label2</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># value1, value2</span>
+</span></span><span class="line"><span class="cl"><span class="c1"># ...</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1"># Main entry point</span>
+</span></span><span class="line"><span class="cl"><span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="c1"># Set CSV file path and other parameters</span>
+</span></span><span class="line"><span class="cl">    <span class="n">csv_file_path</span> <span class="o">=</span> <span class="s1">&#39;example_data.csv&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">metric_name</span> <span class="o">=</span> <span class="s1">&#39;example_metric&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">description</span> <span class="o">=</span> <span class="s1">&#39;An example metric for demonstration purposes.&#39;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">job_name</span> <span class="o">=</span> <span class="s2">&#34;example_job&#34;</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pushgateway_url</span> <span class="o">=</span> <span class="s1">&#39;slcx-grafana.calix.local:9091&#39;</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="c1"># Create an instance of PrometheusPusher and push data from CSV file</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pusher</span> <span class="o">=</span> <span class="n">PrometheusPusher</span><span class="p">(</span><span class="n">metric_name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">job_name</span><span class="p">,</span> <span class="n">pushgateway_url</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="n">pusher</span><span class="o">.</span><span class="n">push_metrics_from_csv</span><span class="p">(</span><span class="n">csv_file_path</span><span class="p">)</span></span></span></code></pre></td></tr></table>
+</div>
+</div>]]></description></item><item><title>Prometheus架构详解</title><link>https://hezephyr.github.io/posts/01.prometheus%E6%9E%B6%E6%9E%84%E8%AF%A6%E8%A7%A3/</link><pubDate>Thu, 19 Sep 2024 10:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/01.prometheus%E6%9E%B6%E6%9E%84%E8%AF%A6%E8%A7%A3/</guid><description><![CDATA[<h2 id="prometheus简介" class="heading-element"><span>1 Prometheus简介</span>
+  <a href="#prometheus%e7%ae%80%e4%bb%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Prometheus 是一个开源的系统监控报警工具套件，它最初由SoundCloud开发，并于2016年成为CNCF（云原生计算基金会）托管的第二个项目（第一个是kubernetes）。Prometheus 以其简单高效的方式收集指标而闻名，能更好地与容器平台、云平台配合，这使得它在现代云原生环境中非常受欢迎。Prometheus 被广泛应用于各种场景中，包括但不限于：</p>
+<ul>
+<li><strong>应用性能监控</strong>：监控应用程序的健康状态和性能指标。</li>
+<li><strong>基础设施监控</strong>：监控服务器、存储设备、网络设备等基础设施的状态。</li>
+<li><strong>业务监控</strong>：监控业务层面的关键性能指标（KPIs）。</li>
+</ul>
+<p>Prometheus的主要优势如下：</p>
+<ul>
+<li><strong>独立性</strong>：Prometheus 服务器本身是一个独立的二进制文件，易于部署和管理。</li>
+<li><strong>多维度数据模型</strong>：数据以多维键值对的形式存储，便于灵活查询。</li>
+<li><strong>无中介</strong>：Prometheus 通过HTTP协议直接抓取被监控系统的度量信息，不需要中间代理。</li>
+<li><strong>丰富的数据存储</strong>：Prometheus 内置的时间序列数据库（TSDB）能够高效存储大量的时间序列数据。</li>
+<li><strong>强大的查询语言</strong>：PromQL 提供了强大的查询功能，支持复杂的聚合操作。</li>
+<li><strong>灵活的告警机制</strong>：通过Alertmanager 可以配置复杂的告警规则并处理告警消息。</li>
+<li><strong>插件化设计</strong>：支持各种Exporter，能够轻松集成到现有系统中。</li>
+</ul>
+<h2 id="架构" class="heading-element"><span>2 架构</span>
+  <a href="#%e6%9e%b6%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>Prometheus的架构设计旨在提供一个简单、高效且可扩展的监控解决方案，核心组件包括Prometheus Server、Exporters、PushGateway、Service Discovery、Alertmanager以及数据可视化工具（如Grafana）等。其整体架构如下图所示：
+<a class="lightgallery" href="https://i-blog.csdnimg.cn/direct/018f226650834e569b66ecfffe60623f.png?size=large" data-thumbnail="https://i-blog.csdnimg.cn/direct/018f226650834e569b66ecfffe60623f.png?size=small" data-sub-html="<h2>在这里插入图片描述</h2>"><img loading="lazy" src="https://i-blog.csdnimg.cn/direct/018f226650834e569b66ecfffe60623f.png" alt="在这里插入图片描述" srcset="https://i-blog.csdnimg.cn/direct/018f226650834e569b66ecfffe60623f.png?size=small, https://i-blog.csdnimg.cn/direct/018f226650834e569b66ecfffe60623f.png?size=medium 1.5x, https://i-blog.csdnimg.cn/direct/018f226650834e569b66ecfffe60623f.png?size=large 2x" data-title="在这里插入图片描述" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<ol>
+<li>
+<p>客户端</p>
+<ul>
+<li><strong>Short-lived jobs</strong>：对于那些生命周期较短的任务，可能在Prometheus来pull之前就消失了。Prometheus提供了PushGateway机制。客户端（或服务端）安装官方的PushGateway，这些任务可以将它们的监控数据组织成Key-Value形式并推送到PushGateway，然后Prometheus Server会定期从PushGateway拉取数据。这里需要注意的是PushGateway不一定要安装在被监控端，也可以安装在服务端，甚至是一台不相关的主机上，换句话来说，它只是一个中间转发的媒介，确保即使是在任务结束之后，Prometheus也能获取到必要的监控数据。</li>
+<li><strong>Jobs supported by Prometheus</strong>：Prometheus支持多种服务（如cAdvisor, Kubernetes, Etcd, Gokit等）直接向Prometheus暴露监控数据。这些服务通常被称为“Jobs”，它们通过内置的端点直接与Prometheus交互，无需额外的中间层。</li>
+<li><strong>Exporter</strong>：Exporter是Prometheus生态系统中的重要组成部分。它们通常作为中间层运行在被监控系统旁边，负责从不同的后端系统中提取度量数据，并将其转换为Prometheus可以理解的格式。这样，即使原有的监控目标不直接支持 Prometheus，也可以通过 Prometheus 提供的 Client Library 编写该监控目标的监控采集程序。例如，可以通过 Node Exporter 来监控 Linux 或 Windows 主机的硬件资源使用情况。常用的 Exporter 包括 Mysql Exporter、JMX Exporter、Consul Exporter 等。</li>
+</ul>
+</li>
+<li>
+<p>Prometheus Server</p>
+<p>Prometheus Server是Prometheus组件中的核心部分，负责实现对监控数据的获取，存储以及查询。</p>
+<ul>
+<li><strong>数据获取 (Data Retrieval)</strong>：Prometheus Server 可以通过静态配置的方式来管理其监控的目标，同时也支持结合 Service Discovery 动态地发现和管理监控目标。这种方式允许 Prometheus Server 在网络中自动识别服务实例，并从这些实例中拉取监控数据。</li>
+<li><strong>数据存储 (Data Storage)</strong>：Prometheus Server 内置了时序数据库功能，能够将采集到的监控数据按时间序列的形式存储在本地磁盘上。此外，Prometheus 社区也提供了与外部时序数据库集成的方案，以满足特定场景下的存储需求。</li>
+<li><strong>数据查询 (Data Querying)</strong>：Prometheus Server对外提供了自定义的PromQL语言，实现对数据的查询以及分析。</li>
+</ul>
+</li>
+<li>
+<p>Server discovery</p>
+<p>Prometheus为了适应动态变化的环境，提供了服务发现机制来自动管理监控目标列表。在现代云原生环境中，资源使用方式通常是按需的，这意味着没有固定的监控目标，所有的监控对象（包括基础设施、应用和服务）都在动态变化。对于 Prometheus 这一类基于 Pull 模式的监控系统，显然无法继续使用<code>static_configs</code>的方式静态地定义监控目标。因此，Prometheus 引入了一个中间的代理人（即服务注册中心），这个代理人掌握着当前所有监控目标的访问信息，Prometheus 只需要向这个代理人询问有哪些监控目标即可。这种模式被称为服务发现。</p>
+<p>Prometheus 支持多种服务发现机制，包括但不限于以下几种：</p>
+<ul>
+<li><strong>Consul</strong>：Consul 是一种服务网格工具，可以用来发现和监控服务。Prometheus 可以集成 Consul 来动态发现服务实例，在微服务架构的应用程序中，Consul 常被用作服务发现注册软件，Prometheus 与其集成从而动态发现需要监控的应用服务实例。</li>
+<li><strong>DNS SD</strong>：DNS 服务发现是一种基于 DNS 的服务发现机制，适用于那些使用 DNS 解析服务位置的环境。</li>
+<li><strong>Kubernetes SD</strong>：在 Kubernetes 这类容器管理平台中，Kubernetes 掌握并管理着所有的容器以及服务信息，Prometheus 只需要与 Kubernetes 打交道就可以找到所有需要监控的容器以及服务对象。</li>
+<li><strong>EC2 SD</strong>：在 AWS 的 EC2 环境中，Prometheus 可以使用 EC2 服务发现来自动发现和监控运行中的实例。</li>
+</ul>
+</li>
+<li>
+<p>AlertManager</p>
+<p>AlertManager 是 Prometheus 架构中的另一个关键组件，负责处理来自 Prometheus Server 的警报。支持基于PromQL创建告警规则，当 Prometheus Server 检测到告警规则被触发时，会产生警报，并将这些警报发送给 AlertManager。AlertManager 负责汇总、去重、抑制和路由这些警报，确保警报信息能够及时、准确地通知到相关人员或系统。</p>
+<ul>
+<li><strong>汇总与去重</strong>：AlertManager 会汇总来自多个 Prometheus Server 的警报，并去除重复的警报，以减少无效的通知。</li>
+<li><strong>抑制 (Silencing)</strong>：管理员可以设置抑制规则，临时屏蔽特定的警报，避免在维护窗口期间产生不必要的警报。</li>
+<li><strong>路由 (Routing)</strong>：AlertManager 支持基于警报标签的路由策略，可以根据预定义的规则将警报发送给不同的接收者或接收组，确保警报能够发送给最合适的人或系统进行处理。</li>
+<li><strong>通知 (Notification)</strong>：AlertManager 支持多种通知方式，包括电子邮件、PagerDuty、OpsGenie、WeChat Work 等，也可以通过Webhook自定义告警处理方式，以便快速响应警报。</li>
+</ul>
+<p>Prometheus 自带的 AlertManager 模块可以与诸如 PagerDuty 这样的商业化服务集成，实现警报和邮件的发送功能。然而，在国内使用 AlertManager 结合 PagerDuty 可能会遇到一些不便。因此，通常的做法是将Prometheus的数据集成到 Grafana 中进行展示，并在 Grafana 中配置警报，以实现更简便的本地化警报管理。</p>
+</li>
+<li>
+<p>监控数据可视化</p>
+<p>监控数据可视化是监控系统不可或缺的一部分，它帮助用户直观地理解系统的健康状况和性能表现。Prometheus Web UI是Prometheus内置的一个可视化管理界面，通过Prometheus UI用户能够轻松的了解Prometheus当前的配置，监控任务运行状态等。但在生态系统中常用的数据可视化工具是 Grafana，它是一个开源的度量仪表板和可视化工具，支持多种数据源，包括 Prometheus，使得用户可以轻松地创建图表和仪表板来展示监控数据。Grafana 不仅限于数据展示，还可以配置警报。用户可以在 Grafana 中设置基于 Prometheus 数据的警报规则，当监控数据达到预设的阈值时，可以触发警报。Grafana 可以通过多种渠道发送警报通知，包括邮件、短信、Webhook 等，确保问题能够被及时发现并处理。</p>
+</li>
+</ol>
+]]></description></item><item><title>Vim教程</title><link>https://hezephyr.github.io/posts/02.vim%E6%95%99%E7%A8%8B/</link><pubDate>Fri, 21 Jan 2022 10:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/02.vim%E6%95%99%E7%A8%8B/</guid><description><![CDATA[<p>##. Vim</p>
+<h3 id="vim简介" class="heading-element"><span>0.1 Vim简介</span>
   <a href="#vim%e7%ae%80%e4%bb%8b" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -14,7 +292,7 @@
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/4fa748e07a8d9bc792fde0639e55f1af.gif" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>​                                 图源：<a href="https://www.runoob.com/linux/linux-vim.html"target="_blank" rel="external nofollow noopener noreferrer">https://www.runoob.com/linux/linux-vim.html<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
 <p>这个键盘图特别重要，也是vim的核心。</p>
-<h3 id="vim模式" class="heading-element"><span>1.2 Vim模式</span>
+<h3 id="vim模式" class="heading-element"><span>0.2 Vim模式</span>
   <a href="#vim%e6%a8%a1%e5%bc%8f" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -28,7 +306,7 @@
 <p>有的时候通常也认为是三个模式，即没有可视模式（<del>可能是因为这个模式存在感低</del>），我们可以参考下图理解模式之间的转换：</p>
 <p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/%e6%9c%aa%e5%91%bd%e5%90%8d%e6%96%87%e4%bb%b6%286%29.png?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/未命名文件(6).png?size=small" data-sub-html="<h2>https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/未命名文件(6).png</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/%e6%9c%aa%e5%91%bd%e5%90%8d%e6%96%87%e4%bb%b6%286%29.png" alt="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/未命名文件(6).png" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/%e6%9c%aa%e5%91%bd%e5%90%8d%e6%96%87%e4%bb%b6%286%29.png?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/%e6%9c%aa%e5%91%bd%e5%90%8d%e6%96%87%e4%bb%b6%286%29.png?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/%e6%9c%aa%e5%91%bd%e5%90%8d%e6%96%87%e4%bb%b6%286%29.png?size=large 2x" data-title="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/未命名文件(6).png" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
 <p>接下来我们分别介绍这几个模式。</p>
-<h4 id="正常模式normal-mode" class="heading-element"><span>1.2.1 正常模式(Normal-mode)</span>
+<h4 id="正常模式normal-mode" class="heading-element"><span>0.2.1 正常模式(Normal-mode)</span>
   <a href="#%e6%ad%a3%e5%b8%b8%e6%a8%a1%e5%bc%8fnormal-mode" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -114,243 +392,243 @@
 <li>
 <p><strong>其他常用操作</strong></p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">快捷键</th>
-<th style="text-align:center">功能</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">J                               |</td>
-<td style="text-align:center">将光标所在行与下一行的数据结合成同一行            |</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>gg=G</code>                            |</td>
-<td style="text-align:center">将全文代码格式化                       |</td>
-</tr>
-<tr>
-<td style="text-align:center">u                               |</td>
-<td style="text-align:center">撤销。(常用)                         |</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl+r</code>                           |</td>
-<td style="text-align:center">取消撤销。(常用)                       |</td>
-</tr>
-<tr>
-<td style="text-align:center">��个 <code>u </code>与 <code>Ctrl+r</code> 是很常用的指令！一个是复原，另一个则是重做一次～ 利用这两个功能按键，你的编辑，嘿嘿！很快乐的啦！ |</td>
-<td style="text-align:center">|</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>.</code>                              |</td>
-<td style="text-align:center">��要怀疑！这就是小数点！意思是重复前一个动作的意思。 如果你想要重复删除、重复贴上等等动作，按下小数点『.』就好了！ (常用) |</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>n</code>                              |</td>
-<td style="text-align:center">重复前一个查找操作（常用）                  |</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>N</code>                              |</td>
-<td style="text-align:center">反向重复前一个查找操作（常用）                |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">快捷键</th>
+          <th style="text-align: center">功能</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">J                               |</td>
+          <td style="text-align: center">将光标所在行与下一行的数据结合成同一行            |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>gg=G</code>                            |</td>
+          <td style="text-align: center">将全文代码格式化                       |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">u                               |</td>
+          <td style="text-align: center">撤销。(常用)                         |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl+r</code>                           |</td>
+          <td style="text-align: center">取消撤销。(常用)                       |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">��个 <code>u </code>与 <code>Ctrl+r</code> 是很常用的指令！一个是复原，另一个则是重做一次～ 利用这两个功能按键，你的编辑，嘿嘿！很快乐的啦！ |</td>
+          <td style="text-align: center">|</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>.</code>                              |</td>
+          <td style="text-align: center">��要怀疑！这就是小数点！意思是重复前一个动作的意思。 如果你想要重复删除、重复贴上等等动作，按下小数点『.』就好了！ (常用) |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>n</code>                              |</td>
+          <td style="text-align: center">重复前一个查找操作（常用）                  |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>N</code>                              |</td>
+          <td style="text-align: center">反向重复前一个查找操作（常用）                |</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 </ul>
 <p>其他的不常用操作这里不作列举。</p>
 <p>我们可以通过方向键操作光标位置，注意linux中的方向键可以通过<code>hjkl</code>分别代表左下上右。这里给出移动光标的方法表格：</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">快捷键</th>
-<th style="text-align:center">功能</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">h 或 向左箭头键(←)</td>
-<td style="text-align:center">光标向左移动一个字符</td>
-</tr>
-<tr>
-<td style="text-align:center">j 或 向下箭头键(↓)</td>
-<td style="text-align:center">光标向下移动一个字符</td>
-</tr>
-<tr>
-<td style="text-align:center">k 或 向上箭头键(↑)</td>
-<td style="text-align:center">光标向上移动一个字符</td>
-</tr>
-<tr>
-<td style="text-align:center">l 或 向右箭头键(→)</td>
-<td style="text-align:center">光标向右移动一个字符</td>
-</tr>
-<tr>
-<td style="text-align:center">如果你将右手放在键盘上的话，你会发现 hjkl 是排列在一起的，因此可以使用这四个按钮来移动光标。 如果想要进行多次移动的话，例如向下移动 30 行，可以使用 &ldquo;30j&rdquo; 或 &ldquo;30↓&rdquo; 的组合按键， 亦即加上想要进行的次数(数字)后，按下动作即可！</td>
-<td style="text-align:center"></td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl] + f</code></td>
-<td style="text-align:center">屏幕『向下』移动一页，相当于 [Page Down]按键 (常用)</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + b</code></td>
-<td style="text-align:center">屏幕『向上』移动一页，相当于 [Page Up] 按键 (常用)</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + d</code></td>
-<td style="text-align:center">屏幕『向下』移动半页</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl] + u</code></td>
-<td style="text-align:center">屏幕『向上』移动半页</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>+</code></td>
-<td style="text-align:center">光标移动到非空格符的下一行行首</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>-</code></td>
-<td style="text-align:center">光标移动到非空格符的上一行行首</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>n&lt;space&gt;</code></td>
-<td style="text-align:center">那个 n 表示『数字』，例如 20 。按下数字后再按空格键，光标会向右移动这一行的 n 个字符。例如 20<space> 则光标会向后面移动 20 个字符距离。</td>
-</tr>
-<tr>
-<td style="text-align:center">0 或功能键``Home`</td>
-<td style="text-align:center">这是数字『 0 』：移动到这一行的最前面字符处 (常用)</td>
-</tr>
-<tr>
-<td style="text-align:center">$ 或功能键``End`</td>
-<td style="text-align:center">移动到这一行的最后面字符处(常用)</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>H</code></td>
-<td style="text-align:center">光标移动到这个屏幕的最上方那一行的第一个字符</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>M</code></td>
-<td style="text-align:center">光标移动到这个屏幕的中央那一行的第一个字符</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>L</code></td>
-<td style="text-align:center">光标移动到这个屏幕的最下方那一行的第一个字符</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>G</code></td>
-<td style="text-align:center">移动到这个档案的最后一行(常用)</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>:n</code>或<code>nG</code></td>
-<td style="text-align:center">n 为数字。移动到这个档案的第 n 行。例如 20G 则会移动到这个档案的第 20 行(可配合 :set nu)</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>gg</code></td>
-<td style="text-align:center">移动到这个档案的第一行，相当于 1G 啊！ (常用)</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>n&lt;Enter&gt;</code></td>
-<td style="text-align:center">n 为数字。光标向下移动 n 行(常用)</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>f{char}</code></td>
-<td style="text-align:center">光标跳转到光标所在行从光标开始之后的<code>char</code>字符处。即从光标位置到该行尾检索<code>char</code>字符，光标位置前的不处理</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>F{char}</code></td>
-<td style="text-align:center">光标跳转到光标所在行从光标开始之前的<code>char</code>字符处。即从行开头到光标处检索<code>char</code>字符，光标位置前的不处理</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>W</code>或者<code>w</code>（大小写均可）</td>
-<td style="text-align:center">跳转到下一个单词的开头。支持数字前缀</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>b</code>或者<code>B</code>（大小写均可）</td>
-<td style="text-align:center">跳转到上一个单词的开头。支持数字前缀。</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>{</code></td>
-<td style="text-align:center">光标跳转到段首</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>}</code></td>
-<td style="text-align:center">光标跳转到段尾</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>^</code></td>
-<td style="text-align:center">光标跳转到软行首。即该行的最早非空格位置字符。</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>E</code>或<code>e</code>（大小写均可）</td>
-<td style="text-align:center">移动到词尾。</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>(</code></td>
-<td style="text-align:center">句首</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>)</code></td>
-<td style="text-align:center">下一句首</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>%</code></td>
-<td style="text-align:center">括号匹配。</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">快捷键</th>
+          <th style="text-align: center">功能</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">h 或 向左箭头键(←)</td>
+          <td style="text-align: center">光标向左移动一个字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">j 或 向下箭头键(↓)</td>
+          <td style="text-align: center">光标向下移动一个字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">k 或 向上箭头键(↑)</td>
+          <td style="text-align: center">光标向上移动一个字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">l 或 向右箭头键(→)</td>
+          <td style="text-align: center">光标向右移动一个字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">如果你将右手放在键盘上的话，你会发现 hjkl 是排列在一起的，因此可以使用这四个按钮来移动光标。 如果想要进行多次移动的话，例如向下移动 30 行，可以使用 &ldquo;30j&rdquo; 或 &ldquo;30↓&rdquo; 的组合按键， 亦即加上想要进行的次数(数字)后，按下动作即可！</td>
+          <td style="text-align: center"></td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl] + f</code></td>
+          <td style="text-align: center">屏幕『向下』移动一页，相当于 [Page Down]按键 (常用)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + b</code></td>
+          <td style="text-align: center">屏幕『向上』移动一页，相当于 [Page Up] 按键 (常用)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + d</code></td>
+          <td style="text-align: center">屏幕『向下』移动半页</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl] + u</code></td>
+          <td style="text-align: center">屏幕『向上』移动半页</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>+</code></td>
+          <td style="text-align: center">光标移动到非空格符的下一行行首</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>-</code></td>
+          <td style="text-align: center">光标移动到非空格符的上一行行首</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>n&lt;space&gt;</code></td>
+          <td style="text-align: center">那个 n 表示『数字』，例如 20 。按下数字后再按空格键，光标会向右移动这一行的 n 个字符。例如 20<space> 则光标会向后面移动 20 个字符距离。</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">0 或功能键``Home`</td>
+          <td style="text-align: center">这是数字『 0 』：移动到这一行的最前面字符处 (常用)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">$ 或功能键``End`</td>
+          <td style="text-align: center">移动到这一行的最后面字符处(常用)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>H</code></td>
+          <td style="text-align: center">光标移动到这个屏幕的最上方那一行的第一个字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>M</code></td>
+          <td style="text-align: center">光标移动到这个屏幕的中央那一行的第一个字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>L</code></td>
+          <td style="text-align: center">光标移动到这个屏幕的最下方那一行的第一个字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>G</code></td>
+          <td style="text-align: center">移动到这个档案的最后一行(常用)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>:n</code>或<code>nG</code></td>
+          <td style="text-align: center">n 为数字。移动到这个档案的第 n 行。例如 20G 则会移动到这个档案的第 20 行(可配合 :set nu)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>gg</code></td>
+          <td style="text-align: center">移动到这个档案的第一行，相当于 1G 啊！ (常用)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>n&lt;Enter&gt;</code></td>
+          <td style="text-align: center">n 为数字。光标向下移动 n 行(常用)</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>f{char}</code></td>
+          <td style="text-align: center">光标跳转到光标所在行从光标开始之后的<code>char</code>字符处。即从光标位置到该行尾检索<code>char</code>字符，光标位置前的不处理</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>F{char}</code></td>
+          <td style="text-align: center">光标跳转到光标所在行从光标开始之前的<code>char</code>字符处。即从行开头到光标处检索<code>char</code>字符，光标位置前的不处理</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>W</code>或者<code>w</code>（大小写均可）</td>
+          <td style="text-align: center">跳转到下一个单词的开头。支持数字前缀</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>b</code>或者<code>B</code>（大小写均可）</td>
+          <td style="text-align: center">跳转到上一个单词的开头。支持数字前缀。</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>{</code></td>
+          <td style="text-align: center">光标跳转到段首</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>}</code></td>
+          <td style="text-align: center">光标跳转到段尾</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>^</code></td>
+          <td style="text-align: center">光标跳转到软行首。即该行的最早非空格位置字符。</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>E</code>或<code>e</code>（大小写均可）</td>
+          <td style="text-align: center">移动到词尾。</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>(</code></td>
+          <td style="text-align: center">句首</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>)</code></td>
+          <td style="text-align: center">下一句首</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>%</code></td>
+          <td style="text-align: center">括号匹配。</td>
+      </tr>
+  </tbody>
 </table>
 <p>正常模式只有一些基本的命令，因此我们需要靠命令模式来输入更多的命令。</p>
-<h4 id="插入模式insert-mode" class="heading-element"><span>1.2.2 插入模式(Insert-mode)</span>
+<h4 id="插入模式insert-mode" class="heading-element"><span>0.2.2 插入模式(Insert-mode)</span>
   <a href="#%e6%8f%92%e5%85%a5%e6%a8%a1%e5%bc%8finsert-mode" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h4><p>由上相信大家应该知道怎么由正常模式进入输入模式，即按下<code>i</code>(insert)即可进入插入模式。</p>
 <p>在插入模式中，操作和正常的文本编辑器差不多，这里不作叙述。给出对应的快捷键操作表。</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">快捷键</th>
-<th style="text-align:center">功能</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center"><code>Ctrl + m</code>或者<code>Ctrl + j</code></td>
-<td style="text-align:center">开启新行</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + e</code></td>
-<td style="text-align:center">插入光标下的字符</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + y</code></td>
-<td style="text-align:center">插入光标上的字符</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + a</code></td>
-<td style="text-align:center">插入上次插入的文本</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + @</code></td>
-<td style="text-align:center">插入上次插入的文本并结束插入模式</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + w</code></td>
-<td style="text-align:center">删除光标前的一个单词</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + u</code></td>
-<td style="text-align:center">删除当前行的所有字符</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + T</code></td>
-<td style="text-align:center">在当前行首插入一个移位宽度的缩进</td>
-</tr>
-<tr>
-<td style="text-align:center"><code>Ctrl + D</code></td>
-<td style="text-align:center">从当前行首删除一个位移宽度的缩进</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">快捷键</th>
+          <th style="text-align: center">功能</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + m</code>或者<code>Ctrl + j</code></td>
+          <td style="text-align: center">开启新行</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + e</code></td>
+          <td style="text-align: center">插入光标下的字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + y</code></td>
+          <td style="text-align: center">插入光标上的字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + a</code></td>
+          <td style="text-align: center">插入上次插入的文本</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + @</code></td>
+          <td style="text-align: center">插入上次插入的文本并结束插入模式</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + w</code></td>
+          <td style="text-align: center">删除光标前的一个单词</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + u</code></td>
+          <td style="text-align: center">删除当前行的所有字符</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + T</code></td>
+          <td style="text-align: center">在当前行首插入一个移位宽度的缩进</td>
+      </tr>
+      <tr>
+          <td style="text-align: center"><code>Ctrl + D</code></td>
+          <td style="text-align: center">从当前行首删除一个位移宽度的缩进</td>
+      </tr>
+  </tbody>
 </table>
-<h4 id="命令模式command--mode" class="heading-element"><span>1.2.3 命令模式(Command -mode)</span>
+<h4 id="命令模式command--mode" class="heading-element"><span>0.2.3 命令模式(Command -mode)</span>
   <a href="#%e5%91%bd%e4%bb%a4%e6%a8%a1%e5%bc%8fcommand--mode" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -402,7 +680,7 @@
 <p><code>:noh</code> -关闭查找关键词高亮。</p>
 </li>
 </ul>
-<h4 id="可视模式visual-mode" class="heading-element"><span>1.2.4 可视模式(Visual-mode)</span>
+<h4 id="可视模式visual-mode" class="heading-element"><span>0.2.4 可视模式(Visual-mode)</span>
   <a href="#%e5%8f%af%e8%a7%86%e6%a8%a1%e5%bc%8fvisual-mode" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
@@ -412,34 +690,34 @@
 <p><strong>如何选中一块区域？</strong></p>
 <p>在vim中有三种激活可视模式并选择一块区域的方法：</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">模式类型</th>
-<th style="text-align:center">激活方式</th>
-<th style="text-align:center">选择效果</th>
-<th style="text-align:center">左下角提示（即提示你当前处于何种模式）</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">��符文本 |</td>
-<td style="text-align:center">v`(小写)  |</td>
-<td style="text-align:center">逐个字符选择文本   |</td>
-<td style="text-align:center"><code>VISUAL</code>                |</td>
-</tr>
-<tr>
-<td style="text-align:center">行文本  |</td>
-<td style="text-align:center">V`(大写)  |</td>
-<td style="text-align:center">逐行选择文本     |</td>
-<td style="text-align:center"><code>VISUAL LINE</code>              |</td>
-</tr>
-<tr>
-<td style="text-align:center">块文本  |</td>
-<td style="text-align:center">Ctrl + v` |</td>
-<td style="text-align:center">��照块的方式选择文本 |</td>
-<td style="text-align:center"><code>VISUAL BLOCK</code>             |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">模式类型</th>
+          <th style="text-align: center">激活方式</th>
+          <th style="text-align: center">选择效果</th>
+          <th style="text-align: center">左下角提示（即提示你当前处于何种模式）</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">��符文本 |</td>
+          <td style="text-align: center">v`(小写)  |</td>
+          <td style="text-align: center">逐个字符选择文本   |</td>
+          <td style="text-align: center"><code>VISUAL</code>                |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">行文本  |</td>
+          <td style="text-align: center">V`(大写)  |</td>
+          <td style="text-align: center">逐行选择文本     |</td>
+          <td style="text-align: center"><code>VISUAL LINE</code>              |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">块文本  |</td>
+          <td style="text-align: center">Ctrl + v` |</td>
+          <td style="text-align: center">��照块的方式选择文本 |</td>
+          <td style="text-align: center"><code>VISUAL BLOCK</code>             |</td>
+      </tr>
+  </tbody>
 </table>
 <p>可能看着有点懵。我们来解释一下，</p>
 <ul>
@@ -462,63 +740,63 @@
 <li>
 <p>对选中的区域进行操作</p>
 <table>
-<thead>
-<tr>
-<th style="text-align:center">命令</th>
-<th style="text-align:center">命令效果</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:center">d`  |</td>
-<td style="text-align:center">删除选中文本   |</td>
-</tr>
-<tr>
-<td style="text-align:center">c`  |</td>
-<td style="text-align:center">修改选中文本   |</td>
-</tr>
-<tr>
-<td style="text-align:center">r`  |</td>
-<td style="text-align:center">替换选中文本   |</td>
-</tr>
-<tr>
-<td style="text-align:center">I`  |</td>
-<td style="text-align:center">��选中文本前插入 |</td>
-</tr>
-<tr>
-<td style="text-align:center">A`  |</td>
-<td style="text-align:center">��选中文本后插入 |</td>
-</tr>
-<tr>
-<td style="text-align:center">gu` |</td>
-<td style="text-align:center">��中区域转为小写 |</td>
-</tr>
-<tr>
-<td style="text-align:center">gU` |</td>
-<td style="text-align:center">��中区域转为大写 |</td>
-</tr>
-<tr>
-<td style="text-align:center">g~` |</td>
-<td style="text-align:center">大小写互调    |</td>
-</tr>
-<tr>
-<td style="text-align:center">&gt;`  |</td>
-<td style="text-align:center">��右缩进一个单位 |</td>
-</tr>
-<tr>
-<td style="text-align:center">&lt;`  |</td>
-<td style="text-align:center">��左缩进一个单位 |</td>
-</tr>
-</tbody>
+  <thead>
+      <tr>
+          <th style="text-align: center">命令</th>
+          <th style="text-align: center">命令效果</th>
+      </tr>
+  </thead>
+  <tbody>
+      <tr>
+          <td style="text-align: center">d`  |</td>
+          <td style="text-align: center">删除选中文本   |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">c`  |</td>
+          <td style="text-align: center">修改选中文本   |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">r`  |</td>
+          <td style="text-align: center">替换选中文本   |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">I`  |</td>
+          <td style="text-align: center">��选中文本前插入 |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">A`  |</td>
+          <td style="text-align: center">��选中文本后插入 |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">gu` |</td>
+          <td style="text-align: center">��中区域转为小写 |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">gU` |</td>
+          <td style="text-align: center">��中区域转为大写 |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">g~` |</td>
+          <td style="text-align: center">大小写互调    |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">&gt;`  |</td>
+          <td style="text-align: center">��右缩进一个单位 |</td>
+      </tr>
+      <tr>
+          <td style="text-align: center">&lt;`  |</td>
+          <td style="text-align: center">��左缩进一个单位 |</td>
+      </tr>
+  </tbody>
 </table>
 </li>
 </ul>
-<h3 id="快捷键速览图" class="heading-element"><span>1.3 快捷键速览图</span>
+<h3 id="快捷键速览图" class="heading-element"><span>0.3 快捷键速览图</span>
   <a href="#%e5%bf%ab%e6%8d%b7%e9%94%ae%e9%80%9f%e8%a7%88%e5%9b%be" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h3><p><a class="lightgallery" href="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/vi-vim-cheat-sheet-sch1.gif?size=large" data-thumbnail="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/vi-vim-cheat-sheet-sch1.gif?size=small" data-sub-html="<h2>vi-vim-cheat-sheet-sch</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/vi-vim-cheat-sheet-sch1.gif" alt="vi-vim-cheat-sheet-sch" srcset="https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/vi-vim-cheat-sheet-sch1.gif?size=small, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/vi-vim-cheat-sheet-sch1.gif?size=medium 1.5x, https://raw.githubusercontent.com/unique-pure/NewPicGoLibrary/main/img/vi-vim-cheat-sheet-sch1.gif?size=large 2x" data-title="vi-vim-cheat-sheet-sch" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
-<h2 id="参考文献" class="heading-element"><span>2 参考文献</span>
+<h2 id="参考文献" class="heading-element"><span>1 参考文献</span>
   <a href="#%e5%8f%82%e8%80%83%e6%96%87%e7%8c%ae" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>

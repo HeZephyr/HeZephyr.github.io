@@ -1,6 +1,6 @@
 # 【MIT 6.5840(6.824)】 Lab 4:Fault-Tolerant KVService 设计实现
 
-## 1 实验要求
+## 实验要求
 
 &lt;font color=&#34;red&#34;&gt;本实验旨在利用lab 3中的Raft库，构建一个具备容错能力的键值存储服务&lt;/font&gt;。服务将作为一个复制状态机，由多个服务器组成，各服务器通过Raft协议同步数据库状态。即使在部分故障或网络隔离的情况下，只要大多数服务器正常，服务仍需继续响应客户端请求。在lab 4完成后，你将实现图中Raft交互的所有部分（Clerk、Service和Raft）。
 
@@ -16,9 +16,9 @@
 
 &lt;font color=&#34;red&#34;&gt;注意：下述所贴代码为了简洁以及分块，进行了一定程度的删减，如果需要复现，可以前往仓库。&lt;/font&gt;
 
-## 2 实验设计
+## 实验设计
 
-### 2.1 思路
+### 思路
 
 lab4需要我们基于lab3实现的Raft，实现一个可用的KV服务，这意味着我们需要保证线性一致性（要求从外部观察者的角度来看，所有操作都按照某个全局顺序执行，并且结果与这些操作按该顺序串行执行的结果相同）。尽管 Raft 共识算法本身支持线性化语义，但要真正保证线性化语义在整个系统中生效，仍然需要上层服务的配合。
 
@@ -43,13 +43,13 @@ lab4需要我们基于lab3实现的Raft，实现一个可用的KV服务，这意
 		- 如果新命令的`CommandId`大于记录的`CommandId`，则说明这是新的命令，服务器应该正常处理这个命令，并更新映射表中对应`ClientId`的`CommandId`及结果。
 	- 如果不存在对应的`ClientId`条目，则将此命令视为首次出现的命令进行处理，并添加一个新的条目到映射表中。
 
-### 2.2 lab4A：无快照
+### lab4A：无快照
 
 整体的时序图如下所示：
 
 ![image-20240829224033039](https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20240829224033039.png)
 
-#### 2.2.1 客户端
+####.1 客户端
 
 对于客户端，需要有`(clientId, commandId)`来标识唯一命令，对于`clientId`，通过lab提供的随机数生成器`nrand`生成即可，对于`commandId`，可以采用递增的方式进行管理。这意味着每当客户端发送一个新的命令时，`commandId`都会递增一次，从而确保每个命令都有一个唯一的标识符，这样也需要保证如果这条命令没处理完（请求的server不是leader或者请求超时）需重复执行的时候，不能改变commandId。
 
@@ -101,7 +101,7 @@ func (ck *Clerk) ExecuteCommand(args *CommandArgs) string {
 }
 ```
 
-#### 2.2.2 服务端
+####.2 服务端
 
 `KVServer`结构体被设计成一个基于Raft一致性协议实现的键值存储服务。为了确保客户端请求的幂等性，并且能够正确地处理来自客户端的重复请求，`lastOperations`映射表用于跟踪每个客户端（由`clientId`标识）的最后已应用的`commandId`以及相应的`reply`。这使得服务器能够在接收到重复请求时返回之前的结果而无需再次执行相同的命令。
 
@@ -174,7 +174,7 @@ func (kv *KVServer) ExecuteCommand(args *CommandArgs, reply *CommandReply) {
 }
 ```
 
-#### 2.2.3 applier
+####.3 applier
 
 `applier`协程实现如下，主要是监控`applyCh`，根据Raft的应用结果来进行响应处理，需要注意的就是检测是否为重复的命令，如果不是，则需要应用到状态机，并保存最近的响应结果。最后，如果当前节点是领导者，并且该日志条目属于当前任期，则通知相关的客户端。
 
@@ -220,7 +220,7 @@ func (kv *KVServer) applier() {
 }
 ```
 
-### 2.2 lab4B：有快照
+### lab4B：有快照
 
 实现了lab4A，lab4B就好做了，只需要修改`applier`，每次应用了`command`之后，都需要检查是否达到`maxraftstate`，如果达到，则调用`snapshot`来制作快照，需要注意，快照中，不仅需要保存状态机的状态，还需要包含用来去重的`lastOperations`，这也是为了防止应用快照后的节点成为leader后，由于没有`lastOperations`导致重复执行命令。
 
@@ -281,7 +281,7 @@ func (kv *KVServer) applier() {
 }
 ```
 
-## 3 压测结果
+## 压测结果
 
 网上提供了一个[测试脚本](https://gist.github.com/JJGO/0d73540ef7cc2f066cb535156b7cbdab)，功能强大。我的压测结果如下所示：
 
