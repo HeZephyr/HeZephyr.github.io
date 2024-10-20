@@ -7336,49 +7336,49 @@ $$</p>
 </h3><table>
   <thead>
       <tr>
-          <th style="text-align: left">端口</th>
+          <th>端口</th>
           <th style="text-align: center">服务</th>
           <th style="text-align: center">用途</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">21</td>
+          <td>21</td>
           <td style="text-align: center">FTP(文件传输协议)</td>
           <td style="text-align: center">用于在计算机之间传输文件</td>
       </tr>
       <tr>
-          <td style="text-align: left">22</td>
+          <td>22</td>
           <td style="text-align: center">SSH</td>
           <td style="text-align: center">用于远程登录、文件传输和命令行界面交互</td>
       </tr>
       <tr>
-          <td style="text-align: left">23</td>
+          <td>23</td>
           <td style="text-align: center">Telnet(远程登录服务)</td>
           <td style="text-align: center">允许用户从一台计算机登录到另一台计算机</td>
       </tr>
       <tr>
-          <td style="text-align: left">53</td>
+          <td>53</td>
           <td style="text-align: center">DNS域名解析服务</td>
           <td style="text-align: center">将域名转换为IP地址以便访问网站</td>
       </tr>
       <tr>
-          <td style="text-align: left">80</td>
+          <td>80</td>
           <td style="text-align: center">HTTP超文本传输协议</td>
           <td style="text-align: center">用于在万维网上交换信息</td>
       </tr>
       <tr>
-          <td style="text-align: left">443</td>
+          <td>443</td>
           <td style="text-align: center">HTTPS</td>
           <td style="text-align: center">提供安全的HTTP通信</td>
       </tr>
       <tr>
-          <td style="text-align: left">1080</td>
+          <td>1080</td>
           <td style="text-align: center">SOCKS</td>
           <td style="text-align: center">用于在计算机之间安全地传输数据。它通过代理服务器来隐藏原始的IP地址和端口号，从而提供匿名性和安全性</td>
       </tr>
       <tr>
-          <td style="text-align: left">3306</td>
+          <td>3306</td>
           <td style="text-align: center">MySQL默认端口号</td>
           <td style="text-align: center">用于MySQL数据库服务器上的数据访问</td>
       </tr>

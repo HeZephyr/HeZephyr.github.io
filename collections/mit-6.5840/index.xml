@@ -4286,4 +4286,1479 @@ Go切片比Go数组更灵活，因为数组的大小是其类型的一部分，�
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
 </h2><p><a href="https://blog.csdn.net/hzf0701/article/details/138770454?spm=1001.2014.3001.5501"target="_blank" rel="external nofollow noopener noreferrer">MapReduce论文阅读笔记<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></p>
+]]></description></item><item><title>【MIT 6.5840(6.824)】 Lab 5:Sharded Key/Value Service 设计实现</title><link>https://hezephyr.github.io/posts/11.mit6.5840-lab5/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/11.mit6.5840-lab5/</guid><description><![CDATA[<h2 id="实验要求" class="heading-element"><span>1 实验要求</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%a6%81%e6%b1%82" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="介绍" class="heading-element"><span>1.1 介绍</span>
+  <a href="#%e4%bb%8b%e7%bb%8d" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>本实验要求构建一个键 / 值存储系统，该系统能够将键 “分片” 或分区到一组副本组上。分片是键 / 值对的子集，例如所有以“a”开头的键可能是一个分片等，通过分片可提高系统性能，因为每个副本组仅处理几个分片的放置和获取，并且这些组并行操作。</p>
+<p>系统有两个主要组件：一组副本组和分片控制器。每个副本组使用 Raft 复制负责部分分片的操作，分片控制器决定每个分片应由哪个副本组服务，其配置会随时间变化。客户端和副本组都需咨询分片控制器来找到对应关系。系统必须能在副本组间转移分片，以平衡负载或应对副本组的加入和离开。</p>
+<p>主要挑战在于处理重新配置，即分片到组的分配变化，<font color="red">且要确保任何时候每个分片只有一个副本组在处理请求，同时重新配置还需要副本组间的交互（分片移动）</font>。本实验只允许通过 RPC 进行客户端和服务器间的交互。实验架构与许多其他系统类似，但相对简单。实验需使用相同的 Raft 实现，完成后需通过相关测试。</p>
+<h3 id="lab5a控制器和静态分片" class="heading-element"><span>1.2 lab5A：控制器和静态分片</span>
+  <a href="#lab5a%e6%8e%a7%e5%88%b6%e5%99%a8%e5%92%8c%e9%9d%99%e6%80%81%e5%88%86%e7%89%87" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ol>
+<li>
+<p>实现分片控制器</p>
+<ul>
+<li>在<code>shardctrler/server.go</code>和<code>client.go</code>中实现。需支持<code>Join</code>、<code>Leave</code>、<code>Move</code>和<code>Query</code>四种 RPC 接口。</li>
+<li><code>Join</code> RPC：管理员用于添加新副本组，参数是从唯一、非零副本组标识符（GIDs）到服务器名称列表的映射集。分片控制器创建新配置，尽可能均匀地分配分片并尽量少移动分片。若 GID 不在当前配置中可重复使用。</li>
+<li><code>Leave</code> RPC：参数是已加入组的 GIDs 列表，分片控制器创建新配置，排除这些组并将其分片分配给剩余组，且尽可能均匀分配并少移动分片。</li>
+<li><code>Move</code> RPC：参数是分片编号和 GID，分片控制器创建新配置将分片分配给指定组，主要用于测试。</li>
+<li><code>Query</code> RPC：参数是配置编号，分片控制器回复对应编号的配置，若编号为 - 1 或大于最大已知配置编号，则回复最新配置。第一个配置编号为 0，无组且所有分片分配给无效 GID 0，后续配置编号依次递增。通常，分片的数量明显多于组（即，每一组将服务多个分片），以便可以以相当细的粒度转移负载。</li>
+</ul>
+<blockquote>
+<ul>
+<li>从</li>
+<li>实现时要注意去重客户端请求，代码需具有确定性，注意 Go 中 map 的特性，可使用 <code>Go test --race</code> 查找漏洞。</li>
+</ul>
+</blockquote>
+</li>
+<li>
+<p>实现分片键 / 值服务器（处理静态配置）</p>
+<ul>
+<li>在<code>shardkv/</code>目录下实现，可从现有的<code>kvraft</code>服务器复制代码。</li>
+<li>对于第一个测试，无需特别处理分片即可通过。</li>
+<li>对于第二个测试，键 / 值副本组必须拒绝处理不属于其负责分片的键请求，服务器需定期向控制器获取最新配置，并在每次收到客户端<code>Get/Put/Append</code> RPC 时检查配置，对不负责分片的键请求返回<code>ErrWrongGroup</code>错误，且服务器不应调用分片控制器的<code>Join()</code>处理程序，由测试程序在适当时候调用。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>Hint</p>
+<ul>
+<li>从 kvraft 服务器的精简副本开始。</li>
+<li>实现时要注意去重客户端请求。</li>
+<li>状态机中执行分片重新平衡的代码必须是确定性的。在Go中，map的迭代顺序是不确定的</li>
+<li>Go map是引用。如果将map类型的一个变量分配给另一个变量，则这两个变量都引用同一个map。因此，如果你想创建一个新的 <code>Config</code> 基于前一个，您需要创建一个新的地图对象（使用 <code>make()</code> ）并单独复制键和值。</li>
+<li>Go竞争detector（<code>go test --race</code>）可以帮助您发现错误。</li>
+</ul>
+</blockquote>
+<h3 id="lab5b碎片移动" class="heading-element"><span>1.3 lab5B：碎片移动</span>
+  <a href="#lab5b%e7%a2%8e%e7%89%87%e7%a7%bb%e5%8a%a8" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>当控制器改变分片时在副本组间移动分片，并确保键 / 值客户端操作的线性化。每个分片仅在其 Raft 副本组中多数服务器存活且能相互通信，以及能与多数分片控制器服务器通信时才能进行操作。系统在某些副本组中的少数服务器出现故障、暂时不可用或速度慢的情况下仍需运行。</p>
+<p><font color="red">一个<code>shardkv</code>服务器只属于一个副本组，且组内服务器集合不会改变</font>。</p>
+<p>服务器需监测配置变化，检测到变化时启动分片迁移过程。若副本组丢失分片，需立即停止处理该分片的请求并迁移数据给接管的副本组；若副本组获得分片，需等待前所有者发送旧分片数据后再接受请求。实现配置更改期间的分片迁移，确保副本组中的所有服务器在操作执行顺序中的同一点进行迁移，以统一处理并发客户端请求。</p>
+<blockquote>
+<p>Hint</p>
+<ul>
+<li>服务器需周期性（约每 100 毫秒）轮询分片控制器获取新配置，配置更改时服务器间需通过 RPC 传输分片，使用<code>make_end()</code>函数将服务器名称转换为<code>labrpc.ClientEnd</code>来发送 RPC。</li>
+<li>按顺序处理重新配置，处理跨分片移动的客户端请求时需提供最多一次语义（去重检测）。</li>
+<li>考虑<code>shardkv</code>客户端和服务器如何处理<code>ErrWrongGroup</code>错误，包括客户端是否更改序列号，服务器执行<code>Get/Put</code>请求返回该错误时是否更新客户端状态等。</li>
+<li>服务器迁移到新配置后可继续存储不再拥有的分片，但在实际系统中应避免。</li>
+<li>考虑在配置更改过程中，一个组从另一个组获取分片时，发送分片的时间点是否重要。</li>
+<li>可在 RPC 请求或回复中发送整个map来简化分片转移代码，但要注意可能导致的竞态问题，处理方法是在 RPC 处理程序的回复中包含map的副本，以及在将映射 / 切片放入 Raft 日志条目并保存到键 / 值服务器状态时也要复制以避免竞态。</li>
+<li>配置更改时，两组之间可能需要双向移动分片，注意避免死锁。</li>
+</ul>
+</blockquote>
+<h3 id="挑战任务" class="heading-element"><span>1.4 挑战任务</span>
+  <a href="#%e6%8c%91%e6%88%98%e4%bb%bb%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><ol>
+<li>状态垃圾回收
+<ul>
+<li>当副本组失去一个分片的所有权时，应从其数据库中删除该分片的键，避免浪费空间，但这给迁移带来问题。</li>
+<li>解决方法是让副本组在必要时保留旧分片，且在副本组崩溃后重新启动时仍能正常工作，通过<code>TestChallenge1Delete</code>测试即完成此挑战。</li>
+</ul>
+</li>
+<li>配置更改期间的客户端请求处理
+<ul>
+<li><strong>基本优化</strong>：修改解决方案，使在配置更改期间，不受影响分片的客户端操作能够继续执行，通过<code>TestChallenge2Unaffected</code>测试即完成此部分挑战。</li>
+<li><strong>进一步优化</strong>：修改解决方案，使副本组在能够处理分片时立即开始服务，即使配置更改仍在进行中，通过<code>TestChallenge2Partial</code>测试即完成此挑战。</li>
+</ul>
+</li>
+</ol>
+<h2 id="实验设计" class="heading-element"><span>2 实验设计</span>
+  <a href="#%e5%ae%9e%e9%aa%8c%e8%ae%be%e8%ae%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><h3 id="整体架构" class="heading-element"><span>2.1 整体架构</span>
+  <a href="#%e6%95%b4%e4%bd%93%e6%9e%b6%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>Shardedkv服务整体架构如下图所示，主要由<strong>shardctrler</strong>（分片控制器）和<strong>shardkv</strong>（分片键值存储）两个核心组件构成，基于Raft一致性协议。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020102540500.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020102540500.png?size=small" data-sub-html="<h2>image-20241020102540500</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020102540500.png" alt="image-20241020102540500" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020102540500.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020102540500.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020102540500.png?size=large 2x" data-title="image-20241020102540500" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<ol>
+<li>客户端层
+<ul>
+<li>shardctrler客户端：主要用于与shardctrler集群进行交互，执行分片配置的管理操作。通过4个主要的RPC接口，客户端可以请求<code>Join</code>（加入新分片组）、<code>Leave</code>（离开分片组）、<code>Move</code>（迁移分片）和<code>Query</code>（查询分片配置）。</li>
+<li>shardkv客户端：负责向shardkv集群发送具体的键值操作请求。客户端通过分片ID（<code>shardID</code>）查找目标分片所在的集群组（通过本地配置中的映射关系），并将请求发送到正确的shardkv服务器。如果该shardkv服务器无法提供服务（如分片迁移导致服务不可用），客户端会向shardctrler请求最新的配置，并重新定向请求。</li>
+</ul>
+</li>
+<li>服务器层：分为两个主要的集群：<strong>shardctrler集群</strong>和<strong>shardkv集群</strong>，它们分别处理配置管理和数据存储。
+<ul>
+<li><strong>Shardctrler集群</strong>：Shardctrler是负责管理分片配置的服务器集群。该集群的每个节点保存一个<code>configs[]</code>数组，记录系统中每个分片的最新及历史配置，包括<code>configNum,map:shard-&gt;gid,map:gid-&gt;servers</code>。该集群通过RPC接口处理客户端发起的配置变更请求，包括<code>Join</code>、<code>Leave</code>、<code>Move</code>和<code>Query</code>。每当shardctrler接收到配置变更请求时，它会生成一个新的配置，将分片重新分配给不同的shardkv集群组。</li>
+<li><strong>Shardkv集群</strong>：Shardkv集群是处理实际键值存储和数据操作的核心部分。整个Shardkv系统被划分为多个分片组（Group），每个组负责管理一部分分片。一个组通常包含多个shardkv服务器，每个服务器保存其负责的分片数据。客户端的<code>Get</code>、<code>Put</code>和<code>Append</code>请求会根据分片ID路由到对应的服务器，服务器根据当前配置中的分片分配情况进行操作。如果服务器收到的请求涉及的分片已经迁移或重新分配，它会通过向shardctrler请求最新配置来处理这一变化。具体来说，当分片被重新分配时，shardkv集群会将原先分配给某个组的分片数据传输到新的分片组。<font color="red">每个分片在迁移过程中，需要通过状态追踪保证只有新的分片组接管该分片的数据写入与查询</font>。当分片完成迁移后，原先拥有该分片的shardkv服务器需要清理掉旧的分片数据，以释放存储资源。</li>
+</ul>
+</li>
+<li>Raft层：Shardctrler集群和Shardkv集群都依赖于Raft一致性协议来实现分布式日志的一致性复制。</li>
+<li>持久化存储层：Raft协议的实现要求系统能够将Raft状态和日志数据持久化，以便在节点宕机或重启时恢复状态。其中由于shardctrler的配置数据比较小，所以不太需要快照功能。</li>
+</ol>
+<h3 id="shardctrler" class="heading-element"><span>2.2 shardctrler</span>
+  <a href="#shardctrler" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>shardctrler本质上跟kvraft没什么区别，只是存储的是配置项信息，包含每个分片由哪个副本组负责以及副本组ID到对应服务器的endPoint这两个映射。所以在代码实现上完全可以按照kvraft的实现，并且由于配置项数据一般比较少，所以不需要实现日志快照功能。</p>
+<p>具体在于四个RPC请求：<code>Join</code>、<code>Leave</code>、<code>Move</code>、<code>Query</code>的实现。</p>
+<ul>
+<li>
+<p>我们根据 <code>Join</code> 请求的副本组 ID 和服务器列表，更新最新配置中的副本组列表，将新副本组添加进去。<font color="red">并且根据新的副本组数量，重新分配分片（使用简单的负载均衡算法：尽量让所有副本组处理的分片数量相等）</font>。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Join adds new groups to the configuration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">cf</span> <span class="o">*</span><span class="nx">MemoryConfigStateMachine</span><span class="p">)</span> <span class="nf">Join</span><span class="p">(</span><span class="nx">groups</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">][]</span><span class="kt">string</span><span class="p">)</span> <span class="nx">Err</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lastConfig</span> <span class="o">:=</span> <span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// create a new configuration based on the last configuration
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">newConfig</span> <span class="o">:=</span> <span class="nx">Config</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastConfig</span><span class="p">.</span><span class="nx">Shards</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">deepCopy</span><span class="p">(</span><span class="nx">lastConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">gid</span><span class="p">,</span> <span class="nx">servers</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">groups</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// if the group does not exist in the new configuration, add it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">newConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">[</span><span class="nx">gid</span><span class="p">];</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">newServers</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">string</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="nx">servers</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="nb">copy</span><span class="p">(</span><span class="nx">newServers</span><span class="p">,</span> <span class="nx">servers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">newConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">[</span><span class="nx">gid</span><span class="p">]</span> <span class="p">=</span> <span class="nx">newServers</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">group2Shards</span> <span class="o">:=</span> <span class="nf">Group2Shards</span><span class="p">(</span><span class="nx">newConfig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// load balance the shards among the groups
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">source</span><span class="p">,</span> <span class="nx">target</span> <span class="o">:=</span> <span class="nf">GetGIDWithMaximumShards</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">),</span> <span class="nf">GetGIDWithMinimumShards</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">source</span> <span class="o">!=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="nb">len</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">[</span><span class="nx">source</span><span class="p">])</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">[</span><span class="nx">target</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="mi">1</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">break</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">group2Shards</span><span class="p">[</span><span class="nx">target</span><span class="p">]</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">[</span><span class="nx">target</span><span class="p">],</span> <span class="nx">group2Shards</span><span class="p">[</span><span class="nx">source</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">group2Shards</span><span class="p">[</span><span class="nx">source</span><span class="p">]</span> <span class="p">=</span> <span class="nx">group2Shards</span><span class="p">[</span><span class="nx">source</span><span class="p">][</span><span class="mi">1</span><span class="p">:]</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// update the shard assignment in the new configuration
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="kd">var</span> <span class="nx">newShards</span> <span class="p">[</span><span class="nx">NShards</span><span class="p">]</span><span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">gid</span><span class="p">,</span> <span class="nx">shards</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">group2Shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">shard</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">newShards</span><span class="p">[</span><span class="nx">shard</span><span class="p">]</span> <span class="p">=</span> <span class="nx">gid</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">newConfig</span><span class="p">.</span><span class="nx">Shards</span> <span class="p">=</span> <span class="nx">newShards</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">,</span> <span class="nx">newConfig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">OK</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>Leave</code>：根据需要移除的副本组ID，从配置中删除这些组的信息。将它们负责的分片重新分配给现存的副本组，保证分片的平衡。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Leave removes specified groups from the configuration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">cf</span> <span class="o">*</span><span class="nx">MemoryConfigStateMachine</span><span class="p">)</span> <span class="nf">Leave</span><span class="p">(</span><span class="nx">gids</span> <span class="p">[]</span><span class="kt">int</span><span class="p">)</span> <span class="nx">Err</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lastConifg</span> <span class="o">:=</span> <span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// create a new configuration based on the last configuration
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">newConfig</span> <span class="o">:=</span> <span class="nx">Config</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastConifg</span><span class="p">.</span><span class="nx">Shards</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">deepCopy</span><span class="p">(</span><span class="nx">lastConifg</span><span class="p">.</span><span class="nx">Groups</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">group2Shards</span> <span class="o">:=</span> <span class="nf">Group2Shards</span><span class="p">(</span><span class="nx">newConfig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// used to store the orphan shards (i.e., shards owned by
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">orphanShards</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">gid</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">gids</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// if the group exists in the new configuration, remove it
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">newConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">[</span><span class="nx">gid</span><span class="p">];</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nb">delete</span><span class="p">(</span><span class="nx">newConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">,</span> <span class="nx">gid</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// if the group owns any shards, remove them and add them to the orphan shards
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">shards</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">group2Shards</span><span class="p">[</span><span class="nx">gid</span><span class="p">];</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nb">delete</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">,</span> <span class="nx">gid</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">orphanShards</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">orphanShards</span><span class="p">,</span> <span class="nx">shards</span><span class="o">...</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="kd">var</span> <span class="nx">newShards</span> <span class="p">[</span><span class="nx">NShards</span><span class="p">]</span><span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="nx">newConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">)</span> <span class="p">&gt;</span> <span class="mi">0</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// re-allocate orphan shards to the remaining groups
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">shard</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">orphanShards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">gid</span> <span class="o">:=</span> <span class="nf">GetGIDWithMinimumShards</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">newShards</span><span class="p">[</span><span class="nx">shard</span><span class="p">]</span> <span class="p">=</span> <span class="nx">gid</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">group2Shards</span><span class="p">[</span><span class="nx">gid</span><span class="p">]</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">[</span><span class="nx">gid</span><span class="p">],</span> <span class="nx">shard</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">		<span class="c1">// update the shard assignment in the new configuration
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">for</span> <span class="nx">gid</span><span class="p">,</span> <span class="nx">shards</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">group2Shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">shard</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">newShards</span><span class="p">[</span><span class="nx">shard</span><span class="p">]</span> <span class="p">=</span> <span class="nx">gid</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">newConfig</span><span class="p">.</span><span class="nx">Shards</span> <span class="p">=</span> <span class="nx">newShards</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">,</span> <span class="nx">newConfig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">OK</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>Move</code>：更新当前的配置，将该分片从旧的副本组重新分配到指定的新副本组。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Move moves a specified shard to a specified group.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">cf</span> <span class="o">*</span><span class="nx">MemoryConfigStateMachine</span><span class="p">)</span> <span class="nf">Move</span><span class="p">(</span><span class="nx">shard</span><span class="p">,</span> <span class="nx">gid</span> <span class="kt">int</span><span class="p">)</span> <span class="nx">Err</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lastConfig</span> <span class="o">:=</span> <span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// create a new configuration based on the last configuration
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">newConfig</span> <span class="o">:=</span> <span class="nx">Config</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastConfig</span><span class="p">.</span><span class="nx">Shards</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nf">deepCopy</span><span class="p">(</span><span class="nx">lastConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// update the shard assignment in the new configuration
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">newConfig</span><span class="p">.</span><span class="nx">Shards</span><span class="p">[</span><span class="nx">shard</span><span class="p">]</span> <span class="p">=</span> <span class="nx">gid</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">,</span> <span class="nx">newConfig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">OK</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+<li>
+<p><code>Query</code>：根据 <code>Query</code> 请求中的参数（版本号），返回对应版本的配置。如果请求的版本号为 -1，则返回最新的配置。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Query queries a specified configuration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">cf</span> <span class="o">*</span><span class="nx">MemoryConfigStateMachine</span><span class="p">)</span> <span class="nf">Query</span><span class="p">(</span><span class="nx">num</span> <span class="kt">int</span><span class="p">)</span> <span class="p">(</span><span class="nx">Config</span><span class="p">,</span> <span class="nx">Err</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// if the configuration number is not valid, return the latest configuration
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">num</span> <span class="p">&lt;</span> <span class="mi">0</span> <span class="o">||</span> <span class="nx">num</span> <span class="o">&gt;=</span> <span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span> <span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="nx">OK</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">cf</span><span class="p">.</span><span class="nx">Configs</span><span class="p">[</span><span class="nx">num</span><span class="p">],</span> <span class="nx">OK</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// Group2Shards assigns each shard to the corresponding group.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">Group2Shards</span><span class="p">(</span><span class="nx">config</span> <span class="nx">Config</span><span class="p">)</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">][]</span><span class="kt">int</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">group2Shards</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">][]</span><span class="kt">int</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">gid</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">config</span><span class="p">.</span><span class="nx">Groups</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">group2Shards</span><span class="p">[</span><span class="nx">gid</span><span class="p">]</span> <span class="p">=</span> <span class="nb">make</span><span class="p">([]</span><span class="kt">int</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="nx">shard</span><span class="p">,</span> <span class="nx">gid</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">config</span><span class="p">.</span><span class="nx">Shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">group2Shards</span><span class="p">[</span><span class="nx">gid</span><span class="p">]</span> <span class="p">=</span> <span class="nb">append</span><span class="p">(</span><span class="nx">group2Shards</span><span class="p">[</span><span class="nx">gid</span><span class="p">],</span> <span class="nx">shard</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">group2Shards</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div></li>
+</ul>
+<h3 id="shardkv-server" class="heading-element"><span>2.3 shardkv server</span>
+  <a href="#shardkv-server" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><h4 id="结构" class="heading-element"><span>2.3.1 结构</span>
+  <a href="#%e7%bb%93%e6%9e%84" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>ShardKV的结构体代码如下，其中</p>
+<ul>
+<li><code>stateMachine</code>用于存储实际的键值数据。它是一个分片映射，键为分片 ID，值为存储该分片数据的 <code>Shard</code> 结构体，每个 <code>Shard</code> 结构体由哈希表和状态变量构成，有以下四种状态：
+<ul>
+<li><code>Serving</code>：表示该分片正在正常地为客户端提供读写服务。这意味着客户端对该分片内键值对的<code>Get</code>、<code>Put</code>、<code>Append</code>等操作都可以得到及时处理。</li>
+<li><code>Pulling</code>：表明该分片正在从其他服务器拉取数据。这种情况通常发生在配置变更后，分片需要从原来所属的服务器迁移到当前服务器时，当前服务器会将该分片标记为<code>Pulling</code>状态。</li>
+<li><code>BePulling</code>：<code>BePulling</code>状态意味着该分片的数据正在被其他服务器拉取。与<code>Pulling</code>状态不同，<code>BePulling</code>状态是从数据提供方的角度来看的，即本服务器上的该分片数据正在被其他服务器获取。</li>
+<li><code>GCing</code>：<code>GCing</code>即垃圾回收（Garbage Collection）状态。当一个分片服务器已经完成了迁移操作，会将进入<code>GCing</code>状态，以便清理拉取服务器上的分片数据（即<code>BePulling</code>状态）。</li>
+</ul>
+</li>
+<li>根据不同状态和当前<code>raft</code>组的配置，决定是否提供读写服务以及进行相应的数据迁移和清理操作。</li>
+<li><code>notifyChans</code>: 用于通知客户端操作的完成情况。每次当 Raft 提交某个操作时，通过<code>notifyChans</code>唤醒等待的客户端。</li>
+<li><code>lastOperations</code>：用于去重记录，保存每个客户端最后一次请求的 <code>commandId</code> 和操作结果，避免重复操作。</li>
+</ul>
+<p>此外，<code>ShardKV</code> 还通过 <code>applyCh</code> 接收 Raft 提交的日志条目，并通过定时任务监控配置更新、分片迁移、垃圾回收以及空日志检测。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">ShardKV</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">mu</span>      <span class="nx">sync</span><span class="p">.</span><span class="nx">RWMutex</span>       <span class="c1">// mutex for synchronizing access to shared resources
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">dead</span>    <span class="kt">int32</span>              <span class="c1">// set by Kill(), indicates if the server is killed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">rf</span>      <span class="o">*</span><span class="nx">raft</span><span class="p">.</span><span class="nx">Raft</span>         <span class="c1">// raft instance for consensus
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">applyCh</span> <span class="kd">chan</span> <span class="nx">raft</span><span class="p">.</span><span class="nx">ApplyMsg</span> <span class="c1">// channel for applying raft messages
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">makeEnd</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">)</span> <span class="o">*</span><span class="nx">labrpc</span><span class="p">.</span><span class="nx">ClientEnd</span> <span class="c1">// function to create a client end to communicate with other groups
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">gid</span>     <span class="kt">int</span>                            <span class="c1">// group id of the server
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">sc</span>      <span class="o">*</span><span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Clerk</span>             <span class="c1">// client to communicate with the shardctrler
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">maxRaftState</span> <span class="kt">int</span> <span class="c1">// snapshot if log grows this big
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">lastApplied</span>  <span class="kt">int</span> <span class="c1">// index of the last applied log entry to prevent stateMachine from rolling back
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">lastConfig</span>    <span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Config</span> <span class="c1">// the last configuration received from the shardctrler
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">currentConfig</span> <span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Config</span> <span class="c1">// the current configuration of the cluster
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="nx">stateMachine</span>   <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="o">*</span><span class="nx">Shard</span>             <span class="c1">// KV State Machines
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">lastOperations</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int64</span><span class="p">]</span><span class="nx">OperationContext</span> <span class="c1">// determine whether log is duplicated by (clientId, commandId)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">notifyChans</span>    <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="kd">chan</span> <span class="o">*</span><span class="nx">CommandReply</span> <span class="c1">// notify the client when the command is applied
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">StartServer</span><span class="p">(</span><span class="nx">servers</span> <span class="p">[]</span><span class="o">*</span><span class="nx">labrpc</span><span class="p">.</span><span class="nx">ClientEnd</span><span class="p">,</span> <span class="nx">me</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">persister</span> <span class="o">*</span><span class="nx">raft</span><span class="p">.</span><span class="nx">Persister</span><span class="p">,</span> <span class="nx">maxraftstate</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">gid</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">ctrlers</span> <span class="p">[]</span><span class="o">*</span><span class="nx">labrpc</span><span class="p">.</span><span class="nx">ClientEnd</span><span class="p">,</span> <span class="nx">makeEnd</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">)</span> <span class="o">*</span><span class="nx">labrpc</span><span class="p">.</span><span class="nx">ClientEnd</span><span class="p">)</span> <span class="o">*</span><span class="nx">ShardKV</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// call labgob.Register on structures you want
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="c1">// Go&#39;s RPC library to marshall/unmarshall.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">labgob</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">Command</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">labgob</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">CommandArgs</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">labgob</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Config</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">labgob</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">ShardOperationArgs</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">labgob</span><span class="p">.</span><span class="nf">Register</span><span class="p">(</span><span class="nx">ShardOperationReply</span><span class="p">{})</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// Create a channel to receive messages applied by Raft.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">applyCh</span> <span class="o">:=</span> <span class="nb">make</span><span class="p">(</span><span class="kd">chan</span> <span class="nx">raft</span><span class="p">.</span><span class="nx">ApplyMsg</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span> <span class="o">:=</span> <span class="o">&amp;</span><span class="nx">ShardKV</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">dead</span><span class="p">:</span>           <span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">rf</span><span class="p">:</span>             <span class="nx">raft</span><span class="p">.</span><span class="nf">Make</span><span class="p">(</span><span class="nx">servers</span><span class="p">,</span> <span class="nx">me</span><span class="p">,</span> <span class="nx">persister</span><span class="p">,</span> <span class="nx">applyCh</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">applyCh</span><span class="p">:</span>        <span class="nx">applyCh</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">makeEnd</span><span class="p">:</span>        <span class="nx">makeEnd</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">gid</span><span class="p">:</span>            <span class="nx">gid</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">sc</span><span class="p">:</span>             <span class="nx">shardctrler</span><span class="p">.</span><span class="nf">MakeClerk</span><span class="p">(</span><span class="nx">ctrlers</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">maxRaftState</span><span class="p">:</span>   <span class="nx">maxraftstate</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastApplied</span><span class="p">:</span>    <span class="mi">0</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastConfig</span><span class="p">:</span>     <span class="nx">shardctrler</span><span class="p">.</span><span class="nf">DefaultConfig</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">currentConfig</span><span class="p">:</span>  <span class="nx">shardctrler</span><span class="p">.</span><span class="nf">DefaultConfig</span><span class="p">(),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">stateMachine</span><span class="p">:</span>   <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="o">*</span><span class="nx">Shard</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastOperations</span><span class="p">:</span> <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">int64</span><span class="p">]</span><span class="nx">OperationContext</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">notifyChans</span><span class="p">:</span>    <span class="nb">make</span><span class="p">(</span><span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="kd">chan</span> <span class="o">*</span><span class="nx">CommandReply</span><span class="p">),</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// Restore any snapshot data stored in persister to recover the state.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">kv</span><span class="p">.</span><span class="nf">restoreSnapshot</span><span class="p">(</span><span class="nx">persister</span><span class="p">.</span><span class="nf">ReadSnapshot</span><span class="p">())</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="k">go</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applier</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// Start several monitoring routines that periodically perform specific actions:
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">go</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">Monitor</span><span class="p">(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">configurationAction</span><span class="p">,</span> <span class="nx">ConfigurationMonitorTimeout</span><span class="p">)</span>         <span class="c1">// Monitor configuration changes.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">go</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">Monitor</span><span class="p">(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">migrationAction</span><span class="p">,</span> <span class="nx">MigrationMonitorTimeout</span><span class="p">)</span>                 <span class="c1">// Monitor shard migration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">go</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">Monitor</span><span class="p">(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">gcAction</span><span class="p">,</span> <span class="nx">GCMonitorTimeout</span><span class="p">)</span>                               <span class="c1">// Monitor garbage collection of old shard data.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">go</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">Monitor</span><span class="p">(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">checkEntryInCurrentTermAction</span><span class="p">,</span> <span class="nx">EmptyEntryDetectorTimeout</span><span class="p">)</span> <span class="c1">// Monitor Raft log entries in the current term.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">kv</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p><code>Execute</code>函数用于处理命令并返回结果，非领导者返回<code>ErrWrongLeader</code>，领导者获取通知通道等待结果或超时处理，最后异步释放通道；<code>applier</code>协程从<code>Raft</code>日志获取消息应用到状态机，对有效命令消息检查是否应用并按类型处理，可能通知客户端和进行快照，对有效快照消息安装快照恢复状态机，对无效消息抛异常。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span><span class="lnt">57
+</span><span class="lnt">58
+</span><span class="lnt">59
+</span><span class="lnt">60
+</span><span class="lnt">61
+</span><span class="lnt">62
+</span><span class="lnt">63
+</span><span class="lnt">64
+</span><span class="lnt">65
+</span><span class="lnt">66
+</span><span class="lnt">67
+</span><span class="lnt">68
+</span><span class="lnt">69
+</span><span class="lnt">70
+</span><span class="lnt">71
+</span><span class="lnt">72
+</span><span class="lnt">73
+</span><span class="lnt">74
+</span><span class="lnt">75
+</span><span class="lnt">76
+</span><span class="lnt">77
+</span><span class="lnt">78
+</span><span class="lnt">79
+</span><span class="lnt">80
+</span><span class="lnt">81
+</span><span class="lnt">82
+</span><span class="lnt">83
+</span><span class="lnt">84
+</span><span class="lnt">85
+</span><span class="lnt">86
+</span><span class="lnt">87
+</span><span class="lnt">88
+</span><span class="lnt">89
+</span><span class="lnt">90
+</span><span class="lnt">91
+</span><span class="lnt">92
+</span><span class="lnt">93
+</span><span class="lnt">94
+</span><span class="lnt">95
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Execute processes a command and returns the result via the reply parameter.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">Execute</span><span class="p">(</span><span class="nx">command</span> <span class="nx">Command</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">CommandReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// do not hold lock to improve throughput
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="c1">// when KVServer holds the lock to take snapshot, underlying raft can still commit raft logs
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">index</span><span class="p">,</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">Start</span><span class="p">(</span><span class="nx">command</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="k">if</span> <span class="p">!</span><span class="nx">isLeader</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrWrongLeader</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">notifyChan</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyChan</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// wait for the result or timeout.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="nx">result</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">notifyChan</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">result</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">result</span><span class="p">.</span><span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="k">case</span> <span class="o">&lt;-</span><span class="nx">time</span><span class="p">.</span><span class="nf">After</span><span class="p">(</span><span class="nx">ExecuteTimeout</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrTimeout</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// release notifyChan to reduce memory footprint
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="c1">// why asynchronously? to improve throughput, here is no need to block client request
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">go</span> <span class="kd">func</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nf">removeOutdatedNotifyChan</span><span class="p">(</span><span class="nx">index</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}()</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// applier continuously applies commands from the Raft log to the state machine.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">applier</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">!</span><span class="nx">kv</span><span class="p">.</span><span class="nf">killed</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">select</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// wait for a new message in the apply channel
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">case</span> <span class="nx">message</span> <span class="o">:=</span> <span class="o">&lt;-</span><span class="nx">kv</span><span class="p">.</span><span class="nx">applyCh</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// check if the command has already been applied.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span> <span class="o">&lt;=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">					<span class="k">continue</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// update the last applied index
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// type assert the command from the message.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">command</span> <span class="o">:=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Command</span><span class="p">.(</span><span class="nx">Command</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">switch</span> <span class="nx">command</span><span class="p">.</span><span class="nx">CommandType</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">case</span> <span class="nx">Operation</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">// extract the operation data and apply the operation to the state machine
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="nx">operation</span> <span class="o">:=</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Data</span><span class="p">.(</span><span class="nx">CommandArgs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyOperation</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">operation</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">case</span> <span class="nx">Configuration</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">// extract the configuration data and apply the configuration to the state machine
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="nx">nextConfig</span> <span class="o">:=</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Data</span><span class="p">.(</span><span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Config</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyConfiguration</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">nextConfig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">case</span> <span class="nx">InsertShards</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">// extract the shard insertion data and apply the insertion to the state machine
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="nx">shardsInfo</span> <span class="o">:=</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Data</span><span class="p">.(</span><span class="nx">ShardOperationReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyInsertShards</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">shardsInfo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">case</span> <span class="nx">DeleteShards</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">// extract the shard deletion data and apply the deletion to the state machine
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="nx">shardsInfo</span> <span class="o">:=</span> <span class="nx">command</span><span class="p">.</span><span class="nx">Data</span><span class="p">.(</span><span class="nx">ShardOperationArgs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyDeleteShards</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">shardsInfo</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">case</span> <span class="nx">EmptyShards</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">// apply empty shards to the state machine, to prevent the state machine from rolling back
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyEmptyShards</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="c1">// only notify the related channel for currentTerm&#39;s log when node is Leader
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">currentTerm</span><span class="p">,</span> <span class="nx">isLeader</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetState</span><span class="p">();</span> <span class="nx">isLeader</span> <span class="o">&amp;&amp;</span> <span class="nx">message</span><span class="p">.</span><span class="nx">CommandTerm</span> <span class="o">==</span> <span class="nx">currentTerm</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">notifyChan</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getNotifyChan</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">notifyChan</span> <span class="o">&lt;-</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">				<span class="c1">// take snapshot if needed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="k">if</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">needSnapshot</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nf">takeSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">CommandIndex</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotValid</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// restore the state machine from the snapshot
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Lock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">CondInstallSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotTerm</span><span class="p">,</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotIndex</span><span class="p">,</span> <span class="nx">message</span><span class="p">.</span><span class="nx">Snapshot</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nf">restoreSnapshot</span><span class="p">(</span><span class="nx">message</span><span class="p">.</span><span class="nx">Snapshot</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nx">lastApplied</span> <span class="p">=</span> <span class="nx">message</span><span class="p">.</span><span class="nx">SnapshotIndex</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">Unlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nb">panic</span><span class="p">(</span><span class="nx">fmt</span><span class="p">.</span><span class="nf">Sprintf</span><span class="p">(</span><span class="s">&#34;{Node %v}{Group %v} invalid apply message %v&#34;</span><span class="p">,</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">GetId</span><span class="p">(),</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">gid</span><span class="p">,</span> <span class="nx">message</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="日志类型" class="heading-element"><span>2.3.2 日志类型</span>
+  <a href="#%e6%97%a5%e5%bf%97%e7%b1%bb%e5%9e%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>在 <code>ShardKV</code> 系统中，Raft 日志包含了以下几种不同类型的操作：</p>
+<ol>
+<li><strong>客户端命令 (<code>Command</code>)</strong>: 包含对键值存储的<code>Put</code>、<code>Append</code>、<code>Get</code>等操作，这些操作会通过 Raft 日志提交来保证多副本的一致性。</li>
+<li><strong>配置变更 (<code>Config</code>)</strong>: 当从 <code>shardctrler</code> 获取到新的分片配置时，会通过 Raft 日志来记录配置的变化。所有副本组通过 Raft 日志共享同一配置，确保分片的一致分配。</li>
+<li><strong>分片操作 (<code>ShardOperation</code>)</strong>: 当进行分片迁移时，涉及到的操作也会记录在 Raft 日志中，保证分片迁移过程的顺序和一致性。</li>
+<li><strong>空日志条目</strong>: Raft 有时会生成空日志条目以保持领导者的状态和活动性，避免在某些情况下集群处于无操作状态。</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">const</span> <span class="p">(</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Operation</span>     <span class="nx">CommandType</span> <span class="p">=</span> <span class="kc">iota</span> <span class="c1">// Generic operation command
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">Configuration</span>                    <span class="c1">// Configuration change command
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">InsertShards</span>                     <span class="c1">// Command to insert shards
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">DeleteShards</span>                     <span class="c1">// Command to delete shards
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">EmptyShards</span>                      <span class="c1">// Command to empty shards
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Command</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">CommandType</span> <span class="nx">CommandType</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Data</span>        <span class="kd">interface</span><span class="p">{}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">ShardOperationArgs</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ConfigNum</span> <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ShardIDs</span>  <span class="p">[]</span><span class="kt">int</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">ShardOperationReply</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Err</span>            <span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">ConfigNum</span>      <span class="kt">int</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">Shards</span>         <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="kd">map</span><span class="p">[</span><span class="kt">string</span><span class="p">]</span><span class="kt">string</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">LastOperations</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int64</span><span class="p">]</span><span class="nx">OperationContext</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="c1">// NewOperationCommand creates a new operation command from CommandArgs
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">NewOperationCommand</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">)</span> <span class="nx">Command</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Command</span><span class="p">{</span><span class="nx">Operation</span><span class="p">,</span> <span class="o">*</span><span class="nx">args</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// NewConfigurationCommand creates a new configuration command
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">NewConfigurationCommand</span><span class="p">(</span><span class="nx">config</span> <span class="o">*</span><span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Config</span><span class="p">)</span> <span class="nx">Command</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Command</span><span class="p">{</span><span class="nx">Configuration</span><span class="p">,</span> <span class="o">*</span><span class="nx">config</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// NewInsertShardsCommand creates a new command to insert shards
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">NewInsertShardsCommand</span><span class="p">(</span><span class="nx">reply</span> <span class="o">*</span><span class="nx">ShardOperationReply</span><span class="p">)</span> <span class="nx">Command</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Command</span><span class="p">{</span><span class="nx">InsertShards</span><span class="p">,</span> <span class="o">*</span><span class="nx">reply</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// NewDeleteShardsCommand creates a new command to delete shards
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">NewDeleteShardsCommand</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">ShardOperationArgs</span><span class="p">)</span> <span class="nx">Command</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Command</span><span class="p">{</span><span class="nx">DeleteShards</span><span class="p">,</span> <span class="o">*</span><span class="nx">args</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// NewEmptyShardsCommand creates a new command indicating no shards
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="nf">NewEmptyShardsCommand</span><span class="p">()</span> <span class="nx">Command</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">Command</span><span class="p">{</span><span class="nx">EmptyShards</span><span class="p">,</span> <span class="kc">nil</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="读写服务" class="heading-element"><span>2.3.3 读写服务</span>
+  <a href="#%e8%af%bb%e5%86%99%e6%9c%8d%e5%8a%a1" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>这段代码主要实现了与<code>shardkv</code>服务相关的操作逻辑。其中<code>canServe</code>函数用于判断服务器是否能服务指定分片，依据是当前配置下分片所属组与服务器组 ID 是否一致以及分片状态。<code>Command</code>函数先检查是否为重复请求，若是非<code>Get</code>操作的重复请求则直接返回结果，同时也检查服务器能否服务对应分片，不能则返回<code>ErrWrongGroup</code>，否则调用<code>Execute</code>。<code>applyOperation</code>函数在处理操作时，先检查服务器能否服务分片，对于非<code>Get</code>操作的重复请求返回上次结果，否则将操作应用到状态机，并在非<code>Get</code>操作时更新客户端操作相关信息，通过在多处进行相关判断和检查来保障操作的正确性和线性化语义。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// canServe checks if the server can serve the shard.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">canServe</span><span class="p">(</span><span class="nx">shardID</span> <span class="kt">int</span><span class="p">)</span> <span class="kt">bool</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span><span class="p">.</span><span class="nx">Shards</span><span class="p">[</span><span class="nx">shardID</span><span class="p">]</span> <span class="o">==</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">gid</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">stateMachine</span><span class="p">[</span><span class="nx">shardID</span><span class="p">].</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Serving</span> <span class="o">||</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">stateMachine</span><span class="p">[</span><span class="nx">shardID</span><span class="p">].</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">GCing</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">Command</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">,</span> <span class="nx">reply</span> <span class="o">*</span><span class="nx">CommandReply</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RLock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// if the command is the duplicated, return result directly without raft layer&#39;s participation
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">args</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">Get</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicateRequest</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">lastReply</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// check if the server can serve the requested shard.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">!</span><span class="nx">kv</span><span class="p">.</span><span class="nf">canServe</span><span class="p">(</span><span class="nf">key2shard</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">))</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrWrongGroup</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">		<span class="k">return</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nf">Execute</span><span class="p">(</span><span class="nf">NewOperationCommand</span><span class="p">(</span><span class="nx">args</span><span class="p">),</span> <span class="nx">reply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// applyOperation applies a given operation to the KV state machine.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">applyOperation</span><span class="p">(</span><span class="nx">operation</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">)</span> <span class="o">*</span><span class="nx">CommandReply</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">shardID</span> <span class="o">:=</span> <span class="nf">key2shard</span><span class="p">(</span><span class="nx">operation</span><span class="p">.</span><span class="nx">Key</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// check if the server can serve the requested shard.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">!</span><span class="nx">kv</span><span class="p">.</span><span class="nf">canServe</span><span class="p">(</span><span class="nx">shardID</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrWrongGroup</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// check if the operation is duplicated(only for non-Get operations)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">operation</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">Get</span> <span class="o">&amp;&amp;</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">isDuplicateRequest</span><span class="p">(</span><span class="nx">operation</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">operation</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">lastReply</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">operation</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">].</span><span class="nx">LastReply</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Value</span><span class="p">,</span> <span class="nx">lastReply</span><span class="p">.</span><span class="nx">Err</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// apply the operation to the state machine
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="nx">reply</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">applyLogToStateMachine</span><span class="p">(</span><span class="nx">operation</span><span class="p">,</span> <span class="nx">shardID</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// update the last operation context for the client if the operation is not a Get operation
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="nx">operation</span><span class="p">.</span><span class="nx">Op</span> <span class="o">!=</span> <span class="nx">Get</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">operation</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">]</span> <span class="p">=</span> <span class="nx">OperationContext</span><span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">operation</span><span class="p">.</span><span class="nx">CommandId</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">reply</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="配置更新检测" class="heading-element"><span>2.3.4 配置更新检测</span>
+  <a href="#%e9%85%8d%e7%bd%ae%e6%9b%b4%e6%96%b0%e6%a3%80%e6%b5%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>首先，配置更新协程负责定时监测配置是否更新，即<code>configNum</code>是否增加（<code>currentConfigNum+1==nextConfig.Num</code>）。但检测前提是需要检查分片的状态是否都为Serving，如果不是，则意味着其他协程仍然没有完成任务，故需要阻塞新配置的拉取和提取。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Checks if the next configuration can be performed.
+</span></span></span><span class="line"><span class="cl"><span class="c1">// If all shards are in Serving status, it queries and applies the next configuration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">configurationAction</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">canPerformNextConfig</span> <span class="o">:=</span> <span class="kc">true</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RLock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// If any shard is not in the Serving status, the next configuration cannot be applied
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">shard</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">stateMachine</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">shard</span><span class="p">.</span><span class="nx">Status</span> <span class="o">!=</span> <span class="nx">Serving</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">canPerformNextConfig</span> <span class="p">=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">			<span class="k">break</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">currentConfigNum</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span><span class="p">.</span><span class="nx">Num</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// Query and apply the next configuration if allowed
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">canPerformNextConfig</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">nextConfig</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">sc</span><span class="p">.</span><span class="nf">Query</span><span class="p">(</span><span class="nx">currentConfigNum</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// Ensure the queried configuration is the next one
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">if</span> <span class="nx">nextConfig</span><span class="p">.</span><span class="nx">Num</span> <span class="o">==</span> <span class="nx">currentConfigNum</span><span class="o">+</span><span class="mi">1</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">kv</span><span class="p">.</span><span class="nf">Execute</span><span class="p">(</span><span class="nf">NewConfigurationCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">nextConfig</span><span class="p">),</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// applyConfiguration applies a new configuration to the shard.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">applyConfiguration</span><span class="p">(</span><span class="nx">nextConfig</span> <span class="o">*</span><span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Config</span><span class="p">)</span> <span class="o">*</span><span class="nx">CommandReply</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// check if the new configuration is the next in line.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">nextConfig</span><span class="p">.</span><span class="nx">Num</span> <span class="o">==</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span><span class="p">.</span><span class="nx">Num</span><span class="o">+</span><span class="mi">1</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// update the shard status based on the new configuration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">kv</span><span class="p">.</span><span class="nf">updateShardStatus</span><span class="p">(</span><span class="nx">nextConfig</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// save the last configuration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">kv</span><span class="p">.</span><span class="nx">lastConfig</span> <span class="p">=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// update the current configuration.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span> <span class="p">=</span> <span class="o">*</span><span class="nx">nextConfig</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">OK</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrOutDated</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="分片迁移" class="heading-element"><span>2.3.5 分片迁移</span>
+  <a href="#%e5%88%86%e7%89%87%e8%bf%81%e7%a7%bb" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>分片迁移协程会定时检测分片的 <code>Pulling</code> 状态。它依据 lastConfig 算出对应 raft 组的 gid 和待拉取的分片，随后并行拉取数据。这里采用 <code>waitGroup</code> 确保所有独立任务完成后再开始下一轮任务。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Executes the migration task to pull shard data from other groups.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">migrationAction</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RLock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">gid2Shards</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getShardIDsByStatus</span><span class="p">(</span><span class="nx">Pulling</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// Create pull tasks for each group (GID)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">gid</span><span class="p">,</span> <span class="nx">shardIDs</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">gid2Shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">wg</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">servers</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">configNum</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">shardIDs</span> <span class="p">[]</span><span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">pullTaskArgs</span> <span class="o">:=</span> <span class="nx">ShardOperationArgs</span><span class="p">{</span><span class="nx">configNum</span><span class="p">,</span> <span class="nx">shardIDs</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// Try to pull shard data from each server in the group
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">server</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">servers</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">pullTaskReply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">ShardOperationReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">srv</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">makeEnd</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">srv</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;ShardKV.GetShardsData&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">pullTaskArgs</span><span class="p">,</span> <span class="nx">pullTaskReply</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">pullTaskReply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">OK</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">//Pulling data from these servers
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="nx">kv</span><span class="p">.</span><span class="nf">Execute</span><span class="p">(</span><span class="nf">NewInsertShardsCommand</span><span class="p">(</span><span class="nx">pullTaskReply</span><span class="p">),</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">lastConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">[</span><span class="nx">gid</span><span class="p">],</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span><span class="p">.</span><span class="nx">Num</span><span class="p">,</span> <span class="nx">shardIDs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">wg</span><span class="p">.</span><span class="nf">Wait</span><span class="p">()</span> <span class="c1">// Wait for all pull tasks to complete
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// applyInsertShards applies the insertion of shard data.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">applyInsertShards</span><span class="p">(</span><span class="nx">shardsInfo</span> <span class="o">*</span><span class="nx">ShardOperationReply</span><span class="p">)</span> <span class="o">*</span><span class="nx">CommandReply</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// check if the configuration number matches the current one.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">shardsInfo</span><span class="p">.</span><span class="nx">ConfigNum</span> <span class="o">==</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span><span class="p">.</span><span class="nx">Num</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">shardID</span><span class="p">,</span> <span class="nx">shardData</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shardsInfo</span><span class="p">.</span><span class="nx">Shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">shard</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">stateMachine</span><span class="p">[</span><span class="nx">shardID</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// only pull if the shard is in the Pulling state.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="nx">shard</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Pulling</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">for</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shardData</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">shard</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// update the shard status to Garbage Collecting.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">shard</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">GCing</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">break</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// update last operations with the provided contexts.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">for</span> <span class="nx">clientId</span><span class="p">,</span> <span class="nx">operationContext</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shardsInfo</span><span class="p">.</span><span class="nx">LastOperations</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">lastOperation</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">clientId</span><span class="p">];</span> <span class="p">!</span><span class="nx">ok</span> <span class="o">||</span> <span class="nx">lastOperation</span><span class="p">.</span><span class="nx">MaxAppliedCommandId</span> <span class="p">&lt;</span> <span class="nx">operationContext</span><span class="p">.</span><span class="nx">MaxAppliedCommandId</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">clientId</span><span class="p">]</span> <span class="p">=</span> <span class="nx">operationContext</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrOutDated</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="垃圾回收" class="heading-element"><span>2.3.6 垃圾回收</span>
+  <a href="#%e5%9e%83%e5%9c%be%e5%9b%9e%e6%94%b6" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>分片清理协程负责定时检测分片的 <code>GCing</code> 状态，利用<code>lastConfig</code> 计算出对应 raft 组的 gid 和要拉取的分片，然后并行地去删除分片。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span><span class="lnt">47
+</span><span class="lnt">48
+</span><span class="lnt">49
+</span><span class="lnt">50
+</span><span class="lnt">51
+</span><span class="lnt">52
+</span><span class="lnt">53
+</span><span class="lnt">54
+</span><span class="lnt">55
+</span><span class="lnt">56
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Executes garbage collection (GC) tasks to delete shard data from other groups.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">gcAction</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RLock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// Get the group that was previously responsible for these shards and clean up the shards that are no longer responsible.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">gid2Shards</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">getShardIDsByStatus</span><span class="p">(</span><span class="nx">GCing</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="kd">var</span> <span class="nx">wg</span> <span class="nx">sync</span><span class="p">.</span><span class="nx">WaitGroup</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">	<span class="c1">// Create GC tasks for each group (GID)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">for</span> <span class="nx">gid</span><span class="p">,</span> <span class="nx">shardIDs</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">gid2Shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">wg</span><span class="p">.</span><span class="nf">Add</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="k">go</span> <span class="kd">func</span><span class="p">(</span><span class="nx">servers</span> <span class="p">[]</span><span class="kt">string</span><span class="p">,</span> <span class="nx">configNum</span> <span class="kt">int</span><span class="p">,</span> <span class="nx">shardIDs</span> <span class="p">[]</span><span class="kt">int</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">defer</span> <span class="nx">wg</span><span class="p">.</span><span class="nf">Done</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">gcTaskArgs</span> <span class="o">:=</span> <span class="nx">ShardOperationArgs</span><span class="p">{</span><span class="nx">configNum</span><span class="p">,</span> <span class="nx">shardIDs</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// Try to delete shard data from each server in the group
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">for</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">server</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">servers</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">gcTaskReply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">ShardOperationReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">srv</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nf">makeEnd</span><span class="p">(</span><span class="nx">server</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">srv</span><span class="p">.</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;ShardKV.DeleteShardsData&#34;</span><span class="p">,</span> <span class="o">&amp;</span><span class="nx">gcTaskArgs</span><span class="p">,</span> <span class="nx">gcTaskReply</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="nx">gcTaskReply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">OK</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">kv</span><span class="p">.</span><span class="nf">Execute</span><span class="p">(</span><span class="nf">NewDeleteShardsCommand</span><span class="p">(</span><span class="o">&amp;</span><span class="nx">gcTaskArgs</span><span class="p">),</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}(</span><span class="nx">kv</span><span class="p">.</span><span class="nx">lastConfig</span><span class="p">.</span><span class="nx">Groups</span><span class="p">[</span><span class="nx">gid</span><span class="p">],</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span><span class="p">.</span><span class="nx">Num</span><span class="p">,</span> <span class="nx">shardIDs</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">kv</span><span class="p">.</span><span class="nx">mu</span><span class="p">.</span><span class="nf">RUnlock</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">wg</span><span class="p">.</span><span class="nf">Wait</span><span class="p">()</span> <span class="c1">// Wait for all GC tasks to complete
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// applyInsertShards applies the insertion of shard data.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">applyInsertShards</span><span class="p">(</span><span class="nx">shardsInfo</span> <span class="o">*</span><span class="nx">ShardOperationReply</span><span class="p">)</span> <span class="o">*</span><span class="nx">CommandReply</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// check if the configuration number matches the current one.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="nx">shardsInfo</span><span class="p">.</span><span class="nx">ConfigNum</span> <span class="o">==</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">currentConfig</span><span class="p">.</span><span class="nx">Num</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="k">for</span> <span class="nx">shardID</span><span class="p">,</span> <span class="nx">shardData</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shardsInfo</span><span class="p">.</span><span class="nx">Shards</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">shard</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">stateMachine</span><span class="p">[</span><span class="nx">shardID</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// only pull if the shard is in the Pulling state.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="nx">shard</span><span class="p">.</span><span class="nx">Status</span> <span class="o">==</span> <span class="nx">Pulling</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">for</span> <span class="nx">key</span><span class="p">,</span> <span class="nx">value</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shardData</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">shard</span><span class="p">.</span><span class="nf">Put</span><span class="p">(</span><span class="nx">key</span><span class="p">,</span> <span class="nx">value</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// update the shard status to Garbage Collecting.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">shard</span><span class="p">.</span><span class="nx">Status</span> <span class="p">=</span> <span class="nx">GCing</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="k">break</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// update last operations with the provided contexts.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="k">for</span> <span class="nx">clientId</span><span class="p">,</span> <span class="nx">operationContext</span> <span class="o">:=</span> <span class="k">range</span> <span class="nx">shardsInfo</span><span class="p">.</span><span class="nx">LastOperations</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="k">if</span> <span class="nx">lastOperation</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">clientId</span><span class="p">];</span> <span class="p">!</span><span class="nx">ok</span> <span class="o">||</span> <span class="nx">lastOperation</span><span class="p">.</span><span class="nx">MaxAppliedCommandId</span> <span class="p">&lt;</span> <span class="nx">operationContext</span><span class="p">.</span><span class="nx">MaxAppliedCommandId</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">kv</span><span class="p">.</span><span class="nx">lastOperations</span><span class="p">[</span><span class="nx">clientId</span><span class="p">]</span> <span class="p">=</span> <span class="nx">operationContext</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="p">=</span> <span class="nx">ErrOutDated</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="nx">reply</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h4 id="空日志检测" class="heading-element"><span>2.3.7 空日志检测</span>
+  <a href="#%e7%a9%ba%e6%97%a5%e5%bf%97%e6%a3%80%e6%b5%8b" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h4><p>根据 raft 论文 5.4.2 节，新 leader 提交之前 term 的日志存在风险。若要提交这类日志，需等新 leader 在自身任期产生新日志，新日志提交时，之前 term 的日志才能随之提交。这意味着若当前 term 迟迟无日志生成并提交，之前 term 的部分日志将一直无法提交，进而可能导致活锁，使日志无法推进。</p>
+<p>所以空日志检测协程会定时检测 raft 层的 leader 是否拥有当前 term 的日志，如果没有则提交一条空日志，这使得新 leader 的状态机能够迅速达到最新状态，从而避免多 raft 组间的活锁状态。</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="c1">// Ensures that a log entry is present in the current term to keep the log active.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">checkEntryInCurrentTermAction</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="c1">// If no log entry exists in the current term, execute an empty command
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="k">if</span> <span class="p">!</span><span class="nx">kv</span><span class="p">.</span><span class="nx">rf</span><span class="p">.</span><span class="nf">HasLogInCurrentTerm</span><span class="p">()</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">kv</span><span class="p">.</span><span class="nf">Execute</span><span class="p">(</span><span class="nf">NewEmptyShardsCommand</span><span class="p">(),</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">))</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="c1">// applyEmptyShards handles the case for empty shards. This is to prevent the state machine from rolling back.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="kd">func</span> <span class="p">(</span><span class="nx">kv</span> <span class="o">*</span><span class="nx">ShardKV</span><span class="p">)</span> <span class="nf">applyEmptyShards</span><span class="p">()</span> <span class="o">*</span><span class="nx">CommandReply</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="k">return</span> <span class="o">&amp;</span><span class="nx">CommandReply</span><span class="p">{</span><span class="nx">Err</span><span class="p">:</span> <span class="nx">OK</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h3 id="shardkv-clerk" class="heading-element"><span>2.4 shardkv clerk</span>
+  <a href="#shardkv-clerk" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h3><p>clerk结构体：</p>
+<ul>
+<li><code>sm</code>：用于和<code>shardctrler</code>交互获取集群最新配置（分片 - 组映射）。</li>
+<li><code>config</code>：当前集群配置，决定请求发送的依据。</li>
+<li><code>makeEnd</code>：创建与服务器的 RPC 连接。</li>
+<li><code>leaderIds</code>：记录组 ID 对应的领导服务器 ID，便于请求发送。</li>
+<li><code>clientId</code>和<code>commandId</code>：用于唯一确定客户端操作，保证操作的可识别性和顺序性。</li>
+</ul>
+<p>这里将四种命令封装成一个<code>command</code>函数，其具体逻辑如下：</p>
+<ol>
+<li>先将操作参数<code>args</code>中的<code>ClientId</code>和<code>CommandId</code>设置为<code>Clerk</code>结构体中的对应值。</li>
+<li>根据操作键确定分片所属组 ID。</li>
+<li>组内leader查找与请求发送：
+<ul>
+<li>若组存在，获取组内服务器列表，确定领导 ID（若未记录则默认为 0）。</li>
+<li>尝试向领导服务器发送请求，若请求成功且回复正常（<code>Err</code>为<code>OK</code>或<code>ErrNoKey</code>），则更新<code>commandId</code>并返回结果；若回复<code>ErrWrongGroup</code>，则跳出当前组内循环重新获取配置；若请求失败或回复错误码不符，尝试下一个服务器，若遍历完组内服务器都不行，则跳出组内循环。</li>
+</ul>
+</li>
+<li>配置更新：
+<ul>
+<li>若不存在对应组或组内无合适服务器处理请求，等待 100 毫秒后从<code>shardctrler</code>获取最新配置，重新开始循环处理请求。</li>
+</ul>
+</li>
+</ol>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt"> 1
+</span><span class="lnt"> 2
+</span><span class="lnt"> 3
+</span><span class="lnt"> 4
+</span><span class="lnt"> 5
+</span><span class="lnt"> 6
+</span><span class="lnt"> 7
+</span><span class="lnt"> 8
+</span><span class="lnt"> 9
+</span><span class="lnt">10
+</span><span class="lnt">11
+</span><span class="lnt">12
+</span><span class="lnt">13
+</span><span class="lnt">14
+</span><span class="lnt">15
+</span><span class="lnt">16
+</span><span class="lnt">17
+</span><span class="lnt">18
+</span><span class="lnt">19
+</span><span class="lnt">20
+</span><span class="lnt">21
+</span><span class="lnt">22
+</span><span class="lnt">23
+</span><span class="lnt">24
+</span><span class="lnt">25
+</span><span class="lnt">26
+</span><span class="lnt">27
+</span><span class="lnt">28
+</span><span class="lnt">29
+</span><span class="lnt">30
+</span><span class="lnt">31
+</span><span class="lnt">32
+</span><span class="lnt">33
+</span><span class="lnt">34
+</span><span class="lnt">35
+</span><span class="lnt">36
+</span><span class="lnt">37
+</span><span class="lnt">38
+</span><span class="lnt">39
+</span><span class="lnt">40
+</span><span class="lnt">41
+</span><span class="lnt">42
+</span><span class="lnt">43
+</span><span class="lnt">44
+</span><span class="lnt">45
+</span><span class="lnt">46
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">type</span> <span class="nx">Clerk</span> <span class="kd">struct</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">sm</span>      <span class="o">*</span><span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Clerk</span>             <span class="c1">// Client that communicates with the shardctrler to get the latest configuration data (mapping of shards to groups)
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">config</span>  <span class="nx">shardctrler</span><span class="p">.</span><span class="nx">Config</span>             <span class="c1">// The current cluster configuration, including the shard-to-group mapping, based on which Clerk sends requests.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">makeEnd</span> <span class="kd">func</span><span class="p">(</span><span class="kt">string</span><span class="p">)</span> <span class="o">*</span><span class="nx">labrpc</span><span class="p">.</span><span class="nx">ClientEnd</span> <span class="c1">// Generates an RPC connection to a server, each of which is identified by a unique address.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="c1">// You will have to modify this struct.
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">leaderIds</span> <span class="kd">map</span><span class="p">[</span><span class="kt">int</span><span class="p">]</span><span class="kt">int</span> <span class="c1">// gid -&gt; leaderId, gid is the group id, leaderId is the leader server id
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">clientId</span>  <span class="kt">int64</span>       <span class="c1">// generated by nrand(), it would be better to use some distributed ID generation algorithm that guarantees no conflicts
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>	<span class="nx">commandId</span> <span class="kt">int64</span>       <span class="c1">// (clientId, commandId) defines a operation uniquely
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span><span class="p">}</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="kd">func</span> <span class="p">(</span><span class="nx">ck</span> <span class="o">*</span><span class="nx">Clerk</span><span class="p">)</span> <span class="nf">Command</span><span class="p">(</span><span class="nx">args</span> <span class="o">*</span><span class="nx">CommandArgs</span><span class="p">)</span> <span class="kt">string</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">	<span class="nx">args</span><span class="p">.</span><span class="nx">ClientId</span><span class="p">,</span> <span class="nx">args</span><span class="p">.</span><span class="nx">CommandId</span> <span class="p">=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">clientId</span><span class="p">,</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">commandId</span>
+</span></span><span class="line"><span class="cl">	<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">shard</span> <span class="o">:=</span> <span class="nf">key2shard</span><span class="p">(</span><span class="nx">args</span><span class="p">.</span><span class="nx">Key</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">gid</span> <span class="o">:=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">Shards</span><span class="p">[</span><span class="nx">shard</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">		<span class="k">if</span> <span class="nx">servers</span><span class="p">,</span> <span class="nx">ok</span> <span class="o">:=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">config</span><span class="p">.</span><span class="nx">Groups</span><span class="p">[</span><span class="nx">gid</span><span class="p">];</span> <span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">			<span class="c1">// if not set, set the default leader id to 0
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>			<span class="k">if</span> <span class="nx">_</span><span class="p">,</span> <span class="nx">ok</span> <span class="p">=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">leaderIds</span><span class="p">[</span><span class="nx">gid</span><span class="p">];</span> <span class="p">!</span><span class="nx">ok</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">ck</span><span class="p">.</span><span class="nx">leaderIds</span><span class="p">[</span><span class="nx">gid</span><span class="p">]</span> <span class="p">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">oldLeaderId</span> <span class="o">:=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">leaderIds</span><span class="p">[</span><span class="nx">gid</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">			<span class="nx">newLeader</span> <span class="o">:=</span> <span class="nx">oldLeaderId</span>
+</span></span><span class="line"><span class="cl">			<span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">				<span class="nx">reply</span> <span class="o">:=</span> <span class="nb">new</span><span class="p">(</span><span class="nx">CommandReply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="c1">// send the request to the leader server
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>				<span class="nx">ok</span> <span class="o">:=</span> <span class="nx">ck</span><span class="p">.</span><span class="nf">makeEnd</span><span class="p">(</span><span class="nx">servers</span><span class="p">[</span><span class="nx">newLeader</span><span class="p">]).</span><span class="nf">Call</span><span class="p">(</span><span class="s">&#34;ShardKV.Command&#34;</span><span class="p">,</span> <span class="nx">args</span><span class="p">,</span> <span class="nx">reply</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">				<span class="k">if</span> <span class="nx">ok</span> <span class="o">&amp;&amp;</span> <span class="p">(</span><span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">OK</span> <span class="o">||</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">ErrNoKey</span><span class="p">)</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="nx">ck</span><span class="p">.</span><span class="nx">commandId</span><span class="o">++</span>
+</span></span><span class="line"><span class="cl">					<span class="k">return</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Value</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="nx">ok</span> <span class="o">&amp;&amp;</span> <span class="nx">reply</span><span class="p">.</span><span class="nx">Err</span> <span class="o">==</span> <span class="nx">ErrWrongGroup</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="k">break</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">// try the next server
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="nx">newLeader</span> <span class="p">=</span> <span class="p">(</span><span class="nx">newLeader</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="nx">servers</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">					<span class="c1">// check if all servers have been tried
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>					<span class="k">if</span> <span class="nx">newLeader</span> <span class="o">==</span> <span class="nx">oldLeaderId</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">						<span class="k">break</span>
+</span></span><span class="line"><span class="cl">					<span class="p">}</span>
+</span></span><span class="line"><span class="cl">				<span class="p">}</span>
+</span></span><span class="line"><span class="cl">			<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="p">}</span>
+</span></span><span class="line"><span class="cl">		<span class="nx">time</span><span class="p">.</span><span class="nf">Sleep</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="nx">time</span><span class="p">.</span><span class="nx">Millisecond</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">		<span class="c1">// Query the latest configuration from the shardctrler
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>		<span class="nx">ck</span><span class="p">.</span><span class="nx">config</span> <span class="p">=</span> <span class="nx">ck</span><span class="p">.</span><span class="nx">sm</span><span class="p">.</span><span class="nf">Query</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">	<span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span></span></span></code></pre></td></tr></table>
+</div>
+</div><h2 id="总结" class="heading-element"><span>3 总结</span>
+  <a href="#%e6%80%bb%e7%bb%93" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><p>这个实验难度还是非常大的，基本上不是自己独立完成，借鉴了<a href="https://github.com/OneSizeFitsQuorum"target="_blank" rel="external nofollow noopener noreferrer">Github OneSizeFitsQuorum<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a>的很多代码，其讲解也非常详细。最后也是成功通过了实验测试。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125349042.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125349042.png?size=small" data-sub-html="<h2>image-20241020125349042</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125349042.png" alt="image-20241020125349042" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125349042.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125349042.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125349042.png?size=large 2x" data-title="image-20241020125349042" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125315201.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125315201.png?size=small" data-sub-html="<h2>image-20241020125315201</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125315201.png" alt="image-20241020125315201" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125315201.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125315201.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241020125315201.png?size=large 2x" data-title="image-20241020125315201" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+<p>从这个实验中也学到了很多：</p>
+<ol>
+<li>可以将多个操作封装成一个操作接口去处理，能让代码变得更简洁且易于理解，从kvraft-&gt;shardkv，这种设计理想还是非常不错的。</li>
+<li>要注意在分片迁移和垃圾回收中，并不是由被拉取的服务器来主动拉取和回收的，而都是由拉取服务器进行RPC操作通知。这样的好处是能够使这两个操作同步，因为被拉取服务器不知道该什么时候回收数据的。</li>
+<li>leader不能先更新分片状态，它只能先进行检测，更新还是需要通过raft共识协议，等日志落地后通过apply协程来进行更新，且总是需要去判断leader的身份。</li>
+<li>可以通过读写锁来优化并发性能，但需要注意的是何时采用读锁很关键。如果不确定，可以一把大锁保平安。</li>
+</ol>
+<h2 id="参考" class="heading-element"><span>4 参考</span>
+  <a href="#%e5%8f%82%e8%80%83" class="heading-mark">
+    <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
+  </a>
+</h2><ul>
+<li><a href="https://blog.csdn.net/qq_43460956/article/details/134885751"target="_blank" rel="external nofollow noopener noreferrer">MIT 6.824 Lab 4 ShardKV详细实现思路及过程<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
+<li><a href="https://github.com/OneSizeFitsQuorum/MIT6.824-2021/blob/master/docs/lab4.md#%E7%BB%93%E6%9E%84"target="_blank" rel="external nofollow noopener noreferrer">Github OneSizeFitsQuorum/MIT6.824-2021<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/464097239"target="_blank" rel="external nofollow noopener noreferrer">知乎mit-6.824 分布式系统2021<i class="fa-solid fa-external-link-alt fa-fw fa-xs ms-1 text-secondary" aria-hidden="true"></i></a></li>
+</ul>
 ]]></description></item></channel></rss>

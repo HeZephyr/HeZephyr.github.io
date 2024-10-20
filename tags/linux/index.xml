@@ -1135,26 +1135,26 @@ Tips：在部署某些服务是，也可以手动添加某些系统用户。</li
 <table>
   <thead>
       <tr>
-          <th style="text-align: left">域</th>
-          <th style="text-align: left">含义</th>
+          <th>域</th>
+          <th>含义</th>
       </tr>
   </thead>
   <tbody>
       <tr>
-          <td style="text-align: left">group_name</td>
-          <td style="text-align: left">用户组名</td>
+          <td>group_name</td>
+          <td>用户组名</td>
       </tr>
       <tr>
-          <td style="text-align: left">group_password</td>
-          <td style="text-align: left">加密后的用户组口令</td>
+          <td>group_password</td>
+          <td>加密后的用户组口令</td>
       </tr>
       <tr>
-          <td style="text-align: left">group_id</td>
-          <td style="text-align: left">用户组ID（GID）</td>
+          <td>group_id</td>
+          <td>用户组ID（GID）</td>
       </tr>
       <tr>
-          <td style="text-align: left">group_members</td>
-          <td style="text-align: left">以逗号分隔的成员用户清单</td>
+          <td>group_members</td>
+          <td>以逗号分隔的成员用户清单</td>
       </tr>
   </tbody>
 </table>
