@@ -1,11 +1,13 @@
 # ZephyrHe
 
-共计 136 篇文章
+共计 137 篇文章
 
 ## 2024
 
-共计 75 篇文章
+共计 77 篇文章
 
+- 10-26 [配置和排查 Lombok 在 IDEA 中使用的详细步骤](https://hezephyr.github.io/posts/06.%E9%85%8D%E7%BD%AE%E5%92%8C%E6%8E%92%E6%9F%A5lombok%E5%9C%A8idea%E4%B8%AD%E4%BD%BF%E7%94%A8%E7%9A%84%E8%AF%A6%E7%BB%86%E6%AD%A5%E9%AA%A4/ "2024-10-26 00:00:00")
+- 10-20 [【MIT 6.5840(6.824)】 Lab 5:Sharded Key/Value Service 设计实现](https://hezephyr.github.io/posts/11.mit6.5840-lab5/ "2024-10-20 00:00:00")
 - 10-14 [分布式系统理论详解：CAP、BASE、PACELC](https://hezephyr.github.io/posts/10.%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E7%90%86%E8%AE%BA/ "2024-10-14 00:00:00")
 - 10-13 [【论文阅读笔记】The Chubby lock service for loosely-coupled distributed systems](https://hezephyr.github.io/posts/10.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0chubby/ "2024-10-13 00:00:00")
 - 10-13 [【论文阅读笔记】Bigtable: A Distributed Storage System for Structured Data](https://hezephyr.github.io/posts/11.%E8%AE%BA%E6%96%87%E9%98%85%E8%AF%BB%E7%AC%94%E8%AE%B0bigtable/ "2024-10-13 00:00:00")

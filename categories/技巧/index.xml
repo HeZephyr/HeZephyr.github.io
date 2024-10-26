@@ -1,4 +1,56 @@
-<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>技巧 - 分类 | ZephyrHe</title><link>https://hezephyr.github.io/categories/%E6%8A%80%E5%B7%A7/</link><description>技巧 - 分类 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Tue, 21 Nov 2023 11:14:47 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/categories/%E6%8A%80%E5%B7%A7/" rel="self" type="application/rss+xml"/><item><title>Github搜索技巧</title><link>https://hezephyr.github.io/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/</link><pubDate>Tue, 21 Nov 2023 11:14:47 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/</guid><description><![CDATA[<h2 id="普通搜索" class="heading-element"><span>1 普通搜索</span>
+<rss xmlns:atom="http://www.w3.org/2005/Atom" version="2.0"><channel><title>技巧 - 分类 | ZephyrHe</title><link>https://hezephyr.github.io/categories/%E6%8A%80%E5%B7%A7/</link><description>技巧 - 分类 | ZephyrHe</description><generator>Hugo -- gohugo.io</generator><language>zh-CN</language><managingEditor>unique.hzf@gmail.com (HeZephyr)</managingEditor><webMaster>unique.hzf@gmail.com (HeZephyr)</webMaster><copyright>本站内容采用 CC BY-NC-SA 4.0 国际许可协议。</copyright><lastBuildDate>Sat, 26 Oct 2024 00:00:00 +0000</lastBuildDate><atom:link href="https://hezephyr.github.io/categories/%E6%8A%80%E5%B7%A7/" rel="self" type="application/rss+xml"/><item><title>配置和排查 Lombok 在 IDEA 中使用的详细步骤</title><link>https://hezephyr.github.io/posts/06.%E9%85%8D%E7%BD%AE%E5%92%8C%E6%8E%92%E6%9F%A5lombok%E5%9C%A8idea%E4%B8%AD%E4%BD%BF%E7%94%A8%E7%9A%84%E8%AF%A6%E7%BB%86%E6%AD%A5%E9%AA%A4/</link><pubDate>Sat, 26 Oct 2024 00:00:00 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/06.%E9%85%8D%E7%BD%AE%E5%92%8C%E6%8E%92%E6%9F%A5lombok%E5%9C%A8idea%E4%B8%AD%E4%BD%BF%E7%94%A8%E7%9A%84%E8%AF%A6%E7%BB%86%E6%AD%A5%E9%AA%A4/</guid><description><![CDATA[<p>在日常开发中，Java 代码常常需要大量的样板代码，比如 <code>getter</code>、<code>setter</code>、<code>toString</code> 等方法。Lombok 是一个 Java 库，可以通过注解的方式，自动生成这些常见的代码，从而让代码更加简洁、清晰。比如，我们可以通过 <code>@Getter</code> 和 <code>@Setter</code> 注解自动生成 <code>getter</code> 和 <code>setter</code> 方法，通过 <code>@ToString</code> 自动生成 <code>toString</code> 方法。Lombok 的常用注解包括：</p>
+<ul>
+<li><code>@Getter</code>：生成 <code>getter</code> 方法。</li>
+<li><code>@Setter</code>：生成 <code>setter</code> 方法。</li>
+<li><code>@ToString</code>：生成 <code>toString</code> 方法。</li>
+<li><code>@Data</code>：生成 <code>getter</code>、<code>setter</code>、<code>toString</code>、<code>equals</code> 和 <code>hashCode</code> 方法。</li>
+<li><code>@Builder</code>：提供构建者模式（Builder pattern）。</li>
+</ul>
+<p>下面是配置和排查 Lombok 在 IDEA 中使用的详细步骤。</p>
+<ol>
+<li>
+<p>安装 Lombok 插件</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105132473.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105132473.png?size=small" data-sub-html="<h2>image-20241026105132473</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105132473.png" alt="image-20241026105132473" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105132473.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105132473.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105132473.png?size=large 2x" data-title="image-20241026105132473" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</li>
+<li>
+<p>开启 Annotation Processing</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105218772.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105218772.png?size=small" data-sub-html="<h2>image-20241026105218772</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105218772.png" alt="image-20241026105218772" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105218772.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105218772.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105218772.png?size=large 2x" data-title="image-20241026105218772" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</li>
+<li>
+<p>在 pom.xml 中添加 Lombok 依赖</p>
+<p>在 Maven 项目中，需要在 <code>pom.xml</code> 中添加 Lombok 的依赖：</p>
+<div class="highlight"><div class="chroma">
+<table class="lntable"><tr><td class="lntd">
+<pre tabindex="0" class="chroma"><code><span class="lnt">1
+</span><span class="lnt">2
+</span><span class="lnt">3
+</span><span class="lnt">4
+</span><span class="lnt">5
+</span><span class="lnt">6
+</span><span class="lnt">7
+</span><span class="lnt">8
+</span><span class="lnt">9
+</span></code></pre></td>
+<td class="lntd">
+<pre tabindex="0" class="chroma"><code class="language-yml" data-lang="yml"><span class="line"><span class="cl"><span class="l">&lt;dependencies&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="l">&lt;!-- Lombok dependency --&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="l">&lt;dependency&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="l">&lt;groupId&gt;org.projectlombok&lt;/groupId&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="l">&lt;artifactId&gt;lombok&lt;/artifactId&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="l">&lt;version&gt;1.18.28&lt;/version&gt; &lt;!-- 根据需要选择版本 --&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">        </span><span class="l">&lt;scope&gt;provided&lt;/scope&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w">    </span><span class="l">&lt;/dependency&gt;</span><span class="w">
+</span></span></span><span class="line"><span class="cl"><span class="w"></span><span class="l">&lt;/dependencies&gt;</span></span></span></code></pre></td></tr></table>
+</div>
+</div><p>添加依赖后，IDEA 将会自动下载 Lombok 库。如果依赖没有自动下载，可以执行下一步来手动刷新项目。</p>
+</li>
+<li>
+<p>刷新 Maven 项目</p>
+<p>在 IDEA 中，点击右侧的 Maven 面板，找到你的项目，点击 <code>Reload All Maven Projects</code>（通常是一个循环箭头图标）。这将强制 Maven 刷新并重新下载所有依赖。完成后，IDEA 就可以正常识别 Lombok 的注解了。</p>
+<p><a class="lightgallery" href="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105404970.png?size=large" data-thumbnail="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105404970.png?size=small" data-sub-html="<h2>image-20241026105404970</h2>"><img loading="lazy" src="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105404970.png" alt="image-20241026105404970" srcset="https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105404970.png?size=small, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105404970.png?size=medium 1.5x, https://raw.githubusercontent.com/HeZephyr/NewPicGoLibrary/main/img/image-20241026105404970.png?size=large 2x" data-title="image-20241026105404970" style="background: url(/images/loading.min.svg) no-repeat center;" onload="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}this.dataset.lazyloaded='';" onerror="this.title=this.dataset.title;for(const i of ['style', 'data-title','onerror','onload']){this.removeAttribute(i);}"/></a></p>
+</li>
+</ol>
+]]></description></item><item><title>Github搜索技巧</title><link>https://hezephyr.github.io/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/</link><pubDate>Tue, 21 Nov 2023 11:14:47 +0000</pubDate><author>HeZephyr</author><guid>https://hezephyr.github.io/posts/05.github%E6%90%9C%E7%B4%A2%E6%8A%80%E5%B7%A7/</guid><description><![CDATA[<h2 id="普通搜索" class="heading-element"><span>1 普通搜索</span>
   <a href="#%e6%99%ae%e9%80%9a%e6%90%9c%e7%b4%a2" class="heading-mark">
     <svg class="octicon octicon-link" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="m7.775 3.275 1.25-1.25a3.5 3.5 0 1 1 4.95 4.95l-2.5 2.5a3.5 3.5 0 0 1-4.95 0 .751.751 0 0 1 .018-1.042.751.751 0 0 1 1.042-.018 1.998 1.998 0 0 0 2.83 0l2.5-2.5a2.002 2.002 0 0 0-2.83-2.83l-1.25 1.25a.751.751 0 0 1-1.042-.018.751.751 0 0 1-.018-1.042Zm-4.69 9.64a1.998 1.998 0 0 0 2.83 0l1.25-1.25a.751.751 0 0 1 1.042.018.751.751 0 0 1 .018 1.042l-1.25 1.25a3.5 3.5 0 1 1-4.95-4.95l2.5-2.5a3.5 3.5 0 0 1 4.95 0 .751.751 0 0 1-.018 1.042.751.751 0 0 1-1.042.018 1.998 1.998 0 0 0-2.83 0l-2.5 2.5a1.998 1.998 0 0 0 0 2.83Z"></path></svg>
   </a>
